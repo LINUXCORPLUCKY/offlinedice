@@ -3,8 +3,8 @@
   "cleanUrls": true,
   "rewrites": [
     {
-      "source": "/api/verify/:sessionId",
-      "destination": "/api/verify/[sessionId].js?sessionId=:sessionId"
+      "source": "/api/verify/(.*)",
+      "destination": "/api/verify.js?sessionId=$1"
     }
   ]
 }
