@@ -1,0 +1,27 @@
+{
+  "name": "offline-dice-verifier",
+  "version": "1.0.0",
+  "description": "Offline Dice Audit & Verifier Dashboard with real-time Firebase RTDB ingestion and statistical analytics",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "keywords": [
+    "dice",
+    "verifier",
+    "audit",
+    "csprng",
+    "provably-fair"
+  ],
+  "author": "Jalapeno",
+  "license": "MIT",
+  "dependencies": {
+    "axios": "^1.7.9",
+    "cors": "^2.8.5",
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "javascript-obfuscator": "^5.9.0"
+  }
+}

@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Traced Hub &bull; Offline Dice Audit &amp; Verifier</title>
+  <meta name="description" content="Traced Hub independent audit and verification dashboard for Offline Dice sessions. Ingests rolls, calculates color distribution, and verifies CSPRNG fairness.">
+  <link rel="icon" type="image/jpeg" href="logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <!-- Background Glow & Grid Overlay -->
+  <div class="cyber-grid-bg"></div>
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-container">
+    <!-- Header -->
+    <header class="app-header">
+      <div class="header-inner">
+        <div class="brand-row">
+          <div class="logo-mark" title="Traced Hub">
+            <img src="logo.jpg" alt="Traced Hub Logo" class="brand-logo-img">
+            <div class="pulse-ring"></div>
+          </div>
+          <div class="brand-text">
+            <div class="badge-row">
+              <span class="badge badge-brand">TRACED HUB</span>
+              <span class="badge badge-cyber">OFFLINE DICE VERIFIER</span>
+              <span class="badge badge-status" id="live-status-pill">
+                <span class="status-dot"></span> ORACLE ACTIVE
+              </span>
+            </div>
+            <h1 class="main-title">Traced Hub <span class="title-sub-accent">&bull; Offline Dice Audit</span></h1>
+            <p class="subtitle">Cryptographic Roll Ingestion, 6-Color Frequency Audit &amp; Statistical Analytics</p>
+          </div>
+        </div>
+
+        <div class="header-actions">
+          <a href="https://discord.gg/" target="_blank" rel="noopener noreferrer" class="btn btn-discord" id="discord-join-btn" title="Join Traced Hub Discord Server">
+            <svg class="discord-icon" viewBox="0 0 24 24" width="20" height="20">
+              <path fill="currentColor" d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.894a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+            </svg>
+            <span>Join Discord</span>
+          </a>
+        </div>
+      </div>
+    </header>
+
+    <!-- Search / Session Ingestion Bar -->
+    <section class="card search-card" id="search-section">
+      <div class="search-header">
+        <label for="session-input" class="search-label">
+          <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
+          Enter Session ID or Round ID
+        </label>
+        <span class="secure-badge" title="Cryptographically Audited Session Ingestion">
+          <span class="status-dot"></span> Secure Ingestion
+        </span>
+      </div>
+
+      <form id="verify-form" class="search-form" autocomplete="off">
+        <div class="input-wrapper">
+          <input 
+            type="text" 
+            id="session-input" 
+            placeholder="e.g. session-78291, 10492, or 'demo' for instant test..." 
+            spellcheck="false"
+            required
+          />
+          <button type="button" id="clear-btn" class="clear-input-btn" title="Clear input">&times;</button>
+        </div>
+        <button type="submit" id="verify-btn" class="btn btn-primary">
+          <span class="btn-text">Verify &amp; Load</span>
+          <span class="btn-spinner" id="btn-spinner"></span>
+        </button>
+      </form>
+
+      <div class="quick-seeds">
+        <span class="quick-label">Quick Seeds:</span>
+        <button type="button" class="seed-pill" data-session="demo">Seed: Demo Audit (36 Rolls)</button>
+        <button type="button" class="seed-pill" data-session="session-live-01">Seed: session-live-01</button>
+        <button type="button" class="seed-pill" data-session="round-alpha-99">Seed: round-alpha-99</button>
+      </div>
+
+      <!-- Alert Notification Banner -->
+      <div id="alert-banner" class="alert-banner hidden">
+        <div class="alert-icon" id="alert-icon">⚠️</div>
+        <div class="alert-content">
+          <div class="alert-title" id="alert-title">Notification</div>
+          <div class="alert-message" id="alert-message"></div>
+        </div>
+        <button type="button" class="alert-close" id="alert-close">&times;</button>
+      </div>
+    </section>
+
+    <!-- Empty State Placeholder (when no session is loaded) -->
+    <section class="card empty-state" id="empty-state">
+      <div class="empty-icon">🎲</div>
+      <h3>No Session Loaded</h3>
+      <p>Enter an Offline Dice <strong>Session ID</strong> or click <strong>Seed: Demo Audit</strong> above to fetch the raw roll records directly from Firebase and run the statistical audit.</p>
+    </section>
+
+    <!-- Dashboard Content Area (Dynamically displayed when session loaded) -->
+    <main id="dashboard-content" class="dashboard-content hidden">
+
+      <!-- High-Level Overview Stats Cards -->
+      <section class="overview-grid">
+        <div class="stat-card">
+          <div class="stat-meta">
+            <span class="stat-label">SESSION IDENTIFIER</span>
+            <span class="stat-icon">🔑</span>
+          </div>
+          <div class="stat-value mono" id="stat-session-id">---</div>
+          <div class="stat-foot" id="stat-session-source">Firebase RTDB</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-meta">
+            <span class="stat-label">TOTAL ROLLS AUDITED</span>
+            <span class="stat-icon">🔄</span>
+          </div>
+          <div class="stat-value" id="stat-total-rolls">0</div>
+          <div class="stat-foot">Discrete roll events</div>
+        </div>
+
+        <div class="stat-card">
+          <div class="stat-meta">
+            <span class="stat-label">INDIVIDUAL DICE ANALYZED</span>
+            <span class="stat-icon">🎲</span>
+          </div>
+          <div class="stat-value" id="stat-total-dice">0</div>
+          <div class="stat-foot" id="stat-dice-per-roll">Average dice/roll: --</div>
+        </div>
+
+        <div class="stat-card highlight-card">
+          <div class="stat-meta">
+            <span class="stat-label">INTEGRITY &amp; FAIRNESS</span>
+            <span class="stat-icon">🛡️</span>
+          </div>
+          <div class="stat-value fair-tag" id="stat-fairness-tag">VERIFIED FAIR</div>
+          <div class="stat-foot" id="stat-rigged-info">Zero manipulation flags detected</div>
+        </div>
+      </section>
+
+      <!-- Suggested Pick Feature Section -->
+      <section class="card suggestion-card" id="suggestion-section">
+        <div class="suggestion-header">
+          <div>
+            <h2 class="card-title">
+              <span class="accent-dot"></span> Next Round Analytical Forecast
+            </h2>
+            <p class="card-desc">Evaluates session frequency deviations, streaks, and probabilistic regression toward the mean.</p>
+          </div>
+          <button type="button" id="get-pick-btn" class="btn btn-action">
+            <span class="btn-icon">⚡</span> Get Suggested Pick
+          </button>
+        </div>
+
+        <!-- Pick Reveal Box -->
+        <div id="pick-result-container" class="pick-result-box">
+          <div class="pick-idle" id="pick-idle-message">
+            Click <strong>"Get Suggested Pick"</strong> above to compute frequency trends for the upcoming roll.
+          </div>
+
+          <div class="pick-active hidden" id="pick-active-display">
+            <div class="pick-showcase">
+              <div class="color-orb-preview" id="pick-orb">
+                <div class="orb-inner" id="pick-orb-inner"></div>
+              </div>
+              <div class="pick-details">
+                <div class="pick-badge-row">
+                  <span class="badge badge-rec">SUGGESTED COLOR</span>
+                  <span class="badge badge-strategy" id="pick-strategy-tag">COLD REVERSION</span>
+                </div>
+                <h3 class="pick-color-name" id="pick-color-title">Color</h3>
+                <p class="pick-rationale" id="pick-color-desc">Rationale breakdown...</p>
+              </div>
+            </div>
+
+            <!-- MANDATORY INLINE MATHEMATICAL DISCLAIMER BADGE -->
+            <div class="disclaimer-badge">
+              <div class="disclaimer-icon">⚖️</div>
+              <div class="disclaimer-text">
+                <strong>Mathematical Transparency:</strong> Offline Dice uses CSPRNG. Every color maintains an independent 1/6 (16.66%) probability on every roll.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Official 6-Color Frequency & Distribution Audit -->
+      <section class="card audit-card">
+        <div class="section-title-row">
+          <div>
+            <h2 class="card-title">
+              <span class="accent-dot"></span> Color Frequency &amp; Statistical Breakdown
+            </h2>
+            <p class="card-desc">Comparison against uniform CSPRNG baseline (16.67% expected per color)</p>
+          </div>
+          <div class="legend-badge">
+            Theoretical baseline: <strong>16.67% (1/6)</strong>
+          </div>
+        </div>
+
+        <div class="color-grid" id="color-stats-grid">
+          <!-- Dynamically populated 6 colors: Red, Orange, Yellow, Green, Blue, Purple -->
+        </div>
+      </section>
+
+      <!-- Reverse Chronological Roll History (Last 15 Rolls) -->
+      <section class="card history-card">
+        <div class="section-title-row">
+          <div>
+            <h2 class="card-title">
+              <span class="accent-dot"></span> Roll Audit History
+            </h2>
+            <p class="card-desc">Showing the latest 15 rolls in reverse chronological order</p>
+          </div>
+          <div class="history-meta" id="history-count-tag">
+            Showing latest 15 rolls
+          </div>
+        </div>
+
+        <div class="table-responsive">
+          <table class="audit-table">
+            <thead>
+              <tr>
+                <th style="width: 90px;">Roll #</th>
+                <th style="width: 220px;">Verification Hash</th>
+                <th>Dice Outcomes</th>
+                <th style="width: 170px;">Timestamp</th>
+                <th style="width: 110px; text-align: center;">Integrity</th>
+              </tr>
+            </thead>
+            <tbody id="rolls-table-body">
+              <!-- Dynamically populated rows -->
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <span>Traced Hub &bull; Offline Dice Cryptographic Audit &amp; Verifier Engine</span>
+        <span class="footer-sub">&copy; 2026 Traced Hub &bull; CSPRNG Integrity &amp; Analytics</span>
+      </div>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
