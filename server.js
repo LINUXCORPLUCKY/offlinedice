@@ -54,9 +54,19 @@ function normalizeColor(name, hex) {
   return name || 'Unknown';
 }
 
+app.get('/', (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
 // Verification & Audit API endpoint
-app.get('/api/verify/:sessionId', async (req, res) => {
-  const { sessionId } = req.params;
+app.get([
+  '/api/verify/:sessionId',
+  '/public/api/verify/:sessionId',
+  '/api/verify',
+  '/public/api/verify'
+], async (req, res) => {
+  const rawSessionId = req.params.sessionId || req.query.sessionId || req.query.id;
+  const sessionId = rawSessionId;
 
   // Input sanitization: alphanumeric, hyphens, and underscores only
   const sanitizedRegex = /^[a-zA-Z0-9_-]+$/;
