@@ -168,7 +168,12 @@ module.exports = async (req, res) => {
     return res.status(200).end();
   }
 
-  const rawSessionId = req.query.sessionId || req.query.id;
+  let rawSessionId = req.query.sessionId || req.query.id;
+  if (!rawSessionId && req.url) {
+    const cleanPath = req.url.split('?')[0].replace(/\/+$/, '');
+    rawSessionId = cleanPath.split('/').pop();
+  }
+
   if (!rawSessionId) {
     return res.status(400).json({
       success: false,

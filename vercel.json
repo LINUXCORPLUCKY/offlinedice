@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/verify/:sessionId",
-      "destination": "/api/verify/[sessionId].js"
+      "destination": "/api/verify/[sessionId].js?sessionId=:sessionId"
     }
   ]
 }
