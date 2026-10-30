@@ -16,8 +16,12 @@ function obfuscateFile(srcPath, distPath, label) {
   console.log(`[*] Obfuscating ${label}...`);
   let sourceCode = fs.readFileSync(srcPath, 'utf8');
 
-  // Strip standalone export statements from TypeScript emit for browser runtime
+  // Strip standalone export statements and export modifiers from TypeScript emit for browser runtime
   sourceCode = sourceCode.replace(/export\s*\{\s*\};?/g, '');
+  sourceCode = sourceCode.replace(/export\s+default\s+/g, '');
+  sourceCode = sourceCode.replace(/export\s+(async\s+)?function/g, '$1function');
+  sourceCode = sourceCode.replace(/export\s+(const|let|var|class)/g, '$1');
+  sourceCode = sourceCode.replace(/export\s*\{[^}]*\};?/g, '');
 
   const obfuscationResult = JavaScriptObfuscator.obfuscate(sourceCode, {
     compact: true,

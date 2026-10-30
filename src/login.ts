@@ -4,36 +4,26 @@ const AUTH_STORAGE_KEY = 'headless_dice_session_key';
 const ROOM_STORAGE_KEY = 'headless_user_room_id';
 const AUTH_DATA_KEY = 'headless_auth_data';
 
-// DOM Elements
-const gateForm = document.getElementById('gate-form') as HTMLFormElement | null;
-const gateKeyInput = document.getElementById('gate-key-input') as HTMLInputElement | null;
-const gateSubmitBtn = document.getElementById('gate-submit-btn') as HTMLButtonElement | null;
-const gateSpinner = document.getElementById('gate-spinner') as HTMLElement | null;
-const gateAlert = document.getElementById('gate-alert') as HTMLElement | null;
-const gateAlertMsg = document.getElementById('gate-alert-msg') as HTMLElement | null;
-const gateClearBtn = document.getElementById('gate-clear-btn') as HTMLElement | null;
-const gateHwidDisplay = document.getElementById('gate-hwid-display') as HTMLElement | null;
-
-// Video Modal
-const btnHowToUse = document.getElementById('btn-how-to-use') as HTMLButtonElement | null;
-const videoTutorialModal = document.getElementById('video-tutorial-modal') as HTMLElement | null;
-const btnCloseVideo = document.getElementById('btn-close-video') as HTMLButtonElement | null;
-const btnGotIt = document.getElementById('btn-got-it') as HTMLButtonElement | null;
-const tutorialVideoPlayer = document.getElementById('tutorial-video-player') as HTMLVideoElement | null;
-
-// Maintenance Elements
-const maintenanceOverlay = document.getElementById('maintenance-overlay') as HTMLElement | null;
-const maintDesc = document.getElementById('maint-desc') as HTMLElement | null;
-const maintHrs = document.getElementById('maint-hrs') as HTMLElement | null;
-const maintMins = document.getElementById('maint-mins') as HTMLElement | null;
-const maintSecs = document.getElementById('maint-secs') as HTMLElement | null;
-const maintProgressBar = document.getElementById('maint-progress-bar') as HTMLElement | null;
-let maintenanceTimerInterval: any = null;
-
 // Hardware ID Fingerprint Generator
-export function getDeviceHWID(): string {
-  let cached = localStorage.getItem('headless_dice_hwid');
-  if (cached && /^HD-HWID-[A-F0-9]{4}-[A-F0-9]{4}$/.test(cached)) return cached;
+function safeStorageGet(key: string): string | null {
+  try {
+    return localStorage.getItem(key);
+  } catch (e) {
+    return null;
+  }
+}
+
+function safeStorageSet(key: string, val: string): void {
+  try {
+    localStorage.setItem(key, val);
+  } catch (e) {}
+}
+
+function getDeviceHWID(): string {
+  let cached = safeStorageGet('headless_dice_hwid');
+  if (cached && /^HD-HWID-[A-F0-9]{4}-[A-F0-9]{4}$/.test(cached)) {
+    return cached;
+  }
   try {
     const canvas = document.createElement('canvas');
     const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
@@ -43,7 +33,7 @@ export function getDeviceHWID(): string {
       gpu = debugInfo ? (gl as any).getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) : '';
     }
     const fp = [
-      navigator.userAgent,
+      navigator.userAgent || '',
       navigator.hardwareConcurrency || '',
       screen.width + 'x' + screen.height + 'x' + screen.colorDepth,
       Intl.DateTimeFormat().resolvedOptions().timeZone || '',
@@ -57,97 +47,108 @@ export function getDeviceHWID(): string {
     }
     const hex = Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
     const hwid = `HD-HWID-${hex.slice(0, 4)}-${hex.slice(4, 8)}`;
-    localStorage.setItem('headless_dice_hwid', hwid);
+    safeStorageSet('headless_dice_hwid', hwid);
     return hwid;
   } catch (e) {
     const fallback = 'HD-HWID-' + Math.random().toString(36).substring(2, 10).toUpperCase();
-    localStorage.setItem('headless_dice_hwid', fallback);
+    safeStorageSet('headless_dice_hwid', fallback);
     return fallback;
   }
 }
 
-// Initialize Login Page
-document.addEventListener('DOMContentLoaded', () => {
-  initHWIDDisplay();
-  setupLoginForm();
-  setupVideoModal();
-  initMaintenanceCheck();
-  autoLoginIfSessionExists();
-});
+// Make HWID accessible globally
+(window as any).getDeviceHWID = getDeviceHWID;
+
+let maintenanceTimerInterval: any = null;
 
 function initHWIDDisplay(): void {
-  const hwid = getDeviceHWID();
+  const gateHwidDisplay = document.getElementById('gate-hwid-display');
   if (gateHwidDisplay) {
-    gateHwidDisplay.textContent = hwid;
-  }
-}
-
-async function autoLoginIfSessionExists(): Promise<void> {
-  const savedKey = sessionStorage.getItem(AUTH_STORAGE_KEY) || localStorage.getItem(AUTH_STORAGE_KEY);
-  if (!savedKey) return;
-
-  const hwid = getDeviceHWID();
-  try {
-    const res = await fetch(`/api/auth?action=verify&key=${encodeURIComponent(savedKey)}&hwid=${encodeURIComponent(hwid)}`);
-    const data: AuthState = await res.json();
-    if (res.ok && data.success && data.valid) {
-      storeSessionAndRedirect(data);
-    } else {
-      sessionStorage.removeItem(AUTH_STORAGE_KEY);
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-      if (gateAlert && gateAlertMsg) {
-        gateAlert.classList.remove('hidden');
-        gateAlertMsg.textContent = data.error || 'Previous session expired. Please enter your key.';
-      }
+    try {
+      const hwid = getDeviceHWID();
+      gateHwidDisplay.textContent = hwid;
+    } catch (e) {
+      gateHwidDisplay.textContent = 'HD-HWID-ONLINE';
     }
-  } catch (err) {
-    // Keep user on login form
   }
 }
 
 function setupLoginForm(): void {
+  const gateForm = document.getElementById('gate-form') as HTMLFormElement | null;
+  const gateKeyInput = document.getElementById('gate-key-input') as HTMLInputElement | null;
+  const gateSubmitBtn = document.getElementById('gate-submit-btn') as HTMLButtonElement | null;
+  const gateSpinner = document.getElementById('gate-spinner') as HTMLElement | null;
+  const gateAlert = document.getElementById('gate-alert') as HTMLElement | null;
+  const gateAlertMsg = document.getElementById('gate-alert-msg') as HTMLElement | null;
+  const gateClearBtn = document.getElementById('gate-clear-btn') as HTMLElement | null;
+
   if (gateKeyInput && gateClearBtn) {
     gateKeyInput.addEventListener('input', () => {
       gateClearBtn.style.display = gateKeyInput.value ? 'block' : 'none';
     });
 
-    gateClearBtn.addEventListener('click', () => {
+    gateClearBtn.addEventListener('click', (e) => {
+      e.preventDefault();
       gateKeyInput.value = '';
       gateClearBtn.style.display = 'none';
       gateKeyInput.focus();
     });
   }
 
-  if (gateForm) {
-    gateForm.addEventListener('submit', async (e: Event) => {
+  const handleLoginSubmit = async (e?: Event) => {
+    if (e) {
       e.preventDefault();
-      const inputVal = (gateKeyInput?.value || '').trim();
-      if (!inputVal) return;
+      e.stopPropagation();
+    }
 
-      if (gateSubmitBtn) gateSubmitBtn.disabled = true;
-      if (gateSpinner) gateSpinner.style.display = 'inline-block';
-      if (gateAlert) gateAlert.classList.add('hidden');
+    const inputVal = (gateKeyInput?.value || '').trim();
+    if (!inputVal) {
+      showLoginError('Please enter your license key.');
+      gateKeyInput?.focus();
+      return;
+    }
 
-      const hwid = getDeviceHWID();
+    if (gateSubmitBtn) {
+      gateSubmitBtn.disabled = true;
+      gateSubmitBtn.style.opacity = '0.7';
+    }
+    if (gateSpinner) gateSpinner.style.display = 'inline-block';
+    if (gateAlert) gateAlert.classList.add('hidden');
 
-      try {
-        const res = await fetch('/api/auth', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ action: 'verify', key: inputVal, hwid })
-        });
-        const data: AuthState = await res.json();
+    const hwid = getDeviceHWID();
 
-        if (res.ok && data.success && data.valid) {
-          storeSessionAndRedirect(data);
-        } else {
-          showLoginError(data.error || 'Invalid license key. Check for typos or acquire a key in Discord.');
-        }
-      } catch (err) {
-        showLoginError('Network connection error. Please verify your connection and try again.');
-      } finally {
-        if (gateSubmitBtn) gateSubmitBtn.disabled = false;
-        if (gateSpinner) gateSpinner.style.display = 'none';
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'verify', key: inputVal, hwid })
+      });
+      const data: AuthState = await res.json();
+
+      if (res.ok && data.success && data.valid) {
+        storeSessionAndRedirect(data);
+      } else {
+        showLoginError(data.error || 'Invalid license key. Check for typos or acquire a key in Discord.');
+      }
+    } catch (err) {
+      showLoginError('Network connection error. Please verify your connection and try again.');
+    } finally {
+      if (gateSubmitBtn) {
+        gateSubmitBtn.disabled = false;
+        gateSubmitBtn.style.opacity = '1';
+      }
+      if (gateSpinner) gateSpinner.style.display = 'none';
+    }
+  };
+
+  if (gateForm) {
+    gateForm.addEventListener('submit', handleLoginSubmit);
+  }
+
+  if (gateSubmitBtn) {
+    gateSubmitBtn.addEventListener('click', (e) => {
+      if (!gateForm) {
+        handleLoginSubmit(e);
       }
     });
   }
@@ -155,23 +156,28 @@ function setupLoginForm(): void {
 
 function storeSessionAndRedirect(authData: AuthState): void {
   const roomId = authData.roomId || `ROOM-${authData.key.slice(0, 4)}-${authData.key.slice(-4)}`;
-  sessionStorage.setItem(AUTH_STORAGE_KEY, authData.key);
-  sessionStorage.setItem(ROOM_STORAGE_KEY, roomId);
-  sessionStorage.setItem(AUTH_DATA_KEY, JSON.stringify(authData));
-  localStorage.setItem(AUTH_STORAGE_KEY, authData.key);
+  try {
+    sessionStorage.setItem(AUTH_STORAGE_KEY, authData.key);
+    sessionStorage.setItem(ROOM_STORAGE_KEY, roomId);
+    sessionStorage.setItem(AUTH_DATA_KEY, JSON.stringify(authData));
+    localStorage.setItem(AUTH_STORAGE_KEY, authData.key);
+  } catch (e) {}
 
+  const gateSubmitBtn = document.getElementById('gate-submit-btn') as HTMLButtonElement | null;
   if (gateSubmitBtn) {
-    gateSubmitBtn.textContent = '✓ Access Granted! Entering Room...';
+    gateSubmitBtn.innerHTML = '<span>&#10003; Access Granted! Entering Room...</span>';
     gateSubmitBtn.style.background = 'linear-gradient(135deg, #00e676, #00b0ff)';
   }
 
   // Seamless transition to dedicated room
   setTimeout(() => {
     window.location.href = '/room.html';
-  }, 400);
+  }, 350);
 }
 
 function showLoginError(msg: string): void {
+  const gateAlert = document.getElementById('gate-alert');
+  const gateAlertMsg = document.getElementById('gate-alert-msg');
   if (gateAlert && gateAlertMsg) {
     gateAlert.classList.remove('hidden');
     gateAlertMsg.textContent = msg;
@@ -179,6 +185,12 @@ function showLoginError(msg: string): void {
 }
 
 function setupVideoModal(): void {
+  const btnHowToUse = document.getElementById('btn-how-to-use');
+  const videoTutorialModal = document.getElementById('video-tutorial-modal');
+  const btnCloseVideo = document.getElementById('btn-close-video');
+  const btnGotIt = document.getElementById('btn-got-it');
+  const tutorialVideoPlayer = document.getElementById('tutorial-video-player') as HTMLVideoElement | null;
+
   const openVideo = (): void => {
     if (videoTutorialModal) {
       videoTutorialModal.classList.remove('hidden');
@@ -208,6 +220,30 @@ function setupVideoModal(): void {
   }
 }
 
+async function autoLoginIfSessionExists(): Promise<void> {
+  let savedKey: string | null = null;
+  try {
+    savedKey = sessionStorage.getItem(AUTH_STORAGE_KEY) || localStorage.getItem(AUTH_STORAGE_KEY);
+  } catch (e) {}
+  if (!savedKey) return;
+
+  const hwid = getDeviceHWID();
+  try {
+    const res = await fetch(`/api/auth?action=verify&key=${encodeURIComponent(savedKey)}&hwid=${encodeURIComponent(hwid)}`);
+    const data: AuthState = await res.json();
+    if (res.ok && data.success && data.valid) {
+      storeSessionAndRedirect(data);
+    } else {
+      try {
+        sessionStorage.removeItem(AUTH_STORAGE_KEY);
+        localStorage.removeItem(AUTH_STORAGE_KEY);
+      } catch (e) {}
+    }
+  } catch (err) {
+    // Keep user on login form
+  }
+}
+
 async function initMaintenanceCheck(): Promise<void> {
   try {
     const res = await fetch('/api/auth?action=get_maintenance');
@@ -219,6 +255,13 @@ async function initMaintenanceCheck(): Promise<void> {
 }
 
 function renderMaintenanceOverlay(maint: MaintenanceData): void {
+  const maintenanceOverlay = document.getElementById('maintenance-overlay');
+  const maintDesc = document.getElementById('maint-desc');
+  const maintHrs = document.getElementById('maint-hrs');
+  const maintMins = document.getElementById('maint-mins');
+  const maintSecs = document.getElementById('maint-secs');
+  const maintProgressBar = document.getElementById('maint-progress-bar');
+
   if (!maintenanceOverlay) return;
   maintenanceOverlay.classList.remove('hidden');
 
@@ -259,3 +302,17 @@ function renderMaintenanceOverlay(maint: MaintenanceData): void {
   maintenanceTimerInterval = setInterval(updateTimer, 1000);
 }
 
+// Master Initialization Router (Handles both immediate execution and late DOM events)
+function initLoginPage(): void {
+  initHWIDDisplay();
+  setupLoginForm();
+  setupVideoModal();
+  initMaintenanceCheck();
+  autoLoginIfSessionExists();
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initLoginPage);
+} else {
+  initLoginPage();
+}

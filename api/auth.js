@@ -174,8 +174,8 @@ module.exports = async (req, res) => {
         });
       }
 
-      // HWID Device Lock
-      const isHwidDisabled = record.hwidLock === false || record.hwidDisabled === true;
+      // HWID Device Lock (Master Owners are exempt from single-hardware lockouts)
+      const isHwidDisabled = isMaster || record.role === 'owner' || record.hwidLock === false || record.hwidDisabled === true;
 
       if (!isHwidDisabled && clientHwid) {
         if (record.hwid) {

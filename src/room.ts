@@ -131,7 +131,7 @@ function getDeviceHWID(): string {
 // ---------------------------------------------------------------------------
 // INITIALIZATION & STRICT ROOM GUARD
 // ---------------------------------------------------------------------------
-document.addEventListener('DOMContentLoaded', async () => {
+async function initRoomPage(): Promise<void> {
   const activeKey = sessionStorage.getItem(AUTH_STORAGE_KEY) || localStorage.getItem(AUTH_STORAGE_KEY);
   if (!activeKey) {
     redirectToLogin('Authentication required. Please enter your license key.');
@@ -162,7 +162,13 @@ document.addEventListener('DOMContentLoaded', async () => {
   } catch (err) {
     redirectToLogin('Network error connecting to security gateway.');
   }
-});
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initRoomPage);
+} else {
+  initRoomPage();
+}
 
 function redirectToLogin(msg?: string): void {
   sessionStorage.removeItem(AUTH_STORAGE_KEY);
