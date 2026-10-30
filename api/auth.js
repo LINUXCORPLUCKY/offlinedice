@@ -1,7 +1,54 @@
 const axios = require('axios');
+const crypto = require('crypto');
 
 const FIREBASE_BASE_URL = 'https://headlessdice-default-rtdb.asia-southeast1.firebasedatabase.app';
 const MASTER_OWNER_KEYS = ['linuxdevpy6767'];
+const MASTER_OWNER_PIN = '6767-MASTER-SECURE-ALPHA';
+
+// Strong Server Cipher Key for AES-256-GCM Database Encryption
+const SERVER_SECRET_SALT = 'e9c8a1b2d3f47560a9b8c7d6e5f4a3b210293847561029384756a1b2c3d4e5f6';
+const CIPHER_KEY = crypto.createHash('sha256').update(SERVER_SECRET_SALT).digest();
+
+// AES-256-GCM Database Encryption Helpers
+function encryptRecord(obj) {
+  if (!obj || typeof obj !== 'object') return obj;
+  try {
+    const iv = crypto.randomBytes(12);
+    const cipher = crypto.createCipheriv('aes-256-gcm', CIPHER_KEY, iv);
+    const jsonStr = JSON.stringify(obj);
+    let enc = cipher.update(jsonStr, 'utf8', 'hex');
+    enc += cipher.final('hex');
+    const tag = cipher.getAuthTag().toString('hex');
+    return {
+      _enc: true,
+      iv: iv.toString('hex'),
+      tag,
+      data: enc,
+      updatedAt: Date.now()
+    };
+  } catch (e) {
+    console.error('[Encryption Error]:', e.message);
+    return obj;
+  }
+}
+
+function decryptRecord(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+  // If not encrypted, return as-is (for legacy data)
+  if (!payload._enc || !payload.iv || !payload.tag || !payload.data) {
+    return payload;
+  }
+  try {
+    const decipher = crypto.createDecipheriv('aes-256-gcm', CIPHER_KEY, Buffer.from(payload.iv, 'hex'));
+    decipher.setAuthTag(Buffer.from(payload.tag, 'hex'));
+    let dec = decipher.update(payload.data, 'hex', 'utf8');
+    dec += decipher.final('utf8');
+    return JSON.parse(dec);
+  } catch (err) {
+    console.warn('[Decryption Alert]: Failed to decrypt key record. Data may have been tampered with.');
+    return null;
+  }
+}
 
 // Duration definitions in milliseconds
 const DURATION_MAP = {
@@ -41,10 +88,21 @@ function generateRandomKey(prefix = 'HD') {
   return `${prefix}-${segment(4)}-${segment(4)}-${segment(4)}`;
 }
 
-// Verify caller permission helper
+// Security Check: Verify Master Owner PIN
+function verifyOwnerPin(req, body, query) {
+  const pinFromHeader = (req.headers && req.headers['x-owner-pin']) || '';
+  const pinFromAuth = (req.headers && req.headers.authorization && req.headers.authorization.startsWith('Bearer PIN_'))
+    ? req.headers.authorization.replace('Bearer PIN_', '')
+    : '';
+  const pinInput = (pinFromHeader || pinFromAuth || body.ownerPin || query.ownerPin || '').trim();
+  return pinInput === MASTER_OWNER_PIN;
+}
+
+// Verify caller permission helper with strict owner immunity
 async function verifyCallerRole(authKey) {
   if (!authKey) return null;
   const cleanKey = String(authKey).trim();
+  // ONLY hardcoded master keys can EVER have 'owner' role
   if (MASTER_OWNER_KEYS.includes(cleanKey)) {
     return 'owner';
   }
@@ -52,9 +110,16 @@ async function verifyCallerRole(authKey) {
   try {
     const keyId = toSafeKeyId(cleanKey);
     const resp = await axios.get(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { timeout: 6000 });
-    const data = resp.data;
+    const rawData = resp.data;
+    if (!rawData) return null;
+    const data = decryptRecord(rawData);
     if (!data || data.status === 'revoked') return null;
     if (data.expiresAt && Date.now() > data.expiresAt) return null;
+
+    // FORTRESS SECURITY: Database keys can NEVER be owner under any circumstance
+    if (data.role === 'owner') {
+      return 'user';
+    }
     return data.role || 'user';
   } catch (err) {
     return null;
@@ -90,7 +155,7 @@ async function getAdminPermissions() {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Owner-Pin');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -125,9 +190,10 @@ module.exports = async (req, res) => {
       } catch (e) {
         resp = { data: null };
       }
-      let record = resp.data;
+      let rawData = resp.data;
+      let record = decryptRecord(rawData);
 
-      // Master key seed if not present in Firebase yet
+      // Master key seed if not present in Firebase yet (always stored encrypted)
       if (isMaster && !record) {
         record = {
           key: keyInput,
@@ -136,12 +202,12 @@ module.exports = async (req, res) => {
           createdAt: Date.now(),
           expiresAt: null,
           status: 'active',
-          hwid: null,
-          hwidBoundAt: null,
+          hwid: clientHwid || null,
+          hwidBoundAt: clientHwid ? Date.now() : null,
           label: 'Sole Master Owner Authority (Private - Single Device HWID)',
           createdBy: 'system'
         };
-        await axios.put(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, record, { timeout: 6000 }).catch(() => {});
+        await axios.put(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, encryptRecord(record), { timeout: 6000 }).catch(() => {});
       }
 
       if (!record) {
@@ -162,7 +228,8 @@ module.exports = async (req, res) => {
 
       // Check Expiration (Master Key never expires)
       if (!isMaster && record.expiresAt && Date.now() > record.expiresAt) {
-        axios.patch(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { status: 'expired' }).catch(() => {});
+        record.status = 'expired';
+        axios.put(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, encryptRecord(record)).catch(() => {});
         return res.status(403).json({
           success: false,
           valid: false,
@@ -170,13 +237,11 @@ module.exports = async (req, res) => {
         });
       }
 
-      // 3. HWID Lock Validation & Auto-Binding (Strictly locks master key linuxdevpy6767 to 1 device as well!)
-      // If hwidLock is explicitly disabled (e.g. Free public key), bypass HWID device lock completely
+      // HWID Device Lock
       const isHwidDisabled = record.hwidLock === false || record.hwidDisabled === true;
 
       if (!isHwidDisabled && clientHwid) {
         if (record.hwid) {
-          // Already bound: verify match
           if (record.hwid !== clientHwid) {
             return res.status(403).json({
               success: false,
@@ -187,11 +252,9 @@ module.exports = async (req, res) => {
           }
         } else {
           // First use on device: bind HWID permanently
-          await axios.patch(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, {
-            hwid: clientHwid,
-            hwidBoundAt: Date.now()
-          }, { timeout: 6000 });
           record.hwid = clientHwid;
+          record.hwidBoundAt = Date.now();
+          await axios.put(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, encryptRecord(record), { timeout: 6000 }).catch(() => {});
         }
       }
 
@@ -201,7 +264,6 @@ module.exports = async (req, res) => {
       // Auto-register dedicated user room metadata in Firebase RTDB
       axios.patch(`${FIREBASE_BASE_URL}/user_rooms/${userRoomId}/meta.json`, {
         roomId: userRoomId,
-        key: record.key,
         role: isMaster ? 'owner' : (record.role || 'user'),
         lastActive: Date.now(),
         isolationMode: 'DEDICATED_ISOLATED_ENVIRONMENT',
@@ -234,6 +296,10 @@ module.exports = async (req, res) => {
         return res.status(403).json({ success: false, error: 'Unauthorized.' });
       }
 
+      if (callerRole === 'owner' && !verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({ success: false, error: 'SECURITY LOCKDOWN: Master Owner Security PIN required.' });
+      }
+
       if (callerRole === 'admin') {
         const perms = await getAdminPermissions();
         if (!perms.canResetHWID) {
@@ -247,14 +313,21 @@ module.exports = async (req, res) => {
       }
 
       const keyId = toSafeKeyId(targetKey);
-      await axios.patch(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, {
-        hwid: null,
-        hwidBoundAt: null
-      }, { timeout: 6000 });
+      const resp = await axios.get(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { timeout: 6000 }).catch(() => ({ data: null }));
+      if (!resp.data) {
+        return res.status(404).json({ success: false, error: 'Key not found.' });
+      }
+
+      const record = decryptRecord(resp.data);
+      if (record) {
+        record.hwid = null;
+        record.hwidBoundAt = null;
+        await axios.put(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, encryptRecord(record), { timeout: 6000 });
+      }
 
       return res.json({
         success: true,
-        message: `HWID lock for key '${targetKey}' has been reset. The key is now unbound and will lock to the next device used.`
+        message: `HWID lock for key '${targetKey}' has been reset. The key will lock to the next device used.`
       });
     }
 
@@ -267,11 +340,28 @@ module.exports = async (req, res) => {
         return res.status(403).json({ success: false, error: 'Unauthorized: Owner or Admin key required.' });
       }
 
+      // SECURITY FORTRESS: Generating any key via Owner authority requires Master Owner PIN!
+      if (callerRole === 'owner' && !verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({
+          success: false,
+          error: 'SECURITY LOCKDOWN: Master Owner Security PIN is required to generate keys.'
+        });
+      }
+
       const roleToCreate = (body.role || 'user').trim().toLowerCase();
+      // NO ONE can create another 'owner' key!
+      if (roleToCreate === 'owner') {
+        return res.status(403).json({ success: false, error: 'Creation of Owner keys is permanently prohibited.' });
+      }
+
+      // Admin role creation strictly requires Owner PIN
+      if (roleToCreate === 'admin' && !verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({ success: false, error: 'Only Master Owner with Security PIN can generate Admin keys.' });
+      }
+
       const duration = (body.duration || '30days').trim().toLowerCase();
       const label = (body.label || '').trim();
       const customKey = (body.customKey || '').trim();
-      // HWID lock option: defaults to true, false disables hardware lock
       const hwidLock = body.hwidLock !== false && body.hwidLock !== 'false';
 
       // Permission checks for Admin
@@ -301,7 +391,6 @@ module.exports = async (req, res) => {
       let durationMs = null;
       let durationLabel = duration;
 
-      // Check if customDays was provided or duration is formatted as "Xdays" / "X"
       const customDaysNum = parseInt(body.customDays || body.days, 10);
       if (duration === 'custom' && customDaysNum > 0) {
         durationMs = customDaysNum * 24 * 60 * 60 * 1000;
@@ -325,7 +414,7 @@ module.exports = async (req, res) => {
 
       let finalKeyString = customKey;
       if (!finalKeyString) {
-        const prefix = roleToCreate === 'owner' ? 'HD-OWNER' : (roleToCreate === 'admin' ? 'HD-ADMIN' : (roleToCreate === 'free' ? 'HD-FREE' : 'HD-KEY'));
+        const prefix = roleToCreate === 'admin' ? 'HD-ADMIN' : (roleToCreate === 'free' ? 'HD-FREE' : 'HD-KEY');
         finalKeyString = generateRandomKey(prefix);
       }
 
@@ -340,21 +429,22 @@ module.exports = async (req, res) => {
         hwid: null,
         hwidBoundAt: null,
         hwidLock: Boolean(hwidLock),
-        label: label || `Created via ${callerRole.toUpperCase()} Panel`,
+        label: label || `Created via ${callerRole.toUpperCase()} Portal`,
         createdBy: callerRole
       };
 
-      await axios.put(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, newRecord, { timeout: 7000 });
+      // Encrypt before saving to Firebase RTDB
+      await axios.put(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, encryptRecord(newRecord), { timeout: 7000 });
 
       return res.json({
         success: true,
-        message: hwidLock ? 'Key generated successfully with HWID protection.' : 'Key generated with HWID lock disabled (multi-device allowed).',
+        message: hwidLock ? 'Key generated successfully with HWID protection.' : 'Key generated with HWID lock disabled.',
         key: newRecord
       });
     }
 
     // -------------------------------------------------------------
-    // ACTION: LIST KEYS (Owner & Admin)
+    // ACTION: LIST KEYS (Requires Master Owner PIN)
     // -------------------------------------------------------------
     if (action === 'list_keys') {
       const callerRole = await verifyCallerRole(authKey);
@@ -362,30 +452,44 @@ module.exports = async (req, res) => {
         return res.status(403).json({ success: false, error: 'Unauthorized: Owner or Admin key required.' });
       }
 
-      const resp = await axios.get(`${FIREBASE_BASE_URL}/keys.json`, { timeout: 7000 });
+      // SECURITY FORTRESS: Accessing the vault requires Master Owner PIN!
+      if (!verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({
+          success: false,
+          error: 'SECURITY LOCKDOWN: Master Owner Security PIN is required to access Keys Vault.'
+        });
+      }
+
+      const resp = await axios.get(`${FIREBASE_BASE_URL}/keys.json`, { timeout: 8000 });
       const rawData = resp.data || {};
 
-      let keyList = Object.values(rawData).map(k => {
+      let keyList = Object.entries(rawData).map(([kId, rawVal]) => {
+        const k = decryptRecord(rawVal);
+        if (!k || !k.key) return null;
+
         const isMaster = MASTER_OWNER_KEYS.includes(k.key);
         const isExpired = k.expiresAt && Date.now() > k.expiresAt;
         const currentStatus = k.status === 'revoked' ? 'revoked' : (isExpired ? 'expired' : k.status || 'active');
         const isHwidDisabled = k.hwidLock === false || k.hwidDisabled === true;
+
         return {
-          ...k,
+          id: kId,
+          key: k.key,
+          role: k.role || 'user',
+          duration: k.duration || 'custom',
+          createdAt: k.createdAt,
+          expiresAt: k.expiresAt,
           status: currentStatus,
           hwid: isHwidDisabled ? 'DISABLED' : (k.hwid || null),
           hwidLock: !isHwidDisabled,
+          label: k.label || '',
+          createdBy: k.createdBy || 'system',
           isMaster
         };
-      });
+      }).filter(Boolean);
 
-      // Completely hide Master Owner keys from the Key Vault table for all roles
-      keyList = keyList.filter(k => !k.isMaster && !MASTER_OWNER_KEYS.includes(k.key) && k.key !== 'linuxdevpy6767');
-
-      // If caller is admin, also hide any generated owner keys
-      if (callerRole === 'admin') {
-        keyList = keyList.filter(k => k.role !== 'owner');
-      }
+      // Hide Master Owner key from vault
+      keyList = keyList.filter(k => !k.isMaster && !MASTER_OWNER_KEYS.includes(k.key));
 
       // Sort newest first
       keyList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -407,11 +511,8 @@ module.exports = async (req, res) => {
         return res.status(403).json({ success: false, error: 'Unauthorized.' });
       }
 
-      if (callerRole === 'admin') {
-        const perms = await getAdminPermissions();
-        if (!perms.canRevokeKeys) {
-          return res.status(403).json({ success: false, error: 'Admin key revocation is disabled by Owner.' });
-        }
+      if (callerRole === 'owner' && !verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({ success: false, error: 'SECURITY LOCKDOWN: Master Owner Security PIN required.' });
       }
 
       const targetKey = (body.targetKey || query.targetKey || '').trim();
@@ -424,7 +525,12 @@ module.exports = async (req, res) => {
       }
 
       const keyId = toSafeKeyId(targetKey);
-      await axios.patch(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { status: 'revoked' }, { timeout: 6000 });
+      const resp = await axios.get(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { timeout: 6000 }).catch(() => ({ data: null }));
+      const record = decryptRecord(resp.data);
+      if (record) {
+        record.status = 'revoked';
+        await axios.put(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, encryptRecord(record), { timeout: 6000 });
+      }
 
       return res.json({ success: true, message: `Key '${targetKey}' revoked.` });
     }
@@ -436,6 +542,10 @@ module.exports = async (req, res) => {
       const callerRole = await verifyCallerRole(authKey);
       if (callerRole !== 'owner') {
         return res.status(403).json({ success: false, error: 'Only Owner can permanently delete keys.' });
+      }
+
+      if (!verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({ success: false, error: 'SECURITY LOCKDOWN: Master Owner Security PIN required.' });
       }
 
       const targetKey = (body.targetKey || query.targetKey || '').trim();
@@ -472,6 +582,10 @@ module.exports = async (req, res) => {
         return res.status(403).json({ success: false, error: 'Only Owner can change Admin permissions.' });
       }
 
+      if (!verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({ success: false, error: 'SECURITY LOCKDOWN: Master Owner Security PIN required.' });
+      }
+
       const newPerms = body.permissions || {};
       const cleanPerms = {
         canCreate1Day: Boolean(newPerms.canCreate1Day),
@@ -489,49 +603,37 @@ module.exports = async (req, res) => {
     }
 
     // -------------------------------------------------------------
-    // ACTION: RECORD VISIT (100% Anonymous Counter, No IP, No Device)
+    // ACTION: RECORD VISIT & PING ACTIVE
     // -------------------------------------------------------------
     if (action === 'record_visit') {
       const sessionId = (body.sessionId || query.sessionId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
-      
-      // Increment total visits counter atomically
       axios.patch(`${FIREBASE_BASE_URL}/stats.json`, {
         totalVisits: { '.sv': { 'increment': 1 } }
       }, { timeout: 5000 }).catch(() => {});
 
-      // Record active heartbeat timestamp
       if (sessionId) {
-        axios.put(`${FIREBASE_BASE_URL}/active_sessions/${sessionId}.json`, {
-          lastSeen: Date.now()
-        }, { timeout: 5000 }).catch(() => {});
+        axios.put(`${FIREBASE_BASE_URL}/active_sessions/${sessionId}.json`, { lastSeen: Date.now() }, { timeout: 5000 }).catch(() => {});
       }
-
       return res.json({ success: true });
     }
 
-    // -------------------------------------------------------------
-    // ACTION: PING ACTIVE (Anonymous Session Heartbeat)
-    // -------------------------------------------------------------
     if (action === 'ping_active') {
       const sessionId = (body.sessionId || query.sessionId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
       if (sessionId) {
-        axios.put(`${FIREBASE_BASE_URL}/active_sessions/${sessionId}.json`, {
-          lastSeen: Date.now()
-        }, { timeout: 5000 }).catch(() => {});
+        axios.put(`${FIREBASE_BASE_URL}/active_sessions/${sessionId}.json`, { lastSeen: Date.now() }, { timeout: 5000 }).catch(() => {});
       }
       return res.json({ success: true });
     }
 
     // -------------------------------------------------------------
-    // ACTION: GET USAGE STATS (Counters Only: Total Visits, Active Online, Active Keys)
+    // ACTION: GET USAGE STATS
     // -------------------------------------------------------------
     if (action === 'get_usage_stats') {
       const callerRole = await verifyCallerRole(authKey);
       if (!callerRole || (callerRole !== 'owner' && callerRole !== 'admin')) {
-        return res.status(403).json({ success: false, error: 'Unauthorized: Owner or Admin key required.' });
+        return res.status(403).json({ success: false, error: 'Unauthorized.' });
       }
 
-      // Query stats, active sessions, and keys in parallel
       const [statsResp, sessionsResp, keysResp] = await Promise.all([
         axios.get(`${FIREBASE_BASE_URL}/stats.json`, { timeout: 6000 }).catch(() => ({ data: {} })),
         axios.get(`${FIREBASE_BASE_URL}/active_sessions.json`, { timeout: 6000 }).catch(() => ({ data: {} })),
@@ -544,31 +646,18 @@ module.exports = async (req, res) => {
 
       const totalVisits = Number(statsData.totalVisits) || 0;
       const now = Date.now();
-      const activeWindow = 5 * 60 * 1000; // 5 minutes window for live active users
+      const activeWindow = 5 * 60 * 1000;
 
       let onlineNow = 0;
-      const staleSessionIds = [];
-
       for (const [id, s] of Object.entries(sessionsData)) {
-        if (s && s.lastSeen) {
-          if (now - s.lastSeen <= activeWindow) {
-            onlineNow++;
-          } else if (now - s.lastSeen > 30 * 60 * 1000) {
-            staleSessionIds.push(id);
-          }
+        if (s && s.lastSeen && now - s.lastSeen <= activeWindow) {
+          onlineNow++;
         }
       }
 
-      // Cleanup stale sessions asynchronously in background
-      if (staleSessionIds.length > 0) {
-        Promise.all(staleSessionIds.slice(0, 20).map(id =>
-          axios.delete(`${FIREBASE_BASE_URL}/active_sessions/${id}.json`).catch(() => {})
-        )).catch(() => {});
-      }
-
-      // Count active keys
       let activeKeys = 0;
-      for (const k of Object.values(keysData)) {
+      for (const rawVal of Object.values(keysData)) {
+        const k = decryptRecord(rawVal);
         if (k && k.status === 'active' && (!k.expiresAt || k.expiresAt > now)) {
           activeKeys++;
         }
@@ -577,13 +666,13 @@ module.exports = async (req, res) => {
       return res.json({
         success: true,
         totalVisits,
-        onlineNow: Math.max(1, onlineNow), // At least current active viewer
+        onlineNow: Math.max(1, onlineNow),
         activeKeys
       });
     }
 
     // -------------------------------------------------------------
-    // ACTION: LOG DICE PREDICTION (Player Activity Feed - No IP/Device)
+    // ACTION: LOG PREDICTION
     // -------------------------------------------------------------
     if (action === 'log_prediction') {
       const logEntry = {
@@ -604,42 +693,34 @@ module.exports = async (req, res) => {
     }
 
     // -------------------------------------------------------------
-    // ACTION: GET PREDICTION LOGS (Owner & Admin View)
+    // ACTION: GET PREDICTION LOGS
     // -------------------------------------------------------------
     if (action === 'get_prediction_logs') {
       const callerRole = await verifyCallerRole(authKey);
       if (!callerRole || (callerRole !== 'owner' && callerRole !== 'admin')) {
-        return res.status(403).json({ success: false, error: 'Unauthorized: Owner or Admin key required.' });
+        return res.status(403).json({ success: false, error: 'Unauthorized.' });
       }
 
       const resp = await axios.get(`${FIREBASE_BASE_URL}/prediction_logs.json`, { timeout: 7000 }).catch(() => ({ data: {} }));
       const raw = resp.data || {};
 
-      let logs = Object.entries(raw).map(([id, item]) => ({
-        id,
-        ...item
-      }));
-
-      // Sort newest first, keep last 100
+      let logs = Object.entries(raw).map(([id, item]) => ({ id, ...item }));
       logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
-      if (logs.length > 100) {
-        logs = logs.slice(0, 100);
-      }
+      if (logs.length > 100) logs = logs.slice(0, 100);
 
-      return res.json({
-        success: true,
-        total: logs.length,
-        logs
-      });
+      return res.json({ success: true, total: logs.length, logs });
     }
 
     // -------------------------------------------------------------
-    // ACTION: CLEAR PREDICTION LOGS (Owner Only)
+    // ACTION: CLEAR PREDICTION LOGS
     // -------------------------------------------------------------
     if (action === 'clear_prediction_logs') {
       const callerRole = await verifyCallerRole(authKey);
       if (callerRole !== 'owner') {
         return res.status(403).json({ success: false, error: 'Only Owner can clear prediction logs.' });
+      }
+      if (!verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({ success: false, error: 'SECURITY LOCKDOWN: Master Owner Security PIN required.' });
       }
 
       await axios.delete(`${FIREBASE_BASE_URL}/prediction_logs.json`, { timeout: 6000 });
@@ -647,7 +728,7 @@ module.exports = async (req, res) => {
     }
 
     // -------------------------------------------------------------
-    // ACTION: GET WEBSITE ANNOUNCEMENT (Public)
+    // ACTION: GET & SAVE WEBSITE ANNOUNCEMENT
     // -------------------------------------------------------------
     if (action === 'get_announcement') {
       try {
@@ -674,13 +755,13 @@ module.exports = async (req, res) => {
       }
     }
 
-    // -------------------------------------------------------------
-    // ACTION: SAVE WEBSITE ANNOUNCEMENT (Owner Only)
-    // -------------------------------------------------------------
     if (action === 'save_announcement') {
       const callerRole = await verifyCallerRole(authKey);
       if (callerRole !== 'owner') {
         return res.status(403).json({ success: false, error: 'Only Owner can publish announcements.' });
+      }
+      if (!verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({ success: false, error: 'SECURITY LOCKDOWN: Master Owner Security PIN required.' });
       }
 
       const title = (body.title || 'HEADLESS DICE ANNOUNCEMENT').trim().slice(0, 80);
@@ -692,26 +773,18 @@ module.exports = async (req, res) => {
         return res.status(400).json({ success: false, error: 'Announcement message cannot be empty.' });
       }
 
-      const announcementData = {
-        enabled,
-        title,
-        message,
-        type,
-        updatedAt: Date.now(),
-        updatedBy: 'owner'
-      };
-
+      const announcementData = { enabled, title, message, type, updatedAt: Date.now(), updatedBy: 'owner' };
       await axios.put(`${FIREBASE_BASE_URL}/announcement.json`, announcementData, { timeout: 6000 });
       return res.json({ success: true, message: 'Website announcement updated live.', announcement: announcementData });
     }
 
-    // -------------------------------------------------------------
-    // ACTION: CLEAR WEBSITE ANNOUNCEMENT (Owner Only)
-    // -------------------------------------------------------------
     if (action === 'delete_announcement') {
       const callerRole = await verifyCallerRole(authKey);
       if (callerRole !== 'owner') {
         return res.status(403).json({ success: false, error: 'Only Owner can delete announcements.' });
+      }
+      if (!verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({ success: false, error: 'SECURITY LOCKDOWN: Master Owner Security PIN required.' });
       }
 
       await axios.patch(`${FIREBASE_BASE_URL}/announcement.json`, { enabled: false, message: '' }, { timeout: 6000 });
@@ -719,16 +792,16 @@ module.exports = async (req, res) => {
     }
 
     // -------------------------------------------------------------
-    // ACTION: GET MAINTENANCE STATUS (Public)
+    // ACTION: GET & SET MAINTENANCE MODE
     // -------------------------------------------------------------
     if (action === 'get_maintenance') {
       try {
         const resp = await axios.get(`${FIREBASE_BASE_URL}/maintenance.json`, { timeout: 6000 });
         const m = resp.data || {
-          enabled: true,
+          enabled: false,
           title: 'SYSTEM UNDER MAINTENANCE',
-          headline: 'LINUX IS WORKING ON OFFLINE DICE BUG FIXING AND ADD ONLINE DICE FEATURES',
-          message: 'Headless Dice is temporarily undergoing critical infrastructure upgrades and algorithmic enhancements. Linux is actively fixing offline dice bugs and deploying new online dice features.',
+          headline: 'UPGRADE IN PROGRESS',
+          message: 'Headless Dice is undergoing scheduled enhancements.',
           durationMs: 3600000,
           endsAt: Date.now() + 3600000
         };
@@ -737,10 +810,10 @@ module.exports = async (req, res) => {
         return res.json({
           success: true,
           maintenance: {
-            enabled: true,
+            enabled: false,
             title: 'SYSTEM UNDER MAINTENANCE',
-            headline: 'LINUX IS WORKING ON OFFLINE DICE BUG FIXING AND ADD ONLINE DICE FEATURES',
-            message: 'Headless Dice is temporarily undergoing critical infrastructure upgrades and algorithmic enhancements. Linux is actively fixing offline dice bugs and deploying new online dice features.',
+            headline: 'UPGRADE IN PROGRESS',
+            message: 'Headless Dice is undergoing scheduled enhancements.',
             durationMs: 3600000,
             endsAt: Date.now() + 3600000
           }
@@ -748,13 +821,13 @@ module.exports = async (req, res) => {
       }
     }
 
-    // -------------------------------------------------------------
-    // ACTION: SET MAINTENANCE (Owner Only)
-    // -------------------------------------------------------------
     if (action === 'set_maintenance') {
       const callerRole = await verifyCallerRole(authKey);
       if (callerRole !== 'owner') {
         return res.status(403).json({ success: false, error: 'Only Owner can change maintenance state.' });
+      }
+      if (!verifyOwnerPin(req, body, query)) {
+        return res.status(403).json({ success: false, error: 'SECURITY LOCKDOWN: Master Owner Security PIN required.' });
       }
 
       const enabled = body.enabled !== undefined ? Boolean(body.enabled) : true;
@@ -765,8 +838,8 @@ module.exports = async (req, res) => {
       const maintenanceData = {
         enabled,
         title: (body.title || 'SYSTEM UNDER MAINTENANCE').trim(),
-        headline: (body.headline || 'LINUX IS WORKING ON OFFLINE DICE BUG FIXING AND ADD ONLINE DICE FEATURES').trim(),
-        message: (body.message || 'Headless Dice is temporarily undergoing critical infrastructure upgrades and algorithmic enhancements. Linux is actively fixing offline dice bugs and deploying new online dice features.').trim(),
+        headline: (body.headline || 'LINUX IS WORKING ON INFRASTRUCTURE ENHANCEMENTS').trim(),
+        message: (body.message || 'Headless Dice is undergoing scheduled enhancements.').trim(),
         startedAt: now,
         durationMs,
         endsAt: now + durationMs,
@@ -778,7 +851,7 @@ module.exports = async (req, res) => {
     }
 
     // -------------------------------------------------------------
-    // ACTION: GET USER ROOM STATUS & ISOLATION HEALTH
+    // ACTION: ROOM STATUS & RESET
     // -------------------------------------------------------------
     if (action === 'get_room_status') {
       const targetRoomId = (query.roomId || body.roomId || '').trim().replace(/[^a-zA-Z0-9_-]/g, '');
@@ -804,9 +877,6 @@ module.exports = async (req, res) => {
       }
     }
 
-    // -------------------------------------------------------------
-    // ACTION: RESET USER ROOM (Clear isolated roll buffer)
-    // -------------------------------------------------------------
     if (action === 'reset_room') {
       const targetRoomId = (query.roomId || body.roomId || '').trim().replace(/[^a-zA-Z0-9_-]/g, '');
       if (!targetRoomId) {
