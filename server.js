@@ -10,6 +10,10 @@ app.use(cors());
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
+// Authentication & Panel API
+const authHandler = require('./api/auth');
+app.all(['/api/auth', '/api/auth/*'], (req, res) => authHandler(req, res));
+
 // Standard official color definitions
 const OFFICIAL_COLORS = {
   Red: '#FF0000',

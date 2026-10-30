@@ -5,6 +5,10 @@
     {
       "source": "/api/verify/(.*)",
       "destination": "/api/verify.js?sessionId=$1"
+    },
+    {
+      "source": "/api/auth/(.*)",
+      "destination": "/api/auth.js"
     }
   ]
 }

@@ -40,6 +40,14 @@
         </div>
 
         <div class="header-actions">
+          <div id="auth-status-chip" class="auth-status-chip hidden">
+            <span class="auth-role-badge" id="auth-role-badge">KEY ACTIVE</span>
+            <button type="button" class="btn-change-key" id="btn-change-key" title="Change or exit key">Change Key</button>
+          </div>
+          <button type="button" id="open-panel-btn" class="btn btn-panel-trigger hidden">
+            <span class="panel-trigger-icon">👑</span>
+            <span id="panel-trigger-text">Owner Panel</span>
+          </button>
           <a href="https://discord.gg/TSensK6HEc" target="_blank" rel="noopener noreferrer" class="btn btn-discord" id="discord-join-btn" title="Join Headless Dice Discord Server">
             <svg class="discord-icon" viewBox="0 0 24 24" width="20" height="20">
               <path fill="currentColor" d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.894a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
@@ -265,6 +273,311 @@
         <span class="footer-sub">&copy; 2026 Headless Dice &bull; CSPRNG Integrity &amp; Analytics</span>
       </div>
     </footer>
+  </div>
+
+  <!-- Key Access Gate Overlay (Locked until valid key entered) -->
+  <div id="access-gate-modal" class="gate-overlay">
+    <div class="gate-card">
+      <div class="gate-glow"></div>
+      
+      <div class="gate-brand">
+        <div class="gate-logo-mark">
+          <img src="logo.jpg" alt="Headless Dice Logo" class="gate-logo-img">
+          <div class="pulse-ring"></div>
+        </div>
+        <h2 class="gate-title">HEADLESS DICE</h2>
+        <div class="gate-badges">
+          <span class="badge badge-brand">ORACLE ACCESS GATE</span>
+        </div>
+        <p class="gate-subtitle">Enter your license key below to unlock real-time roll verification &amp; analytical forecasts.</p>
+      </div>
+
+      <div class="gate-alert hidden" id="gate-alert">
+        <span class="gate-alert-icon" id="gate-alert-icon">⚠️</span>
+        <span class="gate-alert-msg" id="gate-alert-msg"></span>
+      </div>
+
+      <form id="gate-form" class="gate-form" autocomplete="off">
+        <div class="gate-input-wrapper">
+          <span class="gate-key-icon">🔑</span>
+          <input 
+            type="text" 
+            id="gate-key-input" 
+            class="gate-input" 
+            placeholder="Enter Key (e.g. HD-KEY-... or Owner Key)" 
+            spellcheck="false"
+            required 
+          />
+          <button type="button" id="gate-clear-btn" class="gate-clear-btn" title="Clear">&times;</button>
+        </div>
+
+        <button type="submit" id="gate-submit-btn" class="btn btn-primary gate-btn">
+          <span class="btn-text">⚡ Unlock Oracle</span>
+          <span class="btn-spinner" id="gate-spinner"></span>
+        </button>
+      </form>
+
+      <div class="gate-divider"><span>OR GET ACCESS</span></div>
+
+      <div class="gate-footer">
+        <p class="gate-hint">Need a 1-day, 30-day, or lifetime key? Get one on Discord:</p>
+        <a href="https://discord.gg/TSensK6HEc" target="_blank" rel="noopener noreferrer" class="btn btn-discord gate-discord-btn">
+          <svg class="discord-icon" viewBox="0 0 24 24" width="18" height="18">
+            <path fill="currentColor" d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128a10.2 10.2 0 0 0 .372-.292a.074.074 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.074.074 0 0 1 .078.01c.12.098.246.198.373.292a.077.077 0 0 1-.006.127a12.299 12.299 0 0 1-1.873.894a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+          </svg>
+          <span>Join Discord for Key</span>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Owner & Admin Management Panel Modal -->
+  <div id="management-panel-modal" class="panel-overlay hidden">
+    <div class="panel-container">
+      <!-- Panel Header -->
+      <div class="panel-header">
+        <div class="panel-title-block">
+          <div class="panel-badge-row">
+            <span class="badge badge-brand" id="panel-role-badge">OWNER AUTHORITY</span>
+            <span class="badge badge-status"><span class="status-dot"></span> SECURE FIREBASE RTDB</span>
+          </div>
+          <h2 class="panel-title" id="panel-main-title">Headless Dice Control Center</h2>
+        </div>
+        <button type="button" class="panel-close-btn" id="close-panel-btn" title="Close Panel">&times;</button>
+      </div>
+
+      <!-- Panel Navigation Tabs -->
+      <div class="panel-tabs">
+        <button type="button" class="tab-btn active" data-tab="tab-generator" id="btn-tab-generator">⚡ Key Generator</button>
+        <button type="button" class="tab-btn" data-tab="tab-keys" id="btn-tab-keys">📋 Keys Vault</button>
+        <button type="button" class="tab-btn" data-tab="tab-visitors" id="btn-tab-visitors">👥 Visitors &amp; Logs</button>
+        <button type="button" class="tab-btn" data-tab="tab-permissions" id="btn-tab-permissions">⚙️ Admin Perms</button>
+      </div>
+
+      <!-- Panel Alert Banner -->
+      <div id="panel-alert" class="panel-alert hidden">
+        <span id="panel-alert-text"></span>
+      </div>
+
+      <div class="panel-body">
+        <!-- TAB 1: Key Generator -->
+        <div class="tab-content" id="tab-generator">
+          <form id="gen-key-form" class="gen-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="gen-role">License Role</label>
+                <select id="gen-role" class="panel-select">
+                  <option value="user">User License</option>
+                  <option value="admin" id="opt-role-admin">Admin License</option>
+                  <option value="owner" id="opt-role-owner">Owner Authority</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="gen-duration">Subscription Duration</label>
+                <select id="gen-duration" class="panel-select">
+                  <option value="1day">1 Day (24 Hours)</option>
+                  <option value="30days" selected>30 Days (1 Month)</option>
+                  <option value="60days">60 Days (2 Months)</option>
+                  <option value="90days">90 Days (3 Months)</option>
+                  <option value="lifetime">Lifetime Access</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-row">
+              <div class="form-group">
+                <label for="gen-label">Buyer Note / Discord Handle</label>
+                <input type="text" id="gen-label" class="panel-input" placeholder="e.g. Discord: @LuckyDice or Customer #102">
+              </div>
+
+              <div class="form-group">
+                <label for="gen-custom-key">Custom Key Code (Optional)</label>
+                <input type="text" id="gen-custom-key" class="panel-input" placeholder="Leave blank for auto-generated code">
+              </div>
+            </div>
+
+            <button type="submit" id="gen-submit-btn" class="btn btn-primary gen-btn">
+              <span class="btn-text">⚡ Generate License Key</span>
+              <span class="btn-spinner" id="gen-spinner"></span>
+            </button>
+          </form>
+
+          <!-- Generated Key Result Showcase -->
+          <div id="gen-result-box" class="gen-result-box hidden">
+            <div class="result-header">
+              <span class="result-badge">NEW LICENSE CREATED</span>
+              <span class="result-meta" id="gen-res-meta">30 Days &bull; User</span>
+            </div>
+            <div class="key-display-row">
+              <input type="text" readonly id="gen-res-key" class="key-display-input">
+              <button type="button" id="copy-gen-key-btn" class="btn btn-action copy-btn">📋 Copy</button>
+            </div>
+            <div class="share-snippet-box">
+              <span class="snippet-label">Ready-to-Send Customer Snippet:</span>
+              <p id="gen-share-snippet" class="snippet-text"></p>
+            </div>
+          </div>
+        </div>
+
+        <!-- TAB 2: Keys Vault -->
+        <div class="tab-content hidden" id="tab-keys">
+          <div class="table-toolbar">
+            <input type="text" id="keys-search-input" class="search-vault-input" placeholder="Search by key, role, or label...">
+            <button type="button" id="refresh-keys-btn" class="btn btn-action btn-sm">🔄 Refresh</button>
+          </div>
+          <div class="table-responsive panel-table-wrap">
+            <table class="panel-table">
+              <thead>
+                <tr>
+                  <th>Key</th>
+                  <th>Role</th>
+                  <th>Duration</th>
+                  <th>Expires</th>
+                  <th>Status</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="keys-table-body">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 3: Visitors & Logs -->
+        <div class="tab-content hidden" id="tab-visitors">
+          <div class="visitor-metrics-grid">
+            <div class="v-metric-card">
+              <span class="v-metric-label">TOTAL VISITS</span>
+              <span class="v-metric-val" id="v-metric-total">0</span>
+            </div>
+            <div class="v-metric-card">
+              <span class="v-metric-label">VISITS (24H)</span>
+              <span class="v-metric-val" id="v-metric-24h">0</span>
+            </div>
+            <div class="v-metric-card">
+              <span class="v-metric-label">UNIQUE KEY HOLDERS</span>
+              <span class="v-metric-val" id="v-metric-unique">0</span>
+            </div>
+          </div>
+
+          <div class="table-toolbar">
+            <span class="toolbar-title">Visitor Activity Stream:</span>
+            <button type="button" id="refresh-visitors-btn" class="btn btn-action btn-sm">🔄 Refresh Logs</button>
+          </div>
+          <div class="table-responsive panel-table-wrap">
+            <table class="panel-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Key Used</th>
+                  <th>Role</th>
+                  <th>Browser / Device</th>
+                  <th>IP</th>
+                </tr>
+              </thead>
+              <tbody id="visitors-table-body">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- TAB 4: Admin Permissions (Owner Only) -->
+        <div class="tab-content hidden" id="tab-permissions">
+          <div class="perms-desc">
+            <h3>Admin Privileges Configuration</h3>
+            <p>Define exactly what Admin keys can see and produce when they open the Admin Panel.</p>
+          </div>
+
+          <form id="perms-form" class="perms-form">
+            <div class="perm-item">
+              <label class="perm-switch">
+                <input type="checkbox" id="perm-1day">
+                <span class="slider"></span>
+              </label>
+              <div class="perm-info">
+                <strong>Can Generate 1-Day Keys</strong>
+                <span>Allow admins to produce 24-hour trial user licenses.</span>
+              </div>
+            </div>
+
+            <div class="perm-item">
+              <label class="perm-switch">
+                <input type="checkbox" id="perm-30days">
+                <span class="slider"></span>
+              </label>
+              <div class="perm-info">
+                <strong>Can Generate 30-Day (1 Month) Keys</strong>
+                <span>Allow admins to produce monthly user licenses.</span>
+              </div>
+            </div>
+
+            <div class="perm-item">
+              <label class="perm-switch">
+                <input type="checkbox" id="perm-60days">
+                <span class="slider"></span>
+              </label>
+              <div class="perm-info">
+                <strong>Can Generate 60-Day (2 Months) Keys</strong>
+                <span>Allow admins to produce 2-month user licenses.</span>
+              </div>
+            </div>
+
+            <div class="perm-item">
+              <label class="perm-switch">
+                <input type="checkbox" id="perm-90days">
+                <span class="slider"></span>
+              </label>
+              <div class="perm-info">
+                <strong>Can Generate 90-Day (3 Months) Keys</strong>
+                <span>Allow admins to produce 3-month user licenses.</span>
+              </div>
+            </div>
+
+            <div class="perm-item">
+              <label class="perm-switch">
+                <input type="checkbox" id="perm-lifetime">
+                <span class="slider"></span>
+              </label>
+              <div class="perm-info">
+                <strong>Can Generate Lifetime Keys</strong>
+                <span>Allow admins to create permanent lifetime user licenses.</span>
+              </div>
+            </div>
+
+            <div class="perm-item">
+              <label class="perm-switch">
+                <input type="checkbox" id="perm-visitors">
+                <span class="slider"></span>
+              </label>
+              <div class="perm-info">
+                <strong>Can View Visitor Activity Logs</strong>
+                <span>Allow admins to access traffic counts and visitor streams.</span>
+              </div>
+            </div>
+
+            <div class="perm-item">
+              <label class="perm-switch">
+                <input type="checkbox" id="perm-revoke">
+                <span class="slider"></span>
+              </label>
+              <div class="perm-info">
+                <strong>Can Revoke User Keys</strong>
+                <span>Allow admins to revoke user licenses.</span>
+              </div>
+            </div>
+
+            <button type="submit" id="save-perms-btn" class="btn btn-primary gen-btn">
+              <span class="btn-text">💾 Save Admin Permissions</span>
+              <span class="btn-spinner" id="perms-spinner"></span>
+            </button>
+          </form>
+        </div>
+
+      </div>
+    </div>
   </div>
 
   <script src="app.js"></script>
