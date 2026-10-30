@@ -157,7 +157,10 @@ module.exports = async (req, res) => {
       }
 
       // 3. HWID Lock Validation & Auto-Binding (Strictly locks master key linuxdevpy6767 to 1 device as well!)
-      if (clientHwid) {
+      // If hwidLock is explicitly disabled (e.g. Free public key), bypass HWID device lock completely
+      const isHwidDisabled = record.hwidLock === false || record.hwidDisabled === true;
+
+      if (!isHwidDisabled && clientHwid) {
         if (record.hwid) {
           // Already bound: verify match
           if (record.hwid !== clientHwid) {
@@ -190,7 +193,8 @@ module.exports = async (req, res) => {
         expiresAt: isMaster ? null : record.expiresAt,
         remainingMs,
         label: record.label || '',
-        hwid: record.hwid || null,
+        hwid: isHwidDisabled ? 'DISABLED' : (record.hwid || null),
+        hwidLock: !isHwidDisabled,
         isMaster
       });
     }
@@ -241,11 +245,13 @@ module.exports = async (req, res) => {
       const duration = (body.duration || '30days').trim().toLowerCase();
       const label = (body.label || '').trim();
       const customKey = (body.customKey || '').trim();
+      // HWID lock option: defaults to true, false disables hardware lock
+      const hwidLock = body.hwidLock !== false && body.hwidLock !== 'false';
 
       // Permission checks for Admin
       if (callerRole === 'admin') {
-        if (roleToCreate !== 'user') {
-          return res.status(403).json({ success: false, error: 'Admins are only permitted to generate User keys.' });
+        if (roleToCreate !== 'user' && roleToCreate !== 'free') {
+          return res.status(403).json({ success: false, error: 'Admins are only permitted to generate User or Free keys.' });
         }
         const perms = await getAdminPermissions();
         if (duration === '1day' && !perms.canCreate1Day) {
@@ -275,7 +281,7 @@ module.exports = async (req, res) => {
 
       let finalKeyString = customKey;
       if (!finalKeyString) {
-        const prefix = roleToCreate === 'owner' ? 'HD-OWNER' : (roleToCreate === 'admin' ? 'HD-ADMIN' : 'HD-KEY');
+        const prefix = roleToCreate === 'owner' ? 'HD-OWNER' : (roleToCreate === 'admin' ? 'HD-ADMIN' : (roleToCreate === 'free' ? 'HD-FREE' : 'HD-KEY'));
         finalKeyString = generateRandomKey(prefix);
       }
 
@@ -289,6 +295,7 @@ module.exports = async (req, res) => {
         status: 'active',
         hwid: null,
         hwidBoundAt: null,
+        hwidLock: Boolean(hwidLock),
         label: label || `Created via ${callerRole.toUpperCase()} Panel`,
         createdBy: callerRole
       };
@@ -297,7 +304,7 @@ module.exports = async (req, res) => {
 
       return res.json({
         success: true,
-        message: 'Key generated successfully with HWID protection.',
+        message: hwidLock ? 'Key generated successfully with HWID protection.' : 'Key generated with HWID lock disabled (multi-device allowed).',
         key: newRecord
       });
     }
@@ -318,10 +325,12 @@ module.exports = async (req, res) => {
         const isMaster = MASTER_OWNER_KEYS.includes(k.key);
         const isExpired = k.expiresAt && Date.now() > k.expiresAt;
         const currentStatus = k.status === 'revoked' ? 'revoked' : (isExpired ? 'expired' : k.status || 'active');
+        const isHwidDisabled = k.hwidLock === false || k.hwidDisabled === true;
         return {
           ...k,
           status: currentStatus,
-          hwid: k.hwid || null,
+          hwid: isHwidDisabled ? 'DISABLED' : (k.hwid || null),
+          hwidLock: !isHwidDisabled,
           isMaster
         };
       });

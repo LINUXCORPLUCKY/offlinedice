@@ -434,6 +434,7 @@
                 <label for="gen-role">License Role</label>
                 <select id="gen-role" class="panel-select">
                   <option value="user">User License</option>
+                  <option value="free">Free License (Public / Trial)</option>
                   <option value="admin" id="opt-role-admin">Admin License</option>
                   <option value="owner" id="opt-role-owner">Owner Authority</option>
                 </select>
@@ -460,6 +461,20 @@
               <div class="form-group">
                 <label for="gen-custom-key">Custom Key Code (Optional)</label>
                 <input type="text" id="gen-custom-key" class="panel-input" placeholder="Leave blank for auto-generated code">
+              </div>
+            </div>
+
+            <!-- HWID Lock Toggle Option -->
+            <div class="form-row gen-hwid-toggle-row">
+              <div class="form-group-checkbox">
+                <label class="perm-switch" for="gen-hwid-lock">
+                  <input type="checkbox" id="gen-hwid-lock" checked>
+                  <span class="slider"></span>
+                </label>
+                <div class="perm-info">
+                  <strong>Enable Device HWID Lock</strong>
+                  <span id="gen-hwid-hint">Binds license to 1 device upon first use. Uncheck to allow unlimited devices / free key sharing.</span>
+                </div>
               </div>
             </div>
 
