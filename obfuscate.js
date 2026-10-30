@@ -57,8 +57,11 @@ obfuscateFile(
 // 3. Obfuscate Owner Management Gateway
 const ownerSrc = path.join(__dirname, 'public', 'jhvbuihedfbyhibrt5gi-owner-j42n5jhn', 'owner-panel.src.js');
 const ownerDist = path.join(__dirname, 'public', 'jhvbuihedfbyhibrt5gi-owner-j42n5jhn', 'owner-panel.js');
+const ownerDistRoot = path.join(__dirname, 'public', 'owner-panel.js');
 if (fs.existsSync(ownerSrc)) {
   obfuscateFile(ownerSrc, ownerDist, 'owner-panel.src.js -> owner-panel.js');
+  fs.copyFileSync(ownerDist, ownerDistRoot);
+  console.log(`[+] Mirrored owner build to ${ownerDistRoot}`);
 }
 
 // 4. Obfuscate Legacy Bundle
