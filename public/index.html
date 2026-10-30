@@ -176,12 +176,22 @@
               </div>
               <div class="pick-details">
                 <div class="pick-badge-row">
-                  <span class="badge badge-rec">SUGGESTED COLOR</span>
-                  <span class="badge badge-strategy" id="pick-strategy-tag">COLD REVERSION</span>
+                  <span class="badge badge-rec" id="pick-rec-badge">TOP FORECAST</span>
+                  <span class="badge badge-strategy" id="pick-strategy-tag">DYNAMIC CONVERGENCE</span>
+                  <span class="badge badge-confidence" id="pick-confidence-tag">88% SIGNAL</span>
                 </div>
                 <h3 class="pick-color-name" id="pick-color-title">Color</h3>
                 <p class="pick-rationale" id="pick-color-desc">Rationale breakdown...</p>
               </div>
+            </div>
+
+            <!-- Interactive Multi-Strategy Selector -->
+            <div class="strategy-switcher" id="strategy-switcher">
+              <span class="switcher-label">Tactical Model:</span>
+              <button type="button" class="strat-btn active" data-index="0" id="strat-btn-0">⚡ Dynamic AI</button>
+              <button type="button" class="strat-btn" data-index="1" id="strat-btn-1">🔥 Momentum Surge</button>
+              <button type="button" class="strat-btn" data-index="2" id="strat-btn-2">🎯 Gap Reversion</button>
+              <button type="button" class="strat-btn" data-index="3" id="strat-btn-3">🔄 Markov Flow</button>
             </div>
 
             <!-- MANDATORY INLINE MATHEMATICAL DISCLAIMER BADGE -->

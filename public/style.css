@@ -749,6 +749,65 @@ body {
   line-height: 1.5;
 }
 
+.badge-confidence {
+  background: rgba(0, 230, 118, 0.15);
+  color: var(--accent-green);
+  border: 1px solid rgba(0, 230, 118, 0.35);
+  font-weight: 800;
+}
+
+/* Strategy Switcher */
+.strategy-switcher {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 14px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+  padding: 10px 14px;
+  background: rgba(10, 5, 20, 0.7);
+  border-radius: var(--radius-md);
+  border: 1px solid rgba(176, 38, 255, 0.15);
+}
+
+.switcher-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--text-dim);
+  letter-spacing: 0.06em;
+}
+
+.strat-btn {
+  background: rgba(176, 38, 255, 0.08);
+  border: 1px solid rgba(176, 38, 255, 0.25);
+  color: var(--text-muted);
+  font-size: 12px;
+  font-weight: 600;
+  padding: 6px 14px;
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: var(--transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.strat-btn:hover {
+  background: rgba(176, 38, 255, 0.25);
+  color: #fff;
+  border-color: #b026ff;
+  transform: translateY(-1px);
+}
+
+.strat-btn.active {
+  background: linear-gradient(135deg, #b026ff, #7928ca 60%, #ff6a00 100%);
+  color: #fff;
+  border-color: #d8b4fe;
+  box-shadow: 0 0 16px rgba(176, 38, 255, 0.5);
+  font-weight: 700;
+}
+
 /* MANDATORY MATHEMATICAL DISCLAIMER BADGE */
 .disclaimer-badge {
   background: rgba(16, 9, 32, 0.95);
