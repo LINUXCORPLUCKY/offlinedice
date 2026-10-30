@@ -590,6 +590,78 @@ module.exports = async (req, res) => {
       return res.json({ success: true, message: 'All prediction logs cleared.' });
     }
 
+    // -------------------------------------------------------------
+    // ACTION: GET WEBSITE ANNOUNCEMENT (Public)
+    // -------------------------------------------------------------
+    if (action === 'get_announcement') {
+      try {
+        const resp = await axios.get(`${FIREBASE_BASE_URL}/announcement.json`, { timeout: 6000 });
+        const ann = resp.data || {
+          enabled: true,
+          title: '⚡ CRITICAL WIN STRATEGY RULE',
+          message: 'When you win on a predicted dice color, you MUST roll 5 times in your game before requesting your next prediction!',
+          type: 'warning',
+          updatedAt: Date.now()
+        };
+        return res.json({ success: true, announcement: ann });
+      } catch {
+        return res.json({
+          success: true,
+          announcement: {
+            enabled: true,
+            title: '⚡ CRITICAL WIN STRATEGY RULE',
+            message: 'When you win on a predicted dice color, you MUST roll 5 times in your game before requesting your next prediction!',
+            type: 'warning',
+            updatedAt: Date.now()
+          }
+        });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: SAVE WEBSITE ANNOUNCEMENT (Owner Only)
+    // -------------------------------------------------------------
+    if (action === 'save_announcement') {
+      const callerRole = await verifyCallerRole(authKey);
+      if (callerRole !== 'owner') {
+        return res.status(403).json({ success: false, error: 'Only Owner can publish announcements.' });
+      }
+
+      const title = (body.title || 'HEADLESS DICE ANNOUNCEMENT').trim().slice(0, 80);
+      const message = (body.message || '').trim().slice(0, 500);
+      const type = (body.type || 'warning').trim().toLowerCase();
+      const enabled = body.enabled !== undefined ? Boolean(body.enabled) : true;
+
+      if (!message) {
+        return res.status(400).json({ success: false, error: 'Announcement message cannot be empty.' });
+      }
+
+      const announcementData = {
+        enabled,
+        title,
+        message,
+        type,
+        updatedAt: Date.now(),
+        updatedBy: 'owner'
+      };
+
+      await axios.put(`${FIREBASE_BASE_URL}/announcement.json`, announcementData, { timeout: 6000 });
+      return res.json({ success: true, message: 'Website announcement updated live.', announcement: announcementData });
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: CLEAR WEBSITE ANNOUNCEMENT (Owner Only)
+    // -------------------------------------------------------------
+    if (action === 'delete_announcement') {
+      const callerRole = await verifyCallerRole(authKey);
+      if (callerRole !== 'owner') {
+        return res.status(403).json({ success: false, error: 'Only Owner can delete announcements.' });
+      }
+
+      await axios.patch(`${FIREBASE_BASE_URL}/announcement.json`, { enabled: false, message: '' }, { timeout: 6000 });
+      return res.json({ success: true, message: 'Announcement hidden from website.' });
+    }
+
     return res.status(400).json({ success: false, error: `Unrecognized action '${action}'.` });
 
   } catch (err) {

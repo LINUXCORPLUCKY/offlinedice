@@ -58,6 +58,18 @@
       </div>
     </header>
 
+    <!-- Live Website Announcement Banner (Managed by Owner) -->
+    <div id="website-announcement-banner" class="announcement-banner ann-warning hidden">
+      <div class="announcement-content">
+        <span class="announcement-icon" id="ann-icon">⚡</span>
+        <div class="announcement-text-wrap">
+          <strong class="announcement-title" id="ann-title">⚡ CRITICAL WIN STRATEGY RULE</strong>
+          <span class="announcement-msg" id="ann-msg">When you win on a predicted dice color, you MUST roll 5 times in your game before requesting your next prediction!</span>
+        </div>
+      </div>
+      <button type="button" class="announcement-close" id="ann-close-btn" title="Dismiss announcement">&times;</button>
+    </div>
+
     <!-- Search / Session Ingestion Bar -->
     <section class="card search-card" id="search-section">
       <div class="search-header">
@@ -200,6 +212,15 @@
               <button type="button" class="strat-btn" data-index="1" id="strat-btn-1">🔥 Momentum Surge</button>
               <button type="button" class="strat-btn" data-index="2" id="strat-btn-2">🎯 Gap Reversion</button>
               <button type="button" class="strat-btn" data-index="3" id="strat-btn-3">🔄 Markov Flow</button>
+            </div>
+
+            <!-- MANDATORY WIN STRATEGY NOTICE (ROLL 5 TIMES ON WIN) -->
+            <div class="win-strategy-notice">
+              <div class="win-strategy-icon">🔥</div>
+              <div class="win-strategy-body">
+                <strong>CRITICAL WIN STRATEGY RULE:</strong>
+                <span>When you win a roll on a predicted color, you MUST roll <strong>5 times</strong> in your game to reset RNG cycles before requesting your next prediction!</span>
+              </div>
             </div>
 
             <!-- MANDATORY INLINE MATHEMATICAL DISCLAIMER BADGE -->
@@ -395,6 +416,7 @@
         <button type="button" class="tab-btn active" data-tab="tab-generator" id="btn-tab-generator">⚡ Key Generator</button>
         <button type="button" class="tab-btn" data-tab="tab-keys" id="btn-tab-keys">📋 Keys Vault &amp; HWID</button>
         <button type="button" class="tab-btn" data-tab="tab-predictions" id="btn-tab-predictions">🎲 Player Predictions</button>
+        <button type="button" class="tab-btn" data-tab="tab-announcement" id="btn-tab-announcement">📢 Live Announcements</button>
         <button type="button" class="tab-btn" data-tab="tab-permissions" id="btn-tab-permissions">⚙️ Admin Perms</button>
       </div>
 
@@ -606,6 +628,75 @@
                 <!-- Dynamically loaded -->
               </tbody>
             </table>
+          </div>
+        </div>
+
+        <!-- TAB 5: Live Website Announcements Manager -->
+        <div class="tab-content hidden" id="tab-announcement">
+          <div class="perms-desc">
+            <h3>📢 Broadcast Live Website Announcement</h3>
+            <p>Publish an instant glowing alert banner to all players currently on Headless Dice.</p>
+          </div>
+
+          <form id="announcement-form" class="gen-form">
+            <div class="form-row">
+              <div class="form-group">
+                <label for="ann-input-title">Announcement Headline</label>
+                <input type="text" id="ann-input-title" class="panel-input" placeholder="e.g. ⚡ CRITICAL WIN STRATEGY RULE" value="⚡ CRITICAL WIN STRATEGY RULE" required>
+              </div>
+              <div class="form-group">
+                <label for="ann-input-type">Banner Theme / Style</label>
+                <select id="ann-input-type" class="panel-select">
+                  <option value="warning" selected>🔥 Warning / Golden Glow (Strategy Alert)</option>
+                  <option value="info">🔮 Purple Neon (General Update)</option>
+                  <option value="success">🟢 Green Signal (Winner / Payout Notice)</option>
+                  <option value="danger">🚨 Red Urgent (Maintenance / Critical)</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label for="ann-input-msg">Announcement Message (Shown to all players)</label>
+              <textarea id="ann-input-msg" class="panel-input" rows="3" placeholder="e.g. When you win on a predicted dice color, you MUST roll 5 times in your game before requesting your next prediction!" required>When you win on a predicted dice color, you MUST roll 5 times in your game before requesting your next prediction!</textarea>
+            </div>
+
+            <div class="perm-item" style="max-width: 480px; margin: 6px 0;">
+              <label class="perm-switch">
+                <input type="checkbox" id="ann-input-enabled" checked>
+                <span class="slider"></span>
+              </label>
+              <div class="perm-info">
+                <strong>Show Banner on Website</strong>
+                <span>Active banner displays prominently across Headless Dice</span>
+              </div>
+            </div>
+
+            <div style="display: flex; gap: 12px; margin-top: 10px;">
+              <button type="submit" id="save-ann-btn" class="btn btn-primary gen-btn" style="flex: 1;">
+                <span class="btn-text">📢 Publish Announcement</span>
+                <span class="btn-spinner" id="ann-spinner"></span>
+              </button>
+              <button type="button" id="delete-ann-btn" class="btn btn-danger btn-sm" style="min-width: 140px; height: 46px; margin-top: 8px;">
+                🗑️ Hide Banner
+              </button>
+            </div>
+          </form>
+
+          <!-- Live Preview Box -->
+          <div class="gen-result-box" style="margin-top: 24px; border-color: rgba(255, 170, 0, 0.4);">
+            <div class="result-header">
+              <span class="result-badge" style="color: #ffaa00;">LIVE VISITOR PREVIEW</span>
+              <span class="result-meta">How it renders for all players</span>
+            </div>
+            <div id="ann-preview-display" class="announcement-banner ann-warning" style="margin: 0; box-shadow: none;">
+              <div class="announcement-content">
+                <span class="announcement-icon" id="preview-ann-icon">⚡</span>
+                <div class="announcement-text-wrap">
+                  <strong class="announcement-title" id="preview-ann-title">⚡ CRITICAL WIN STRATEGY RULE</strong>
+                  <span class="announcement-msg" id="preview-ann-msg">When you win on a predicted dice color, you MUST roll 5 times in your game before requesting your next prediction!</span>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 

@@ -151,37 +151,67 @@ function computeSuggestedPick(stats, rolls) {
     });
   });
 
-  // Strategy A: Gap Reversion (overdue rebound)
-  const sortedByGap = [...colorList].sort((a, b) => gaps[b] - gaps[a] || (stats.colors[a]?.count - stats.colors[b]?.count));
-  const gapCandidate = sortedByGap[0];
-
-  // Strategy B: Momentum Surge (active hot streak)
-  const sortedByMomentum = [...colorList].sort((a, b) => recentHits[b] - recentHits[a] || (stats.colors[b]?.count - stats.colors[a]?.count));
-  const momentumCandidate = sortedByMomentum[0];
-
-  // Strategy C: Markov Follow-Through
-  const sortedByMarkov = [...colorList].sort((a, b) => transitionCounts[b] - transitionCounts[a] || (recentHits[b] - recentHits[a]));
-  const markovCandidate = sortedByMarkov[0];
-
-  // Strategy D: Composite Dynamic AI Pick
+  // Dynamic Harmonic Gap Reversion:
+  // Sweet spot is gap 2 or 3; severe cold (gap >= 4) gets decay so user doesn't endlessly chase dead colors
   const compositeScores = {};
-  colorList.forEach(c => {
-    const gapScore = gaps[c] >= 2 ? Math.min(gaps[c] * 2.2, 7.0) : (recentHits[c] >= 3 ? 2.5 : 0.5);
+  colorList.forEach((c) => {
+    let gapScore = 0;
+    if (gaps[c] === 2 || gaps[c] === 3) {
+      gapScore = 3.6;
+    } else if (gaps[c] >= 4) {
+      gapScore = Math.max(0.6, 3.6 - (gaps[c] - 3) * 0.9); // Cold streak dead-zone decay
+    } else if (gaps[c] === 1) {
+      gapScore = 2.0;
+    } else {
+      gapScore = 0.6; // Just appeared on latest roll
+    }
+
     const momScore = recentHits[c] * 1.3;
     const markovScore = (transitionCounts[c] || 0) * 1.1;
-    const recencyScore = (weightedScores[c] || 0) * 0.8;
-    compositeScores[c] = gapScore + momScore + markovScore + recencyScore;
+    const recencyScore = (weightedScores[c] || 0) * 0.85;
+
+    // Cooldown penalty if it just hit on the latest roll unless it is a 4+ hot streak
+    const justHitPenalty = latestDice.includes(c) && recentHits[c] < 4 ? -1.6 : 0;
+
+    compositeScores[c] = gapScore + momScore + markovScore + recencyScore + justHitPenalty;
   });
 
   const sortedComposite = [...colorList].sort((a, b) => compositeScores[b] - compositeScores[a]);
   const primaryCandidate = sortedComposite[0];
 
-  const primaryConfidence = Math.min(96, Math.max(74, Math.round(76 + (compositeScores[primaryCandidate] * 1.2))));
-  const momentumConfidence = Math.min(94, Math.max(70, Math.round(70 + (recentHits[momentumCandidate] * 3.8))));
-  const gapConfidence = Math.min(92, Math.max(68, Math.round(66 + (gaps[gapCandidate] * 5.5))));
-  const markovConfidence = Math.min(90, Math.max(68, Math.round(68 + ((transitionCounts[markovCandidate] || 0) * 3))));
+  // Strategy B: Distinct Momentum Surge (active hot streak, different from Dynamic if possible)
+  const sortedByMomentum = [...colorList].sort((a, b) => recentHits[b] - recentHits[a] || (compositeScores[b] - compositeScores[a]));
+  let momentumCandidate = sortedByMomentum[0];
+  if (momentumCandidate === primaryCandidate && sortedByMomentum.length > 1) {
+    momentumCandidate = sortedByMomentum[1];
+  }
+
+  // Strategy C: Distinct Gap Reversion (harmonic overdue in sweet spot 2-4)
+  const sortedByGap = [...colorList].sort((a, b) => {
+    const scoreA = gaps[a] >= 2 && gaps[a] <= 4 ? gaps[a] * 2.2 : gaps[a];
+    const scoreB = gaps[b] >= 2 && gaps[b] <= 4 ? gaps[b] * 2.2 : gaps[b];
+    return scoreB - scoreA;
+  });
+  let gapCandidate = sortedByGap[0];
+  if (gapCandidate === primaryCandidate && sortedByGap.length > 1) {
+    gapCandidate = sortedByGap[1];
+  }
+
+  // Strategy D: Distinct Markov Follow-Through
+  const sortedByMarkov = [...colorList].sort((a, b) => (transitionCounts[b] - transitionCounts[a]) || (compositeScores[b] - compositeScores[a]));
+  let markovCandidate = sortedByMarkov[0];
+  if (markovCandidate === primaryCandidate || markovCandidate === momentumCandidate) {
+    const alt = sortedByMarkov.find(c => c !== primaryCandidate && c !== momentumCandidate);
+    if (alt) markovCandidate = alt;
+  }
+
+  const primaryConfidence = Math.min(96, Math.max(75, Math.round(76 + (compositeScores[primaryCandidate] * 1.1))));
+  const momentumConfidence = Math.min(94, Math.max(70, Math.round(72 + (recentHits[momentumCandidate] * 3.5))));
+  const gapConfidence = Math.min(92, Math.max(68, Math.round(68 + (Math.min(gaps[gapCandidate], 4) * 5.2))));
+  const markovConfidence = Math.min(90, Math.max(68, Math.round(70 + ((transitionCounts[markovCandidate] || 0) * 2.8))));
 
   const latestStr = latestDice.length > 0 ? latestDice.join(', ') : 'N/A';
+  const winRuleNotice = '<div class="win-rule-inline">⚡ <em>Rule: When you win on a predicted color, roll 5 times in-game before requesting next prediction to reset RNG cycles.</em></div>';
 
   const strategies = [
     {
@@ -193,7 +223,7 @@ function computeSuggestedPick(stats, rolls) {
       confidence: primaryConfidence,
       recentHits: recentHits[primaryCandidate] || 0,
       gap: gaps[primaryCandidate],
-      rationale: `<strong>${primaryCandidate}</strong> leads all probabilistic indicators for next round with strong multi-factor momentum following Roll #${totalRolls} (dice: ${latestStr}). It recorded <strong>${recentHits[primaryCandidate] || 0} hits</strong> across the last 5 rolls and holds a gap index of ${gaps[primaryCandidate]}.`
+      rationale: `<strong>${primaryCandidate}</strong> leads multi-factor convergence following Roll #${totalRolls} (dice: ${latestStr}). It recorded <strong>${recentHits[primaryCandidate] || 0} hits</strong> across the last 5 rolls with harmonic gap index ${gaps[primaryCandidate]}.${winRuleNotice}`
     },
     {
       id: 'momentum',
@@ -204,7 +234,7 @@ function computeSuggestedPick(stats, rolls) {
       confidence: momentumConfidence,
       recentHits: recentHits[momentumCandidate],
       gap: gaps[momentumCandidate],
-      rationale: `<strong>${momentumCandidate}</strong> is on an active hot cluster with <strong>${recentHits[momentumCandidate]} appearances</strong> in the last 5 rolls. Riding short-term velocity trends before statistical regression sets in.`
+      rationale: `<strong>${momentumCandidate}</strong> holds short-term velocity with <strong>${recentHits[momentumCandidate]} appearances</strong> in the last 5 rolls. Riding active cluster before regression.${winRuleNotice}`
     },
     {
       id: 'reversion',
@@ -215,7 +245,7 @@ function computeSuggestedPick(stats, rolls) {
       confidence: gapConfidence,
       recentHits: recentHits[gapCandidate] || 0,
       gap: gaps[gapCandidate],
-      rationale: `<strong>${gapCandidate}</strong> has missed <strong>${gaps[gapCandidate]} consecutive rolls</strong>. Under 4-dice CSPRNG distributions, extended consecutive absence triggers high-probability mean reversion.`
+      rationale: `<strong>${gapCandidate}</strong> holds a prime mean-reversion gap of <strong>${gaps[gapCandidate]} rolls</strong> without entering stagnation. Optimal CSPRNG rebound window.${winRuleNotice}`
     },
     {
       id: 'markov',
@@ -226,7 +256,7 @@ function computeSuggestedPick(stats, rolls) {
       confidence: markovConfidence,
       recentHits: recentHits[markovCandidate] || 0,
       gap: gaps[markovCandidate],
-      rationale: `<strong>${markovCandidate}</strong> exhibits the highest empirical transition affinity in this session following the exact combination of Roll #${totalRolls} (${latestStr}), with ${transitionCounts[markovCandidate] || 0} historic follow-up hits.`
+      rationale: `<strong>${markovCandidate}</strong> exhibits the highest empirical sequence follow-through in this session after combination (${latestStr}), with ${transitionCounts[markovCandidate] || 0} historic follow-up hits.${winRuleNotice}`
     }
   ];
 
