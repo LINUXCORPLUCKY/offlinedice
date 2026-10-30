@@ -3,6 +3,10 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn",
+      "destination": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/index.html"
+    },
+    {
       "source": "/room",
       "destination": "/room.html"
     },

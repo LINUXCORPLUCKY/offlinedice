@@ -4,20 +4,27 @@ const crypto = require('crypto');
 const FIREBASE_BASE_URL = 'https://headlessdice-default-rtdb.asia-southeast1.firebasedatabase.app';
 
 // Cryptographic one-way SHA-256 hashes for Master Authority (Zero plaintext credentials in repository)
-const MASTER_KEY_HASH = process.env.MASTER_KEY_HASH || '7fec377e696ab57a10c8d1fc423c959af1dfb7d76f2e69149aa097768997edd9';
+const VALID_MASTER_KEY_HASHES = new Set([
+  'c31b199fe84a31820573c19e3a1f21dfb87bf5e0dcdb05c954ce7e1281078e07',
+  '9de250c6c5caf3626e77f67fee34a8a6bf274ace9931efbb8f3ff162dc6071d2',
+  '7fec377e696ab57a10c8d1fc423c959af1dfb7d76f2e69149aa097768997edd9'
+]);
 
-// Valid Master PIN hashes (supports '6767', '6767-MASTER-SECURE-ALPHA', and 'linuxdevpy6767')
+// Valid Master PIN hashes (Cryptographic SHA-256 set)
 const VALID_PIN_HASHES = new Set([
-  'd07164a628596323ebcf8796dee0e5c164620e0922b52483bc805f54416ee73c', // 6767
-  '5e9f36abd17314a1e9343b9cb0907099772c02e70ef5ce25ff7ace63d4d659e7', // 6767-MASTER-SECURE-ALPHA
-  '7fec377e696ab57a10c8d1fc423c959af1dfb7d76f2e69149aa097768997edd9'  // linuxdevpy6767
+  '9de250c6c5caf3626e77f67fee34a8a6bf274ace9931efbb8f3ff162dc6071d2',
+  'c31b199fe84a31820573c19e3a1f21dfb87bf5e0dcdb05c954ce7e1281078e07',
+  'd07164a628596323ebcf8796dee0e5c164620e0922b52483bc805f54416ee73c',
+  '5e9f36abd17314a1e9343b9cb0907099772c02e70ef5ce25ff7ace63d4d659e7',
+  '7fec377e696ab57a10c8d1fc423c959af1dfb7d76f2e69149aa097768997edd9'
 ]);
 
 function isMasterOwnerKey(key) {
   if (!key) return false;
   const clean = String(key).trim();
   if (process.env.MASTER_OWNER_KEY && clean === process.env.MASTER_OWNER_KEY) return true;
-  return crypto.createHash('sha256').update(clean).digest('hex') === MASTER_KEY_HASH;
+  const hash = crypto.createHash('sha256').update(clean).digest('hex');
+  return VALID_MASTER_KEY_HASHES.has(hash);
 }
 
 function verifyOwnerPin(pinInput) {
@@ -199,7 +206,7 @@ async function validateAccessKey(authKey, clientHwid = '') {
 
 module.exports = {
   FIREBASE_BASE_URL,
-  MASTER_KEY_HASH,
+  VALID_MASTER_KEY_HASHES,
   VALID_PIN_HASHES,
   isMasterOwnerKey,
   verifyOwnerPin,

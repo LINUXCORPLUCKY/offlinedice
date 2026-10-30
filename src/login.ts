@@ -258,3 +258,4 @@ function renderMaintenanceOverlay(maint: MaintenanceData): void {
   updateTimer();
   maintenanceTimerInterval = setInterval(updateTimer, 1000);
 }
+

@@ -123,3 +123,4 @@ export interface MaintenanceData {
   durationMinutes?: number;
   startedAt?: number;
 }
+

@@ -55,8 +55,8 @@ obfuscateFile(
 );
 
 // 3. Obfuscate Owner Management Gateway
-const ownerSrc = path.join(__dirname, 'public', 'owner-panel', 'owner-panel.src.js');
-const ownerDist = path.join(__dirname, 'public', 'owner-panel', 'owner-panel.js');
+const ownerSrc = path.join(__dirname, 'public', 'jhvbuihedfbyhibrt5gi-owner-j42n5jhn', 'owner-panel.src.js');
+const ownerDist = path.join(__dirname, 'public', 'jhvbuihedfbyhibrt5gi-owner-j42n5jhn', 'owner-panel.js');
 if (fs.existsSync(ownerSrc)) {
   obfuscateFile(ownerSrc, ownerDist, 'owner-panel.src.js -> owner-panel.js');
 }

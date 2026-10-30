@@ -70,8 +70,8 @@ app.get(['/room', '/room.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'room.html'));
 });
 
-app.get(['/owner-panel', '/owner-panel/'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'owner-panel', 'index.html'));
+app.get(['/jhvbuihedfbyhibrt5gi-owner-j42n5jhn', '/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'jhvbuihedfbyhibrt5gi-owner-j42n5jhn', 'index.html'));
 });
 
 // Verification & Audit API endpoint

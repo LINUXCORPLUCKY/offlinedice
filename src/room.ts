@@ -729,3 +729,4 @@ function setLoadingState(loading: boolean): void {
   if (verifyBtn) verifyBtn.disabled = loading;
   if (btnSpinner) btnSpinner.style.display = loading ? 'inline-block' : 'none';
 }
+
