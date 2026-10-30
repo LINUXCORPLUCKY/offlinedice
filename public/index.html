@@ -352,6 +352,44 @@
         <button type="button" class="panel-close-btn" id="close-panel-btn" title="Close Panel">&times;</button>
       </div>
 
+      <!-- Live Anonymous Usage Stats (Counters Only - No IPs or Personal Data) -->
+      <div class="panel-live-stats" id="panel-live-stats">
+        <div class="live-stats-row">
+          <div class="live-stat-card">
+            <div class="live-stat-header">
+              <span class="live-stat-icon">👥</span>
+              <span class="live-stat-title">TOTAL USAGE / VISITS</span>
+            </div>
+            <div class="live-stat-num" id="stat-total-visits">0</div>
+            <span class="live-stat-sub">Anonymous all-time site hits</span>
+          </div>
+
+          <div class="live-stat-card live-card-pulse">
+            <div class="live-stat-header">
+              <span class="live-pulse-dot"></span>
+              <span class="live-stat-title">ACTIVE USERS NOW</span>
+            </div>
+            <div class="live-stat-num val-online" id="stat-active-now">1</div>
+            <span class="live-stat-sub">Live in the last 5 minutes</span>
+          </div>
+
+          <div class="live-stat-card">
+            <div class="live-stat-header">
+              <span class="live-stat-icon">🔑</span>
+              <span class="live-stat-title">ACTIVE LICENSES</span>
+            </div>
+            <div class="live-stat-num val-keys" id="stat-active-licenses">0</div>
+            <span class="live-stat-sub">Valid unexpired keys</span>
+          </div>
+        </div>
+
+        <div class="live-stat-action">
+          <button type="button" id="refresh-stats-btn" class="btn btn-action btn-sm" title="Refresh Live Numbers">
+            🔄 Refresh Counters
+          </button>
+        </div>
+      </div>
+
       <!-- Panel Navigation Tabs -->
       <div class="panel-tabs">
         <button type="button" class="tab-btn active" data-tab="tab-generator" id="btn-tab-generator">⚡ Key Generator</button>

@@ -426,6 +426,100 @@ module.exports = async (req, res) => {
       return res.json({ success: true, message: 'Admin permissions updated.', permissions: cleanPerms });
     }
 
+    // -------------------------------------------------------------
+    // ACTION: RECORD VISIT (100% Anonymous Counter, No IP, No Device)
+    // -------------------------------------------------------------
+    if (action === 'record_visit') {
+      const sessionId = (body.sessionId || query.sessionId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
+      
+      // Increment total visits counter atomically
+      axios.patch(`${FIREBASE_BASE_URL}/stats.json`, {
+        totalVisits: { '.sv': { 'increment': 1 } }
+      }, { timeout: 5000 }).catch(() => {});
+
+      // Record active heartbeat timestamp
+      if (sessionId) {
+        axios.put(`${FIREBASE_BASE_URL}/active_sessions/${sessionId}.json`, {
+          lastSeen: Date.now()
+        }, { timeout: 5000 }).catch(() => {});
+      }
+
+      return res.json({ success: true });
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: PING ACTIVE (Anonymous Session Heartbeat)
+    // -------------------------------------------------------------
+    if (action === 'ping_active') {
+      const sessionId = (body.sessionId || query.sessionId || '').replace(/[^a-zA-Z0-9_-]/g, '').slice(0, 32);
+      if (sessionId) {
+        axios.put(`${FIREBASE_BASE_URL}/active_sessions/${sessionId}.json`, {
+          lastSeen: Date.now()
+        }, { timeout: 5000 }).catch(() => {});
+      }
+      return res.json({ success: true });
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: GET USAGE STATS (Counters Only: Total Visits, Active Online, Active Keys)
+    // -------------------------------------------------------------
+    if (action === 'get_usage_stats') {
+      const callerRole = await verifyCallerRole(authKey);
+      if (!callerRole || (callerRole !== 'owner' && callerRole !== 'admin')) {
+        return res.status(403).json({ success: false, error: 'Unauthorized: Owner or Admin key required.' });
+      }
+
+      // Query stats, active sessions, and keys in parallel
+      const [statsResp, sessionsResp, keysResp] = await Promise.all([
+        axios.get(`${FIREBASE_BASE_URL}/stats.json`, { timeout: 6000 }).catch(() => ({ data: {} })),
+        axios.get(`${FIREBASE_BASE_URL}/active_sessions.json`, { timeout: 6000 }).catch(() => ({ data: {} })),
+        axios.get(`${FIREBASE_BASE_URL}/keys.json`, { timeout: 6000 }).catch(() => ({ data: {} }))
+      ]);
+
+      const statsData = statsResp.data || {};
+      const sessionsData = sessionsResp.data || {};
+      const keysData = keysResp.data || {};
+
+      const totalVisits = Number(statsData.totalVisits) || 0;
+      const now = Date.now();
+      const activeWindow = 5 * 60 * 1000; // 5 minutes window for live active users
+
+      let onlineNow = 0;
+      const staleSessionIds = [];
+
+      for (const [id, s] of Object.entries(sessionsData)) {
+        if (s && s.lastSeen) {
+          if (now - s.lastSeen <= activeWindow) {
+            onlineNow++;
+          } else if (now - s.lastSeen > 30 * 60 * 1000) {
+            staleSessionIds.push(id);
+          }
+        }
+      }
+
+      // Cleanup stale sessions asynchronously in background
+      if (staleSessionIds.length > 0) {
+        Promise.all(staleSessionIds.slice(0, 20).map(id =>
+          axios.delete(`${FIREBASE_BASE_URL}/active_sessions/${id}.json`).catch(() => {})
+        )).catch(() => {});
+      }
+
+      // Count active keys
+      let activeKeys = 0;
+      for (const k of Object.values(keysData)) {
+        if (k && k.status === 'active' && (!k.expiresAt || k.expiresAt > now)) {
+          activeKeys++;
+        }
+      }
+
+      return res.json({
+        success: true,
+        totalVisits,
+        onlineNow: Math.max(1, onlineNow), // At least current active viewer
+        activeKeys
+      });
+    }
+
     return res.status(400).json({ success: false, error: `Unrecognized action '${action}'.` });
 
   } catch (err) {
