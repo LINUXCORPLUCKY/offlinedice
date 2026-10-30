@@ -1,7 +1,7 @@
 {
-  "name": "offline-dice-verifier",
+  "name": "headless-dice-verifier",
   "version": "1.0.0",
-  "description": "Offline Dice Audit & Verifier Dashboard with real-time Firebase RTDB ingestion and statistical analytics",
+  "description": "Headless Dice - Offline Dice Audit & Verifier Dashboard with real-time Firebase RTDB ingestion and statistical analytics",
   "main": "server.js",
   "scripts": {
     "start": "node server.js",

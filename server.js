@@ -87,7 +87,7 @@ app.get([
     return res.json({
       success: true,
       sessionId: cleanSessionId,
-      source: 'Traced Demonstration Seed',
+      source: 'Headless Dice Demonstration Seed',
       totalRolls: demoRolls.length,
       stats,
       suggestedPick,
@@ -165,7 +165,7 @@ app.get([
     return res.json({
       success: true,
       sessionId: cleanSessionId,
-      source: 'Traced Oracle Core',
+      source: 'Headless Dice Oracle Core',
       totalRolls: formattedRolls.length,
       stats,
       suggestedPick,
