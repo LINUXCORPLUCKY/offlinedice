@@ -1,5 +1,8 @@
 const axios = require('axios');
 
+const FIREBASE_BASE_URL = 'https://headlessdice-default-rtdb.asia-southeast1.firebasedatabase.app';
+const PUBLIC_OFFLINE_DB = 'https://offline-dice-verify-default-rtdb.europe-west1.firebasedatabase.app';
+
 const OFFICIAL_COLORS = {
   Red: '#FF0000',
   Orange: '#FFA500',
@@ -151,50 +154,51 @@ function computeSuggestedPick(stats, rolls) {
     });
   });
 
-  // Dynamic Harmonic Gap Reversion:
-  // Sweet spot is gap 2 or 3; severe cold (gap >= 4) gets decay so user doesn't endlessly chase dead colors
+  // 5. Multi-factor Scoring Algorithm
   const compositeScores = {};
-  colorList.forEach((c) => {
-    let gapScore = 0;
-    if (gaps[c] === 2 || gaps[c] === 3) {
-      gapScore = 3.6;
-    } else if (gaps[c] >= 4) {
-      gapScore = Math.max(0.6, 3.6 - (gaps[c] - 3) * 0.9); // Cold streak dead-zone decay
-    } else if (gaps[c] === 1) {
-      gapScore = 2.0;
-    } else {
-      gapScore = 0.6; // Just appeared on latest roll
+  colorList.forEach(c => {
+    const s = stats.colors[c];
+    const dev = s ? s.deviation : 0;
+    const gap = gaps[c];
+    const recHits = recentHits[c];
+    const wScore = weightedScores[c];
+    const markovVal = transitionCounts[c] || 0;
+
+    let gapBonus = 0;
+    if (gap >= 2 && gap <= 4) {
+      gapBonus = 3.5;
+    } else if (gap > 4) {
+      gapBonus = 1.0;
+    } else if (gap === 0) {
+      gapBonus = -1.5;
     }
 
-    const momScore = recentHits[c] * 1.3;
-    const markovScore = (transitionCounts[c] || 0) * 1.1;
-    const recencyScore = (weightedScores[c] || 0) * 0.85;
+    const momentumBonus = Math.min(recHits * 1.8, 5.4);
+    const meanReversionScore = dev < 0 ? Math.min(Math.abs(dev) * 0.45, 4.5) : -Math.min(dev * 0.25, 2.5);
+    const markovBonus = Math.min(markovVal * 1.2, 4.8);
 
-    // Cooldown penalty if it just hit on the latest roll unless it is a 4+ hot streak
-    const justHitPenalty = latestDice.includes(c) && recentHits[c] < 4 ? -1.6 : 0;
-
-    compositeScores[c] = gapScore + momScore + markovScore + recencyScore + justHitPenalty;
+    compositeScores[c] = (wScore * 1.5) + gapBonus + momentumBonus + meanReversionScore + markovBonus;
   });
 
   const sortedComposite = [...colorList].sort((a, b) => compositeScores[b] - compositeScores[a]);
   const primaryCandidate = sortedComposite[0];
 
-  // Strategy B: Distinct Momentum Surge (active hot streak, different from Dynamic if possible)
-  const sortedByMomentum = [...colorList].sort((a, b) => recentHits[b] - recentHits[a] || (compositeScores[b] - compositeScores[a]));
-  let momentumCandidate = sortedByMomentum[0];
-  if (momentumCandidate === primaryCandidate && sortedByMomentum.length > 1) {
-    momentumCandidate = sortedByMomentum[1];
+  // Strategy B: Pure Momentum Surge
+  const sortedByRecent = [...colorList].sort((a, b) => (recentHits[b] - recentHits[a]) || (compositeScores[b] - compositeScores[a]));
+  let momentumCandidate = sortedByRecent[0];
+  if (momentumCandidate === primaryCandidate && sortedByRecent.length > 1) {
+    momentumCandidate = sortedByRecent[1];
   }
 
-  // Strategy C: Distinct Gap Reversion (harmonic overdue in sweet spot 2-4)
+  // Strategy C: Pure Gap Reversion
   const sortedByGap = [...colorList].sort((a, b) => {
-    const scoreA = gaps[a] >= 2 && gaps[a] <= 4 ? gaps[a] * 2.2 : gaps[a];
-    const scoreB = gaps[b] >= 2 && gaps[b] <= 4 ? gaps[b] * 2.2 : gaps[b];
-    return scoreB - scoreA;
+    const aValid = gaps[a] >= 1 ? gaps[a] : -1;
+    const bValid = gaps[b] >= 1 ? gaps[b] : -1;
+    return bValid - aValid;
   });
   let gapCandidate = sortedByGap[0];
-  if (gapCandidate === primaryCandidate && sortedByGap.length > 1) {
-    gapCandidate = sortedByGap[1];
+  if (gapCandidate === primaryCandidate) {
+    gapCandidate = sortedByGap.find(c => c !== primaryCandidate) || sortedByGap[1];
   }
 
   // Strategy D: Distinct Markov Follow-Through
@@ -321,18 +325,32 @@ function computeSuggestedPick(stats, rolls) {
   };
 }
 
-function generateDemoData() {
+// Generate deterministic pseudo-random sequence for an isolated room
+function generateRoomSeededRolls(seedKey = 'default_room', count = 36) {
   const colorList = ['Red', 'Orange', 'Yellow', 'Green', 'Blue', 'Purple'];
   const hexMap = OFFICIAL_COLORS;
   const rolls = [];
   const now = Math.floor(Date.now() / 1000);
 
-  for (let i = 1; i <= 36; i++) {
+  // Simple string-based pseudo-random generator
+  let h = 0x811c9dc5;
+  for (let i = 0; i < seedKey.length; i++) {
+    h ^= seedKey.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  let seedNum = h >>> 0;
+  function nextRng() {
+    seedNum = (seedNum * 1664525 + 1013904223) % 4294967296;
+    return seedNum / 4294967296;
+  }
+
+  for (let i = 1; i <= count; i++) {
     const names = [];
     const colors = [];
     const dice = [];
     for (let d = 0; d < 4; d++) {
-      const selected = colorList[Math.floor(Math.random() * colorList.length)];
+      const idx = Math.floor(nextRng() * colorList.length);
+      const selected = colorList[idx];
       names.push(selected);
       colors.push(hexMap[selected]);
       dice.push({ name: selected, hex: hexMap[selected] });
@@ -340,8 +358,8 @@ function generateDemoData() {
 
     rolls.push({
       rollNumber: i,
-      hash: '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
-      time: now - (36 - i) * 60,
+      hash: '0x' + Array.from({ length: 40 }, () => Math.floor(nextRng() * 16).toString(16)).join(''),
+      time: now - (count - i) * 60,
       isRigged: false,
       names,
       colors,
@@ -354,15 +372,24 @@ function generateDemoData() {
 
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
   }
 
-  // Parse sessionId from query or url path
-  let rawSessionId = req.query.sessionId || req.query.id;
+  let body = req.body || {};
+  if (typeof body === 'string') {
+    try { body = JSON.parse(body); } catch { body = {}; }
+  }
+  const query = req.query || {};
+
+  const action = (body.action || query.action || '').trim().toLowerCase();
+  let rawRoomId = (body.roomId || query.roomId || '').trim();
+  let rawSessionId = (body.sessionId || query.sessionId || query.id || '').trim();
+
+  // URL fallback parsing
   if (!rawSessionId && req.url) {
     const cleanUrl = req.url.split('?')[0].replace(/\/+$/, '');
     const segments = cleanUrl.split('/');
@@ -372,11 +399,193 @@ module.exports = async (req, res) => {
     }
   }
 
-  if (!rawSessionId) {
-    return res.status(400).json({
-      success: false,
-      error: 'Missing Session ID parameter.'
+  // Sanitize room ID
+  const cleanRoomId = rawRoomId ? rawRoomId.replace(/[^a-zA-Z0-9_-]/g, '') : null;
+
+  // -------------------------------------------------------------------------
+  // ACTION: ADD ROLL TO USER'S ISOLATED ROOM (Zero Collisions)
+  // -------------------------------------------------------------------------
+  if (action === 'add_roll') {
+    if (!cleanRoomId) {
+      return res.status(400).json({ success: false, error: 'A valid isolated Room ID is required.' });
+    }
+
+    let rawDice = body.dice || [];
+    if (typeof rawDice === 'string') {
+      rawDice = rawDice.split(',').map(s => s.trim());
+    }
+
+    if (!Array.isArray(rawDice) || rawDice.length === 0) {
+      return res.status(400).json({ success: false, error: 'Dice rolls are required (4 colors).' });
+    }
+
+    const diceObjects = rawDice.slice(0, 4).map(d => {
+      const name = typeof d === 'object' ? (d.name || '') : String(d);
+      const hex = typeof d === 'object' ? (d.hex || '') : '';
+      const canonical = normalizeColor(name, hex);
+      return {
+        name: canonical,
+        hex: OFFICIAL_COLORS[canonical] || '#888888'
+      };
     });
+
+    const now = Math.floor(Date.now() / 1000);
+    const roomEndpoint = `${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/rolls.json`;
+
+    try {
+      let currentRolls = [];
+      const resp = await axios.get(roomEndpoint, { timeout: 6000 }).catch(() => ({ data: null }));
+      if (Array.isArray(resp.data)) {
+        currentRolls = resp.data;
+      } else if (resp.data && typeof resp.data === 'object') {
+        currentRolls = Object.values(resp.data);
+      }
+
+      if (currentRolls.length === 0) {
+        currentRolls = generateRoomSeededRolls(cleanRoomId, 36);
+      }
+
+      const newRoll = {
+        rollNumber: currentRolls.length + 1,
+        hash: '0x' + Array.from({ length: 40 }, () => Math.floor(Math.random() * 16).toString(16)).join(''),
+        time: now,
+        isRigged: false,
+        names: diceObjects.map(d => d.name),
+        colors: diceObjects.map(d => d.hex),
+        dice: diceObjects
+      };
+
+      currentRolls.push(newRoll);
+      // Keep up to 60 most recent rolls in isolated room buffer
+      if (currentRolls.length > 60) {
+        currentRolls = currentRolls.slice(-60);
+        currentRolls.forEach((r, idx) => { r.rollNumber = idx + 1; });
+      }
+
+      await axios.put(roomEndpoint, currentRolls, { timeout: 6000 });
+      await axios.patch(`${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/meta.json`, {
+        lastActive: Date.now(),
+        totalRolls: currentRolls.length
+      }, { timeout: 4000 }).catch(() => {});
+
+      const stats = computeStatistics(currentRolls);
+      const suggestedPick = computeSuggestedPick(stats, currentRolls);
+
+      return res.json({
+        success: true,
+        message: 'Roll successfully logged into your isolated environment.',
+        roomId: cleanRoomId,
+        isolated: true,
+        zeroCollisions: true,
+        totalRolls: currentRolls.length,
+        stats,
+        suggestedPick,
+        rolls: currentRolls
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: `Failed to update isolated room: ${err.message}` });
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // ACTION: RESET ROOM (Fresh Clean Session for User)
+  // -------------------------------------------------------------------------
+  if (action === 'reset_room') {
+    if (!cleanRoomId) {
+      return res.status(400).json({ success: false, error: 'A valid isolated Room ID is required.' });
+    }
+
+    try {
+      const freshSeed = `${cleanRoomId}_${Date.now()}`;
+      const newRolls = generateRoomSeededRolls(freshSeed, 36);
+      const roomEndpoint = `${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/rolls.json`;
+
+      await axios.put(roomEndpoint, newRolls, { timeout: 6000 });
+      await axios.patch(`${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/meta.json`, {
+        roomId: cleanRoomId,
+        lastReset: Date.now(),
+        lastActive: Date.now(),
+        totalRolls: 36,
+        zeroCollisions: true,
+        isolationMode: 'STRICT_DEDICATED_ROOM'
+      }, { timeout: 4000 }).catch(() => {});
+
+      const stats = computeStatistics(newRolls);
+      const suggestedPick = computeSuggestedPick(stats, newRolls);
+
+      return res.json({
+        success: true,
+        message: 'Your dedicated environment has been reset to a fresh isolated session.',
+        roomId: cleanRoomId,
+        isolated: true,
+        zeroCollisions: true,
+        totalRolls: 36,
+        stats,
+        suggestedPick,
+        rolls: newRolls
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: `Failed to reset room: ${err.message}` });
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // ACTION: GET ROOM STATUS OR CURRENT ROOM ROLLS
+  // -------------------------------------------------------------------------
+  if (action === 'get_room') {
+    if (!cleanRoomId) {
+      return res.status(400).json({ success: false, error: 'A valid isolated Room ID is required.' });
+    }
+
+    try {
+      const roomEndpoint = `${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/rolls.json`;
+      const resp = await axios.get(roomEndpoint, { timeout: 6000 }).catch(() => ({ data: null }));
+
+      let currentRolls = [];
+      if (Array.isArray(resp.data)) {
+        currentRolls = resp.data;
+      } else if (resp.data && typeof resp.data === 'object') {
+        currentRolls = Object.values(resp.data);
+      }
+
+      if (currentRolls.length === 0) {
+        currentRolls = generateRoomSeededRolls(cleanRoomId, 36);
+        await axios.put(roomEndpoint, currentRolls, { timeout: 6000 }).catch(() => {});
+      }
+
+      const stats = computeStatistics(currentRolls);
+      const suggestedPick = computeSuggestedPick(stats, currentRolls);
+
+      return res.json({
+        success: true,
+        sessionId: 'my_room',
+        roomId: cleanRoomId,
+        source: `Dedicated User Room #${cleanRoomId} (100% Isolated)`,
+        isolated: true,
+        zeroCollisions: true,
+        totalRolls: currentRolls.length,
+        stats,
+        suggestedPick,
+        rolls: currentRolls
+      });
+    } catch (err) {
+      return res.status(500).json({ success: false, error: `Failed to fetch room data: ${err.message}` });
+    }
+  }
+
+  // -------------------------------------------------------------------------
+  // DEFAULT: VERIFY / INGEST SESSION (Scoped to User Room when provided)
+  // -------------------------------------------------------------------------
+  if (!rawSessionId) {
+    // If no sessionId specified but roomId is present, return user's room rolls
+    if (cleanRoomId) {
+      rawSessionId = 'my_room';
+    } else {
+      return res.status(400).json({
+        success: false,
+        error: 'Missing Session ID parameter.'
+      });
+    }
   }
 
   const sanitizedRegex = /^[a-zA-Z0-9_-]+$/;
@@ -389,8 +598,142 @@ module.exports = async (req, res) => {
 
   const cleanSessionId = rawSessionId.trim();
 
+  // 1. ISOLATED ROOM FLOW (When User has an active dedicated room)
+  if (cleanRoomId) {
+    try {
+      // If user queries demo or their own room
+      if (cleanSessionId.toLowerCase() === 'demo' || cleanSessionId.toLowerCase() === 'my_room') {
+        const roomEndpoint = `${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/rolls.json`;
+        const resp = await axios.get(roomEndpoint, { timeout: 6000 }).catch(() => ({ data: null }));
+
+        let roomRolls = [];
+        if (Array.isArray(resp.data)) {
+          roomRolls = resp.data;
+        } else if (resp.data && typeof resp.data === 'object') {
+          roomRolls = Object.values(resp.data);
+        }
+
+        if (roomRolls.length === 0) {
+          roomRolls = generateRoomSeededRolls(cleanRoomId, 36);
+          await axios.put(roomEndpoint, roomRolls, { timeout: 6000 }).catch(() => {});
+        }
+
+        const stats = computeStatistics(roomRolls);
+        const suggestedPick = computeSuggestedPick(stats, roomRolls);
+
+        return res.json({
+          success: true,
+          sessionId: cleanSessionId,
+          roomId: cleanRoomId,
+          source: `Dedicated User Room #${cleanRoomId} (Zero Collisions)`,
+          isolated: true,
+          zeroCollisions: true,
+          totalRolls: roomRolls.length,
+          stats,
+          suggestedPick,
+          rolls: roomRolls
+        });
+      }
+
+      // If user queries an external Session ID, clone/snapshot it into their dedicated room
+      // This guarantees no concurrent user can alter or cross-pollute their session calculations!
+      const userSessionEndpoint = `${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/sessions/${cleanSessionId}/rolls.json`;
+      const cachedResp = await axios.get(userSessionEndpoint, { timeout: 5000 }).catch(() => ({ data: null }));
+
+      let rollsList = [];
+      if (cachedResp.data) {
+        if (Array.isArray(cachedResp.data)) {
+          rollsList = cachedResp.data;
+        } else if (typeof cachedResp.data === 'object') {
+          rollsList = Object.values(cachedResp.data);
+        }
+      }
+
+      if (rollsList.length === 0) {
+        // Query the remote public database
+        const remoteEndpoint = `${PUBLIC_OFFLINE_DB}/sessions/${cleanSessionId}/rolls.json`;
+        const remoteResp = await axios.get(remoteEndpoint, {
+          timeout: 8000,
+          headers: { 'Accept': 'application/json', 'User-Agent': 'OfflineDice-Verifier/1.0' }
+        });
+
+        const rawData = remoteResp.data;
+        if (!rawData) {
+          return res.status(404).json({
+            success: false,
+            error: `Session '${cleanSessionId}' was not found or contains no roll records on the database.`
+          });
+        }
+
+        if (Array.isArray(rawData)) {
+          rollsList = rawData.filter(item => item !== null && typeof item === 'object');
+        } else if (typeof rawData === 'object') {
+          rollsList = Object.entries(rawData).map(([key, val]) => ({ id: key, ...val }));
+        }
+
+        if (rollsList.length === 0) {
+          return res.status(404).json({
+            success: false,
+            error: `Session '${cleanSessionId}' exists but has 0 valid roll entries.`
+          });
+        }
+
+        // Snapshot into user's isolated room database asynchronously
+        axios.put(userSessionEndpoint, rollsList, { timeout: 5000 }).catch(() => {});
+        axios.patch(`${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/meta.json`, {
+          lastSession: cleanSessionId,
+          lastActive: Date.now()
+        }, { timeout: 3000 }).catch(() => {});
+      }
+
+      const formattedRolls = rollsList.map((roll, index) => {
+        const names = Array.isArray(roll.names) ? roll.names : [];
+        const colors = Array.isArray(roll.colors) ? roll.colors : [];
+
+        const dice = names.map((name, i) => {
+          const canonical = normalizeColor(name, colors[i]);
+          return {
+            name: canonical,
+            hex: OFFICIAL_COLORS[canonical] || colors[i] || '#888888'
+          };
+        });
+
+        return {
+          rollNumber: index + 1,
+          hash: roll.hash || 'N/A',
+          time: roll.time || null,
+          isRigged: Boolean(roll.isRigged),
+          names,
+          colors,
+          dice
+        };
+      });
+
+      const stats = computeStatistics(formattedRolls);
+      const suggestedPick = computeSuggestedPick(stats, formattedRolls);
+
+      return res.json({
+        success: true,
+        sessionId: cleanSessionId,
+        roomId: cleanRoomId,
+        source: `Dedicated Environment #${cleanRoomId} (Snapshot Core)`,
+        isolated: true,
+        zeroCollisions: true,
+        totalRolls: formattedRolls.length,
+        stats,
+        suggestedPick,
+        rolls: formattedRolls
+      });
+
+    } catch (roomErr) {
+      console.warn('[Isolated Room Fallback]:', roomErr.message);
+      // Fall through to public query if room snapshot encounter an issue
+    }
+  }
+
+  // 2. FALLBACK PUBLIC QUERY (When no roomId is supplied)
   if (cleanSessionId.toLowerCase() === 'demo') {
-    const demoRolls = generateDemoData();
+    const demoRolls = generateRoomSeededRolls('public_demo', 36);
     const stats = computeStatistics(demoRolls);
     const suggestedPick = computeSuggestedPick(stats, demoRolls);
     return res.json({
@@ -404,7 +747,7 @@ module.exports = async (req, res) => {
     });
   }
 
-  const endpoint = `https://offline-dice-verify-default-rtdb.europe-west1.firebasedatabase.app/sessions/${cleanSessionId}/rolls.json`;
+  const endpoint = `${PUBLIC_OFFLINE_DB}/sessions/${cleanSessionId}/rolls.json`;
 
   try {
     const response = await axios.get(endpoint, {

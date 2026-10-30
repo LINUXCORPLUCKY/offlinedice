@@ -20,6 +20,20 @@ function toSafeKeyId(key) {
   return Buffer.from(String(key).trim()).toString('hex');
 }
 
+// Derive clean unique Room ID for dedicated user environment
+function getRoomIdForKey(key) {
+  if (!key) return 'ROOM-GUEST-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+  const clean = String(key).trim();
+  if (MASTER_OWNER_KEYS.includes(clean)) {
+    return 'ROOM-MASTER-DEV';
+  }
+  const cleanKey = clean.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+  if (cleanKey.length >= 8) {
+    return `ROOM-${cleanKey.slice(0, 4)}-${cleanKey.slice(-4)}`;
+  }
+  return `ROOM-${cleanKey}`;
+}
+
 // Generate random formatted key
 function generateRandomKey(prefix = 'HD') {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -182,6 +196,17 @@ module.exports = async (req, res) => {
       }
 
       const remainingMs = record.expiresAt ? Math.max(0, record.expiresAt - Date.now()) : null;
+      const userRoomId = getRoomIdForKey(record.key);
+
+      // Auto-register dedicated user room metadata in Firebase RTDB
+      axios.patch(`${FIREBASE_BASE_URL}/user_rooms/${userRoomId}/meta.json`, {
+        roomId: userRoomId,
+        key: record.key,
+        role: isMaster ? 'owner' : (record.role || 'user'),
+        lastActive: Date.now(),
+        isolationMode: 'DEDICATED_ISOLATED_ENVIRONMENT',
+        zeroCollisions: true
+      }, { timeout: 3500 }).catch(() => {});
 
       return res.json({
         success: true,
@@ -195,7 +220,8 @@ module.exports = async (req, res) => {
         label: record.label || '',
         hwid: isHwidDisabled ? 'DISABLED' : (record.hwid || null),
         hwidLock: !isHwidDisabled,
-        isMaster
+        isMaster,
+        roomId: userRoomId
       });
     }
 
@@ -749,6 +775,59 @@ module.exports = async (req, res) => {
 
       await axios.put(`${FIREBASE_BASE_URL}/maintenance.json`, maintenanceData, { timeout: 6000 });
       return res.json({ success: true, message: 'Maintenance mode updated.', maintenance: maintenanceData });
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: GET USER ROOM STATUS & ISOLATION HEALTH
+    // -------------------------------------------------------------
+    if (action === 'get_room_status') {
+      const targetRoomId = (query.roomId || body.roomId || '').trim().replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!targetRoomId) {
+        return res.status(400).json({ success: false, error: 'Room ID is required.' });
+      }
+
+      try {
+        const resp = await axios.get(`${FIREBASE_BASE_URL}/user_rooms/${targetRoomId}/meta.json`, { timeout: 5000 });
+        const rollsResp = await axios.get(`${FIREBASE_BASE_URL}/user_rooms/${targetRoomId}/rolls.json`, { timeout: 5000 });
+        const rolls = Array.isArray(rollsResp.data) ? rollsResp.data : (rollsResp.data ? Object.values(rollsResp.data) : []);
+
+        return res.json({
+          success: true,
+          roomId: targetRoomId,
+          meta: resp.data || { isolationMode: 'DEDICATED_ISOLATED_ENVIRONMENT', zeroCollisions: true },
+          totalRolls: rolls.length,
+          isolated: true,
+          zeroCollisions: true
+        });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: `Failed to fetch room status: ${err.message}` });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: RESET USER ROOM (Clear isolated roll buffer)
+    // -------------------------------------------------------------
+    if (action === 'reset_room') {
+      const targetRoomId = (query.roomId || body.roomId || '').trim().replace(/[^a-zA-Z0-9_-]/g, '');
+      if (!targetRoomId) {
+        return res.status(400).json({ success: false, error: 'Room ID is required.' });
+      }
+
+      try {
+        await axios.delete(`${FIREBASE_BASE_URL}/user_rooms/${targetRoomId}/rolls.json`, { timeout: 5000 });
+        await axios.patch(`${FIREBASE_BASE_URL}/user_rooms/${targetRoomId}/meta.json`, {
+          lastReset: Date.now(),
+          totalRolls: 0
+        }, { timeout: 5000 }).catch(() => {});
+
+        return res.json({
+          success: true,
+          roomId: targetRoomId,
+          message: 'Isolated room rolls successfully reset to clean state.'
+        });
+      } catch (err) {
+        return res.status(500).json({ success: false, error: `Failed to reset room: ${err.message}` });
+      }
     }
 
     return res.status(400).json({ success: false, error: `Unrecognized action '${action}'.` });

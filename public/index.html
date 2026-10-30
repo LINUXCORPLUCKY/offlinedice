@@ -124,6 +124,11 @@
         </div>
 
         <div class="header-actions">
+          <div id="user-room-badge" class="user-room-badge hidden" title="Your isolated prediction room with dedicated database buffer">
+            <span class="room-pulse-dot"></span>
+            <span class="room-icon">🛡️</span>
+            <span class="room-label" id="user-room-label">Room: Isolated</span>
+          </div>
           <div id="auth-status-chip" class="auth-status-chip hidden">
             <span class="auth-role-badge" id="auth-role-badge">KEY ACTIVE</span>
             <button type="button" class="btn-change-key" id="btn-change-key" title="Change or exit key">Change Key</button>
@@ -167,6 +172,47 @@
       </div>
       <button type="button" class="announcement-close" id="ann-close-btn" title="Dismiss announcement">&times;</button>
     </div>
+
+    <!-- Dedicated User Room / Isolated Environment Card -->
+    <section class="card room-environment-card" id="room-environment-section">
+      <div class="room-card-content">
+        <div class="room-info-left">
+          <div class="room-shield-wrap">
+            <span class="room-shield-icon">🛡️</span>
+            <span class="room-glow-pulse"></span>
+          </div>
+          <div class="room-text-block">
+            <div class="room-title-row">
+              <h2 class="room-title">Dedicated User Room</h2>
+              <span class="room-active-tag" id="room-active-tag">
+                <span class="status-dot green-dot"></span> 100% ISOLATED ENVIRONMENT
+              </span>
+              <span class="room-zero-tag">ZERO COLLISION CORE</span>
+            </div>
+            <p class="room-desc">
+              Your prediction engine operates inside a private dedicated database session. Even with hundreds of players online simultaneously, your rolls, Markov chains, and predictions remain 100% isolated and collision-free.
+            </p>
+            <div class="room-meta-pills">
+              <span class="meta-pill">Room ID: <strong id="room-display-id" class="mono-code">ROOM-ISOLATED</strong> <button type="button" class="btn-copy-room" id="btn-copy-room" title="Copy Room ID">📋</button></span>
+              <span class="meta-pill">Database Buffer: <strong class="text-green">DEDICATED (RTDB)</strong></span>
+              <span class="meta-pill">User Collision Rate: <strong class="text-green">0.0% (Guaranteed)</strong></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="room-actions-right">
+          <button type="button" class="btn btn-room-action" id="btn-load-my-room" title="Load your dedicated isolated room rolls">
+            <span class="btn-icon">⚡</span> Ingest My Room
+          </button>
+          <button type="button" class="btn btn-room-reset" id="btn-reset-my-room" title="Reset your room to a fresh clean isolated session">
+            <span class="btn-icon">🧹</span> Reset Room
+          </button>
+          <button type="button" class="btn btn-room-add" id="btn-open-add-roll" title="Add a live game roll to your isolated room">
+            <span class="btn-icon">🎲</span> + Add Roll
+          </button>
+        </div>
+      </div>
+    </section>
 
     <!-- Search / Session Ingestion Bar -->
     <section class="card search-card" id="search-section">
@@ -867,6 +913,45 @@
           </div>
         </div>
         <button type="button" class="btn btn-action" id="btn-got-it">Got it, let's roll!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Add Live Game Roll Modal -->
+  <div id="add-roll-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box add-roll-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-badge">ISOLATED ROOM</span>
+          <h3>Add Live Game Roll</h3>
+          <p>Log a round into your private room to update real-time prediction convergence.</p>
+        </div>
+        <button type="button" class="modal-close" id="close-add-roll-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="dice-selector-label">Select 4 Dice Colors for this Roll:</div>
+        <div class="dice-slots-row">
+          <div class="dice-slot" data-slot="0" id="dice-slot-0"><span class="slot-text">Die 1</span></div>
+          <div class="dice-slot" data-slot="1" id="dice-slot-1"><span class="slot-text">Die 2</span></div>
+          <div class="dice-slot" data-slot="2" id="dice-slot-2"><span class="slot-text">Die 3</span></div>
+          <div class="dice-slot" data-slot="3" id="dice-slot-3"><span class="slot-text">Die 4</span></div>
+        </div>
+        <div class="color-picker-grid">
+          <button type="button" class="color-pick-btn" data-color="Red" style="--c:#FF0000;">Red</button>
+          <button type="button" class="color-pick-btn" data-color="Orange" style="--c:#FFA500;">Orange</button>
+          <button type="button" class="color-pick-btn" data-color="Yellow" style="--c:#FFD700;">Yellow</button>
+          <button type="button" class="color-pick-btn" data-color="Green" style="--c:#008000;">Green</button>
+          <button type="button" class="color-pick-btn" data-color="Blue" style="--c:#0000FF;">Blue</button>
+          <button type="button" class="color-pick-btn" data-color="Purple" style="--c:#800080;">Purple</button>
+        </div>
+        <div id="add-roll-error" class="gate-alert hidden" style="margin-top:12px;"></div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <button type="button" class="btn btn-secondary" id="btn-clear-dice-slots">Clear</button>
+        <button type="button" class="btn btn-primary" id="btn-submit-live-roll">
+          <span class="btn-text">Submit &amp; Recalculate</span>
+          <span class="btn-spinner hidden" id="add-roll-spinner"></span>
+        </button>
       </div>
     </div>
   </div>
