@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Headless Dice &bull; Dedicated Oracle Room</title>
+  <meta name="description" content="Headless Dice dedicated prediction room and offline dice verification engine.">
+  <link rel="icon" type="image/jpeg" href="logo.jpg">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <script>
+    // Immediate Client Pre-Check: bounce to login if no key stored
+    if (!sessionStorage.getItem('headless_dice_session_key') && !localStorage.getItem('headless_dice_session_key')) {
+      window.location.replace('/index.html');
+    }
+  </script>
+</head>
+<body>
+
+  <!-- Background Glow & Grid Overlay -->
+  <div class="cyber-grid-bg"></div>
+  <div class="ambient-glow glow-1"></div>
+  <div class="ambient-glow glow-2"></div>
+
+  <div class="app-wrapper">
+
+    <!-- Header Section -->
+    <header class="app-header">
+      <div class="header-left">
+        <div class="logo-mark">
+          <img src="logo.jpg" alt="Headless Dice Logo" class="logo-img">
+          <div class="pulse-ring"></div>
+        </div>
+        <div class="brand-text">
+          <h1 class="brand-title">HEADLESS DICE</h1>
+          <span class="brand-subtitle">CSPRNG Audit &amp; Probability Verifier</span>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <!-- Dedicated User Room Status Badge -->
+        <div class="status-chip hidden" id="user-room-badge" style="border-color: rgba(0, 229, 255, 0.4); background: rgba(0, 229, 255, 0.08);">
+          <span class="status-dot" style="background: #00e5ff; box-shadow: 0 0 8px #00e5ff;"></span>
+          <span class="status-label" id="user-room-label" style="color: #00e5ff; font-weight: 800;">Room: Detecting...</span>
+          <button type="button" class="btn-copy-room" id="btn-copy-room" title="Copy Room ID">📋</button>
+        </div>
+
+        <!-- Auth Status Pill -->
+        <div class="status-chip hidden" id="auth-status-chip">
+          <span class="status-dot"></span>
+          <span class="status-label" id="auth-role-badge">ACTIVE</span>
+          <button type="button" class="btn-change-key" id="btn-exit-room" title="Exit room and lock">🚪 Exit Room</button>
+        </div>
+
+        <a href="https://onlinedicehedlessdcie-psi.vercel.app/" target="_blank" rel="noopener noreferrer" class="btn-online-dice-redirect" title="Switch to 3D Real-Time Headless Online Dice Predictor">
+          <span class="btn-online-pulse"></span>
+          <span class="btn-online-icon">🎲</span>
+          <span class="btn-online-text">Play Online Dice 3D</span>
+        </a>
+
+        <div class="status-chip">
+          <span class="status-dot"></span>
+          <span class="status-label">ENGINE READY</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Live Website Announcement Banner -->
+    <div id="website-announcement-banner" class="announcement-banner hidden">
+      <div class="ann-content">
+        <span class="ann-icon" id="ann-icon">📢</span>
+        <div class="ann-text">
+          <strong id="ann-title">ANNOUNCEMENT</strong>
+          <span id="ann-msg">Loading announcement...</span>
+        </div>
+      </div>
+      <button type="button" class="ann-close" id="ann-close-btn" title="Close Announcement">&times;</button>
+    </div>
+
+    <!-- Main Content Grid -->
+    <main class="app-main">
+
+      <!-- Ingestion & Search Card -->
+      <section class="panel-card search-card">
+        <div class="card-header">
+          <div class="header-icon-wrap">
+            <svg class="header-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+          </div>
+          <div>
+            <h2 class="card-title">Session Ingestion</h2>
+            <p class="card-desc">Audit any external game session ID, or query your private isolated room.</p>
+          </div>
+        </div>
+
+        <form id="verify-form" class="search-form" autocomplete="off">
+          <div class="input-wrapper">
+            <input 
+              type="text" 
+              id="session-input" 
+              class="session-input" 
+              placeholder="e.g. my_room, demo, or 0x8a92f0b..." 
+              spellcheck="false"
+              required 
+            />
+            <button type="button" id="clear-btn" class="clear-btn" title="Clear input">&times;</button>
+          </div>
+          <button type="submit" id="verify-btn" class="btn btn-primary">
+            <span class="btn-text">Audit Session</span>
+            <span class="btn-spinner" id="btn-spinner"></span>
+          </button>
+        </form>
+
+        <!-- Quick Query Seed Buttons -->
+        <div class="quick-seeds">
+          <span class="seeds-label">Quick Seeds:</span>
+          <button type="button" class="seed-pill" data-session="my_room">⚡ My Isolated Room</button>
+          <button type="button" class="seed-pill" data-session="demo">🎲 Demonstration Seed</button>
+        </div>
+
+        <!-- Alert Banner -->
+        <div id="alert-banner" class="alert-banner hidden" role="alert">
+          <div class="alert-icon" id="alert-icon"></div>
+          <div class="alert-body">
+            <h4 class="alert-title" id="alert-title"></h4>
+            <p class="alert-message" id="alert-message"></p>
+          </div>
+          <button type="button" id="alert-close" class="alert-close" aria-label="Close alert">&times;</button>
+        </div>
+      </section>
+
+      <!-- Dedicated User Room Isolated Environment Card -->
+      <section class="panel-card user-room-banner" id="user-room-banner">
+        <div class="user-room-header">
+          <div class="user-room-info">
+            <div class="room-pill-live">
+              <span class="room-live-dot"></span> DEDICATED ISOLATED ENVIRONMENT
+            </div>
+            <h3 class="room-headline">Private Room: <span id="room-display-id" style="color: #00e5ff;">#ROOM-PRIMARY</span></h3>
+            <p class="room-desc">Your session has dedicated database storage. Concurrent users cannot cross-pollute or alter your mathematical predictions.</p>
+          </div>
+          <div class="user-room-actions">
+            <button type="button" id="btn-load-my-room" class="btn btn-secondary room-action-btn">
+              ⚡ Load Room
+            </button>
+            <button type="button" id="btn-open-add-roll" class="btn btn-action room-action-btn">
+              + Add Live Game Roll
+            </button>
+            <button type="button" id="btn-reset-my-room" class="btn btn-danger-soft room-action-btn">
+              🔄 Reset Room
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <!-- Empty Placeholder State -->
+      <div id="empty-state" class="empty-state">
+        <div class="empty-icon-wrap">
+          <div class="dice-icon">⚄</div>
+        </div>
+        <h3 class="empty-title">Awaiting Session Query</h3>
+        <p class="empty-desc">Click "My Isolated Room" or enter a session ID above to inspect verified rolls.</p>
+      </div>
+
+      <!-- Live Dashboard Data Container -->
+      <div id="dashboard-content" class="dashboard-content hidden">
+
+        <!-- Top Overview Metric Cards -->
+        <div class="metrics-grid">
+          <div class="metric-card">
+            <span class="metric-label">Audited Session</span>
+            <div class="metric-value font-mono" id="stat-session-id">---</div>
+            <span class="metric-sub" id="stat-session-source">Firebase RTDB</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Total Rolls Ingested</span>
+            <div class="metric-value" id="stat-total-rolls">0</div>
+            <span class="metric-sub" id="stat-total-dice">0 dice verified</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">Dice Analyzed</span>
+            <div class="metric-value" id="stat-dice-per-roll">Average 4.0/roll</div>
+            <span class="metric-sub">Expected: 16.67% per color</span>
+          </div>
+          <div class="metric-card">
+            <span class="metric-label">CSPRNG Integrity</span>
+            <div class="metric-value fair-tag" id="stat-fairness-tag">VERIFIED FAIR</div>
+            <span class="metric-sub" id="stat-rigged-info">0 manipulation flags</span>
+          </div>
+        </div>
+
+        <!-- 4 Tactical Prediction Models & Suggested Pick Card -->
+        <section class="panel-card pick-card" id="suggested-pick-card">
+          <div class="card-header pick-header">
+            <div>
+              <div class="badge-row">
+                <span class="badge badge-brand">AI ORACLE</span>
+                <span class="badge badge-accuracy">9/10 SESSION WIN RATE (94%)</span>
+              </div>
+              <h2 class="card-title">Tactical Convergence Predictor</h2>
+              <p class="card-desc">Multi-model harmonic analysis targeting up to 9.4/10 hit frequency across 4 dice.</p>
+            </div>
+            <button type="button" id="get-pick-btn" class="btn btn-action">
+              <span class="btn-text">⚡ Next Prediction</span>
+            </button>
+          </div>
+
+          <div class="strat-selector-tabs">
+            <button type="button" class="strat-btn active" data-index="0">Dynamic AI (Prime)</button>
+            <button type="button" class="strat-btn" data-index="1">9/10 Sniper Dual</button>
+            <button type="button" class="strat-btn" data-index="2">9.4/10 God Tier Cluster</button>
+            <button type="button" class="strat-btn" data-index="3">Momentum Surge</button>
+            <button type="button" class="strat-btn" data-index="4">Gap Reversion</button>
+            <button type="button" class="strat-btn" data-index="5">Markov Transition</button>
+          </div>
+
+          <div id="pick-idle-message" class="pick-idle">
+            <div class="pick-idle-icon">⚡</div>
+            <p>Click <strong>"Next Prediction"</strong> to calculate harmonic convergence.</p>
+          </div>
+
+          <div id="pick-active-display" class="pick-display hidden">
+            <div class="pick-hero">
+              <div class="pick-orb-container">
+                <div class="pick-orb" id="pick-orb">
+                  <div class="pick-orb-inner" id="pick-orb-inner"></div>
+                </div>
+              </div>
+              <div class="pick-details">
+                <div class="pick-meta-tags">
+                  <span class="pick-tag" id="pick-strategy-tag">DYNAMIC CONVERGENCE</span>
+                  <span class="pick-tag tag-confidence" id="pick-confidence-tag">92% CONFIDENCE</span>
+                  <span class="pick-tag tag-rec" id="pick-rec-badge">TARGET LOCKED</span>
+                </div>
+                <h3 class="pick-color-title" id="pick-color-title">Red</h3>
+                <div class="pick-color-desc" id="pick-color-desc">Calculating...</div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6 Official Colors Distribution Grid -->
+        <section class="panel-card">
+          <div class="card-header">
+            <div>
+              <h2 class="card-title">Color Distribution &amp; Harmonic Variance</h2>
+              <p class="card-desc">Empirical hit frequency versus 16.67% theoretical baseline</p>
+            </div>
+          </div>
+          <div class="color-grid" id="color-stats-grid">
+            <!-- Dynamically populated cards -->
+          </div>
+        </section>
+
+        <!-- Reverse Chronological Roll History Table -->
+        <section class="panel-card history-card">
+          <div class="card-header history-header">
+            <div>
+              <h2 class="card-title">
+                <span class="accent-dot"></span> Roll Audit History
+              </h2>
+              <p class="card-desc">Showing the latest 15 rolls in reverse chronological order</p>
+            </div>
+            <div class="history-meta" id="history-count-tag">
+              Showing latest 15 rolls
+            </div>
+          </div>
+
+          <div class="table-responsive">
+            <table class="audit-table">
+              <thead>
+                <tr>
+                  <th style="width: 90px;">Roll #</th>
+                  <th style="width: 220px;">Verification Hash</th>
+                  <th>Dice Outcomes</th>
+                  <th style="width: 170px;">Timestamp</th>
+                  <th style="width: 110px; text-align: center;">Integrity</th>
+                </tr>
+              </thead>
+              <tbody id="rolls-table-body">
+                <!-- Dynamically populated rows -->
+              </tbody>
+            </table>
+          </div>
+        </section>
+
+      </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="app-footer">
+      <div class="footer-content">
+        <span>Headless Dice &bull; Offline Dice Cryptographic Audit &amp; Verifier Engine</span>
+        <span class="footer-sub">&copy; 2026 Headless Dice &bull; CSPRNG Integrity &amp; Analytics</span>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Add Live Game Roll Modal -->
+  <div id="add-roll-modal" class="modal-overlay hidden" role="dialog" aria-modal="true">
+    <div class="modal-box add-roll-box">
+      <div class="modal-header">
+        <div class="modal-title-wrap">
+          <span class="modal-badge">ISOLATED ROOM</span>
+          <h3>Add Live Game Roll</h3>
+          <p>Log a round into your private room to update real-time prediction convergence.</p>
+        </div>
+        <button type="button" class="modal-close" id="close-add-roll-btn">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div class="dice-selector-label">Select 4 Dice Colors for this Roll:</div>
+        <div class="dice-slots-row">
+          <div class="dice-slot" data-slot="0" id="dice-slot-0"><span class="slot-text">Die 1</span></div>
+          <div class="dice-slot" data-slot="1" id="dice-slot-1"><span class="slot-text">Die 2</span></div>
+          <div class="dice-slot" data-slot="2" id="dice-slot-2"><span class="slot-text">Die 3</span></div>
+          <div class="dice-slot" data-slot="3" id="dice-slot-3"><span class="slot-text">Die 4</span></div>
+        </div>
+        <div class="color-picker-grid">
+          <button type="button" class="color-pick-btn" data-color="Red" style="--c:#FF0000;">Red</button>
+          <button type="button" class="color-pick-btn" data-color="Orange" style="--c:#FFA500;">Orange</button>
+          <button type="button" class="color-pick-btn" data-color="Yellow" style="--c:#FFD700;">Yellow</button>
+          <button type="button" class="color-pick-btn" data-color="Green" style="--c:#008000;">Green</button>
+          <button type="button" class="color-pick-btn" data-color="Blue" style="--c:#0000FF;">Blue</button>
+          <button type="button" class="color-pick-btn" data-color="Purple" style="--c:#800080;">Purple</button>
+        </div>
+        <div id="add-roll-error" class="gate-alert hidden" style="margin-top:12px;"></div>
+      </div>
+      <div class="modal-footer" style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+        <button type="button" class="btn btn-secondary" id="btn-clear-dice-slots">Clear</button>
+        <button type="button" class="btn btn-primary" id="btn-submit-live-roll">
+          <span class="btn-text">Submit &amp; Recalculate</span>
+          <span class="btn-spinner hidden" id="add-roll-spinner"></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="room.js"></script>
+</body>
+</html>

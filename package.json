@@ -22,6 +22,8 @@
     "express": "^4.21.2"
   },
   "devDependencies": {
-    "javascript-obfuscator": "^5.9.0"
+    "@types/node": "^26.6.6",
+    "javascript-obfuscator": "^5.9.0",
+    "typescript": "^7.0.2"
   }
 }

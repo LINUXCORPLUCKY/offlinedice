@@ -3,6 +3,14 @@
   "cleanUrls": true,
   "rewrites": [
     {
+      "source": "/room",
+      "destination": "/room.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
       "source": "/api/verify/(.*)",
       "destination": "/api/verify.js?sessionId=$1"
     },

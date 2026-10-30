@@ -210,3 +210,4 @@ module.exports = {
   getRoomIdForKey,
   validateAccessKey
 };
+

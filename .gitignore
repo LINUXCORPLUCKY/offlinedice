@@ -1,4 +1,5 @@
 node_modules
+dist
 *.src.js
 public/owner-panel/owner-panel.src.js
 .env

@@ -1,10 +1,23 @@
 const fs = require('fs');
 const path = require('path');
+const { execSync } = require('child_process');
 const JavaScriptObfuscator = require('javascript-obfuscator');
+
+console.log('[*] Compiling TypeScript sources in src/...');
+try {
+  execSync('npx tsc', { stdio: 'inherit' });
+  console.log('[+] TypeScript compilation completed.');
+} catch (err) {
+  console.error('[!] TypeScript compilation error:', err.message);
+  process.exit(1);
+}
 
 function obfuscateFile(srcPath, distPath, label) {
   console.log(`[*] Obfuscating ${label}...`);
-  const sourceCode = fs.readFileSync(srcPath, 'utf8');
+  let sourceCode = fs.readFileSync(srcPath, 'utf8');
+
+  // Strip standalone export statements from TypeScript emit for browser runtime
+  sourceCode = sourceCode.replace(/export\s*\{\s*\};?/g, '');
 
   const obfuscationResult = JavaScriptObfuscator.obfuscate(sourceCode, {
     compact: true,
@@ -27,16 +40,32 @@ function obfuscateFile(srcPath, distPath, label) {
   console.log(`[+] Successfully wrote protected build to ${distPath} (${Buffer.byteLength(obfuscationResult.getObfuscatedCode())} bytes)`);
 }
 
-// 1. Obfuscate Client Application
+// 1. Obfuscate TypeScript Login Bundle
 obfuscateFile(
-  path.join(__dirname, 'app.src.js'),
-  path.join(__dirname, 'public', 'app.js'),
-  'app.src.js'
+  path.join(__dirname, 'dist', 'login.js'),
+  path.join(__dirname, 'public', 'login.js'),
+  'dist/login.js -> public/login.js'
 );
 
-// 2. Obfuscate Owner Management Gateway
+// 2. Obfuscate TypeScript Room & Oracle Bundle
+obfuscateFile(
+  path.join(__dirname, 'dist', 'room.js'),
+  path.join(__dirname, 'public', 'room.js'),
+  'dist/room.js -> public/room.js'
+);
+
+// 3. Obfuscate Owner Management Gateway
 const ownerSrc = path.join(__dirname, 'public', 'owner-panel', 'owner-panel.src.js');
 const ownerDist = path.join(__dirname, 'public', 'owner-panel', 'owner-panel.js');
 if (fs.existsSync(ownerSrc)) {
-  obfuscateFile(ownerSrc, ownerDist, 'owner-panel.src.js');
+  obfuscateFile(ownerSrc, ownerDist, 'owner-panel.src.js -> owner-panel.js');
+}
+
+// 4. Obfuscate Legacy Bundle
+if (fs.existsSync(path.join(__dirname, 'app.src.js'))) {
+  obfuscateFile(
+    path.join(__dirname, 'app.src.js'),
+    path.join(__dirname, 'public', 'app.js'),
+    'app.src.js -> public/app.js'
+  );
 }

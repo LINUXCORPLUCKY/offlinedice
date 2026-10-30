@@ -62,8 +62,16 @@ function normalizeColor(name, hex) {
   return name || 'Unknown';
 }
 
-app.get('/', (req, res) => {
+app.get(['/', '/login', '/login.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
+});
+
+app.get(['/room', '/room.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'room.html'));
+});
+
+app.get(['/owner-panel', '/owner-panel/'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'owner-panel', 'index.html'));
 });
 
 // Verification & Audit API endpoint
