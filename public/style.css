@@ -2982,3 +2982,32 @@ input:checked + .slider:before {
     padding: 8px 10px;
   }
 }
+
+
+/* 9/10 Tactical Strategy Switcher Buttons */
+.strat-highlight-btn {
+  background: rgba(0, 229, 255, 0.12) !important;
+  border-color: rgba(0, 229, 255, 0.35) !important;
+  color: #00e5ff !important;
+}
+
+.strat-highlight-btn.active, .strat-highlight-btn:hover {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.35), rgba(176, 38, 255, 0.3)) !important;
+  border-color: #00e5ff !important;
+  box-shadow: 0 0 15px rgba(0, 229, 255, 0.4) !important;
+}
+
+.strat-god-btn {
+  background: rgba(255, 215, 0, 0.14) !important;
+  border-color: rgba(255, 215, 0, 0.45) !important;
+  color: #ffd700 !important;
+  font-weight: 800 !important;
+  box-shadow: 0 0 12px rgba(255, 215, 0, 0.2) !important;
+}
+
+.strat-god-btn.active, .strat-god-btn:hover {
+  background: linear-gradient(135deg, #ffd700, #ff6a00) !important;
+  color: #000 !important;
+  border-color: #fff !important;
+  box-shadow: 0 0 22px rgba(255, 215, 0, 0.6) !important;
+}
