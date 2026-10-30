@@ -222,7 +222,7 @@
         </span>
       </div>
 
-      <form id="verify-form" class="search-form" autocomplete="off">
+      <form id="verify-form" class="search-form" autocomplete="off" onsubmit="event.preventDefault(); return false;">
         <div class="input-wrapper">
           <input 
             type="text" 
@@ -233,7 +233,7 @@
           />
           <button type="button" id="clear-btn" class="clear-input-btn" title="Clear input">&times;</button>
         </div>
-        <button type="submit" id="verify-btn" class="btn btn-primary">
+        <button type="button" id="verify-btn" class="btn btn-primary">
           <span class="btn-text">Verify &amp; Load</span>
           <span class="btn-spinner" id="btn-spinner"></span>
         </button>
@@ -457,7 +457,7 @@
         <span class="gate-alert-msg" id="gate-alert-msg"></span>
       </div>
 
-      <form id="gate-form" class="gate-form" autocomplete="off">
+      <form id="gate-form" class="gate-form" autocomplete="off" onsubmit="event.preventDefault(); return false;">
         <div class="gate-input-wrapper">
           <span class="gate-key-icon">🔑</span>
           <input 
@@ -471,7 +471,7 @@
           <button type="button" id="gate-clear-btn" class="gate-clear-btn" title="Clear">&times;</button>
         </div>
 
-        <button type="submit" id="gate-submit-btn" class="btn btn-primary gate-btn">
+        <button type="button" id="gate-submit-btn" class="btn btn-primary gate-btn">
           <span class="btn-text">⚡ Unlock Oracle</span>
           <span class="btn-spinner" id="gate-spinner"></span>
         </button>
