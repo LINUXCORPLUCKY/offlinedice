@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const FIREBASE_BASE_URL = 'https://headlessdice-default-rtdb.asia-southeast1.firebasedatabase.app';
-const MASTER_OWNER_KEYS = ['deofc3ey'];
+const MASTER_OWNER_KEYS = ['linuxdevpy'];
 
 // Duration definitions in milliseconds
 const DURATION_MAP = {
@@ -103,26 +103,32 @@ module.exports = async (req, res) => {
         return res.status(400).json({ success: false, valid: false, error: 'Access Key is required.' });
       }
 
-      // 1. Check Master Owner Key: deofc3ey (Bypasses HWID lock)
-      if (MASTER_OWNER_KEYS.includes(keyInput)) {
-        return res.json({
-          success: true,
-          valid: true,
+      const isMaster = MASTER_OWNER_KEYS.includes(keyInput);
+      const keyId = toSafeKeyId(keyInput);
+      let resp;
+      try {
+        resp = await axios.get(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { timeout: 7000 });
+      } catch (e) {
+        resp = { data: null };
+      }
+      let record = resp.data;
+
+      // Master key seed if not present in Firebase yet
+      if (isMaster && !record) {
+        record = {
           key: keyInput,
           role: 'owner',
           duration: 'lifetime',
+          createdAt: Date.now(),
           expiresAt: null,
-          remainingMs: null,
-          label: 'Sole Master Owner Authority (Private)',
-          isMaster: true,
-          hwid: 'MASTER-BYPASS'
-        });
+          status: 'active',
+          hwid: null,
+          hwidBoundAt: null,
+          label: 'Sole Master Owner Authority (Private - Single Device HWID)',
+          createdBy: 'system'
+        };
+        await axios.put(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, record, { timeout: 6000 }).catch(() => {});
       }
-
-      // 2. Query Firebase RTDB
-      const keyId = toSafeKeyId(keyInput);
-      const resp = await axios.get(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { timeout: 7000 });
-      const record = resp.data;
 
       if (!record) {
         return res.status(404).json({
@@ -140,8 +146,8 @@ module.exports = async (req, res) => {
         });
       }
 
-      // Check Expiration
-      if (record.expiresAt && Date.now() > record.expiresAt) {
+      // Check Expiration (Master Key never expires)
+      if (!isMaster && record.expiresAt && Date.now() > record.expiresAt) {
         axios.patch(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { status: 'expired' }).catch(() => {});
         return res.status(403).json({
           success: false,
@@ -150,7 +156,7 @@ module.exports = async (req, res) => {
         });
       }
 
-      // 3. HWID Lock Validation & Auto-Binding
+      // 3. HWID Lock Validation & Auto-Binding (Strictly locks master key linuxdevpy to 1 device as well!)
       if (clientHwid) {
         if (record.hwid) {
           // Already bound: verify match
@@ -163,7 +169,7 @@ module.exports = async (req, res) => {
             });
           }
         } else {
-          // First use on device: bind HWID
+          // First use on device: bind HWID permanently
           await axios.patch(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, {
             hwid: clientHwid,
             hwidBoundAt: Date.now()
@@ -178,14 +184,14 @@ module.exports = async (req, res) => {
         success: true,
         valid: true,
         key: record.key,
-        role: record.role || 'user',
-        duration: record.duration || 'custom',
+        role: isMaster ? 'owner' : (record.role || 'user'),
+        duration: isMaster ? 'lifetime' : (record.duration || 'custom'),
         createdAt: record.createdAt,
-        expiresAt: record.expiresAt,
+        expiresAt: isMaster ? null : record.expiresAt,
         remainingMs,
         label: record.label || '',
         hwid: record.hwid || null,
-        isMaster: false
+        isMaster
       });
     }
 
@@ -518,6 +524,70 @@ module.exports = async (req, res) => {
         onlineNow: Math.max(1, onlineNow), // At least current active viewer
         activeKeys
       });
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: LOG DICE PREDICTION (Player Activity Feed - No IP/Device)
+    // -------------------------------------------------------------
+    if (action === 'log_prediction') {
+      const logEntry = {
+        timestamp: Date.now(),
+        key: (body.key || 'Anonymous').trim().slice(0, 40),
+        role: (body.role || 'user').trim().slice(0, 16),
+        sessionId: (body.sessionId || 'Unknown').trim().slice(0, 64),
+        predictedColor: (body.predictedColor || 'Unknown').trim().slice(0, 20),
+        predictedHex: (body.predictedHex || '#b026ff').trim().slice(0, 10),
+        confidence: Number(body.confidence) || 85,
+        strategy: (body.strategy || 'Dynamic Convergence').trim().slice(0, 40),
+        totalRolls: Number(body.totalRolls) || 0,
+        fairness: (body.fairness || 'FAIR').trim().slice(0, 12)
+      };
+
+      await axios.post(`${FIREBASE_BASE_URL}/prediction_logs.json`, logEntry, { timeout: 5000 }).catch(() => {});
+      return res.json({ success: true });
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: GET PREDICTION LOGS (Owner & Admin View)
+    // -------------------------------------------------------------
+    if (action === 'get_prediction_logs') {
+      const callerRole = await verifyCallerRole(authKey);
+      if (!callerRole || (callerRole !== 'owner' && callerRole !== 'admin')) {
+        return res.status(403).json({ success: false, error: 'Unauthorized: Owner or Admin key required.' });
+      }
+
+      const resp = await axios.get(`${FIREBASE_BASE_URL}/prediction_logs.json`, { timeout: 7000 }).catch(() => ({ data: {} }));
+      const raw = resp.data || {};
+
+      let logs = Object.entries(raw).map(([id, item]) => ({
+        id,
+        ...item
+      }));
+
+      // Sort newest first, keep last 100
+      logs.sort((a, b) => (b.timestamp || 0) - (a.timestamp || 0));
+      if (logs.length > 100) {
+        logs = logs.slice(0, 100);
+      }
+
+      return res.json({
+        success: true,
+        total: logs.length,
+        logs
+      });
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: CLEAR PREDICTION LOGS (Owner Only)
+    // -------------------------------------------------------------
+    if (action === 'clear_prediction_logs') {
+      const callerRole = await verifyCallerRole(authKey);
+      if (callerRole !== 'owner') {
+        return res.status(403).json({ success: false, error: 'Only Owner can clear prediction logs.' });
+      }
+
+      await axios.delete(`${FIREBASE_BASE_URL}/prediction_logs.json`, { timeout: 6000 });
+      return res.json({ success: true, message: 'All prediction logs cleared.' });
     }
 
     return res.status(400).json({ success: false, error: `Unrecognized action '${action}'.` });

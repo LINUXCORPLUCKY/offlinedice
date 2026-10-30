@@ -2086,6 +2086,78 @@ body {
   color: #fff;
 }
 
+.btn-danger {
+  background: rgba(255, 59, 48, 0.15);
+  border: 1px solid rgba(255, 59, 48, 0.35);
+  color: #ff5252;
+  transition: var(--transition);
+}
+
+.btn-danger:hover {
+  background: rgba(255, 59, 48, 0.3);
+  color: #fff;
+  box-shadow: 0 0 10px rgba(255, 59, 48, 0.3);
+}
+
+/* Prediction Feed Styles */
+.pred-color-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: var(--radius-sm);
+  background: rgba(10, 5, 20, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  font-weight: 700;
+  font-size: 12px;
+}
+
+.pred-color-pip {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.pred-strat-tag {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+.pred-conf-tag {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 700;
+  color: #00e676;
+}
+
+.pred-fair-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background: rgba(0, 230, 118, 0.15);
+  border: 1px solid rgba(0, 230, 118, 0.35);
+  color: #00e676;
+}
+
+.pred-flag-tag {
+  display: inline-block;
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  background: rgba(255, 59, 48, 0.15);
+  border: 1px solid rgba(255, 59, 48, 0.35);
+  color: #ff5252;
+}
+
 /* Tab 3: Admin Permissions Form */
 .perms-desc {
   margin-bottom: 20px;

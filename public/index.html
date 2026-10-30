@@ -394,6 +394,7 @@
       <div class="panel-tabs">
         <button type="button" class="tab-btn active" data-tab="tab-generator" id="btn-tab-generator">⚡ Key Generator</button>
         <button type="button" class="tab-btn" data-tab="tab-keys" id="btn-tab-keys">📋 Keys Vault &amp; HWID</button>
+        <button type="button" class="tab-btn" data-tab="tab-predictions" id="btn-tab-predictions">🎲 Player Predictions</button>
         <button type="button" class="tab-btn" data-tab="tab-permissions" id="btn-tab-permissions">⚙️ Admin Perms</button>
       </div>
 
@@ -579,6 +580,33 @@
               <span class="btn-spinner" id="perms-spinner"></span>
             </button>
           </form>
+        </div>
+
+        <!-- TAB 4: Player Predictions Feed -->
+        <div class="tab-content hidden" id="tab-predictions">
+          <div class="table-toolbar">
+            <input type="text" id="preds-search-input" class="search-vault-input" placeholder="Search by key, session ID, color, strategy...">
+            <button type="button" id="refresh-preds-btn" class="btn btn-action btn-sm">🔄 Refresh Predictions</button>
+            <button type="button" id="clear-preds-btn" class="btn btn-danger btn-sm" title="Clear prediction logs from database">🗑️ Clear Logs</button>
+          </div>
+          <div class="table-responsive panel-table-wrap">
+            <table class="panel-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Player Key</th>
+                  <th>Session ID</th>
+                  <th>Predicted Color</th>
+                  <th>Confidence &amp; Strategy</th>
+                  <th>Rolls</th>
+                  <th>Integrity</th>
+                </tr>
+              </thead>
+              <tbody id="preds-table-body">
+                <!-- Dynamically loaded -->
+              </tbody>
+            </table>
+          </div>
         </div>
 
       </div>
