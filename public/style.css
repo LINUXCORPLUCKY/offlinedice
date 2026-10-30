@@ -165,6 +165,45 @@ body {
   gap: 12px;
 }
 
+.btn-how-to-use {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(176, 38, 255, 0.12);
+  color: #fff !important;
+  font-weight: 700;
+  font-size: 14px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  border: 1px solid rgba(176, 38, 255, 0.45);
+  box-shadow: 0 4px 16px rgba(176, 38, 255, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  letter-spacing: 0.02em;
+}
+
+.btn-how-to-use:hover {
+  background: linear-gradient(135deg, rgba(176, 38, 255, 0.35), rgba(255, 0, 127, 0.3));
+  border-color: #b026ff;
+  box-shadow: 0 6px 24px rgba(176, 38, 255, 0.5), 0 0 15px rgba(255, 0, 127, 0.35);
+  transform: translateY(-2px);
+  color: #fff !important;
+}
+
+.how-to-use-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #b026ff, #ff007f);
+  color: #fff;
+  border-radius: 50%;
+  font-size: 9px;
+  padding-left: 2px;
+  box-shadow: 0 2px 8px rgba(176, 38, 255, 0.5);
+}
+
 .btn-discord {
   display: inline-flex;
   align-items: center;
@@ -2439,4 +2478,139 @@ input:checked + .slider:before {
   .live-stats-row {
     flex-direction: column;
   }
+}
+
+
+/* ==========================================================================
+   VIDEO TUTORIAL MODAL
+   ========================================================================== */
+.video-modal-card {
+  background: radial-gradient(circle at top right, rgba(176, 38, 255, 0.15), transparent 70%),
+              linear-gradient(180deg, #160c2b 0%, #0d061a 100%);
+  border: 1px solid rgba(176, 38, 255, 0.35);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 40px rgba(176, 38, 255, 0.25);
+  width: 90%;
+  max-width: 820px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: modalEnter 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.video-modal-header {
+  padding: 20px 24px;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(176, 38, 255, 0.15);
+  background: rgba(10, 5, 20, 0.4);
+}
+
+.video-modal-title-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.video-pill {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  color: #ff007f;
+  background: rgba(255, 0, 127, 0.12);
+  border: 1px solid rgba(255, 0, 127, 0.3);
+  padding: 2px 8px;
+  border-radius: var(--radius-full);
+  width: fit-content;
+}
+
+.video-modal-title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #fff;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.video-modal-sub {
+  font-size: 13px;
+  color: var(--text-dim);
+}
+
+.btn-close-video {
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 26px;
+  cursor: pointer;
+  line-height: 1;
+  padding: 4px;
+  transition: var(--transition);
+}
+
+.btn-close-video:hover {
+  color: #fff;
+  transform: scale(1.1);
+}
+
+.video-player-container {
+  position: relative;
+  width: 100%;
+  background: #000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 16 / 9;
+  max-height: 480px;
+}
+
+.video-player-container video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+  outline: none;
+}
+
+.video-modal-footer {
+  padding: 18px 24px;
+  background: rgba(10, 5, 20, 0.6);
+  border-top: 1px solid rgba(176, 38, 255, 0.15);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.video-key-points {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex: 1;
+}
+
+.key-point-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: var(--text-muted);
+}
+
+.point-num {
+  width: 18px;
+  height: 18px;
+  background: rgba(176, 38, 255, 0.2);
+  border: 1px solid rgba(176, 38, 255, 0.4);
+  color: #d8b4fe;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 700;
+  flex-shrink: 0;
 }
