@@ -679,52 +679,81 @@ module.exports = async (req, res) => {
         });
       }
 
-      // If user queries an external Session ID, clone/snapshot it into their dedicated room
-      // This guarantees no concurrent user can alter or cross-pollute their session calculations!
-      const userSessionEndpoint = `${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/sessions/${cleanSessionId}/rolls.json`;
-      const cachedResp = await axios.get(userSessionEndpoint, { timeout: 5000 }).catch(() => ({ data: null }));
-
-      let rollsList = [];
-      if (cachedResp.data) {
-        if (Array.isArray(cachedResp.data)) {
-          rollsList = cachedResp.data;
-        } else if (typeof cachedResp.data === 'object') {
-          rollsList = Object.values(cachedResp.data);
-        }
+      // If user queries 'demo', serve verified demo rolls
+      if (cleanSessionId.toLowerCase() === 'demo') {
+        const demoRolls = generateRoomSeededRolls(`${cleanRoomId}_demo`, 36);
+        const stats = computeStatistics(demoRolls);
+        const suggestedPick = computeSuggestedPick(stats, demoRolls);
+        return res.json({
+          success: true,
+          sessionId: cleanSessionId,
+          roomId: cleanRoomId,
+          source: 'Offline Dice Demonstration Seed (36 Rolls)',
+          isolated: true,
+          zeroCollisions: true,
+          totalRolls: demoRolls.length,
+          stats,
+          suggestedPick,
+          rolls: demoRolls
+        });
       }
 
+      // Query the live remote Firebase database for real game session rolls
+      let rollsList = [];
+
+      // Pass 1: Try session root endpoint (/sessions/{id}.json)
+      try {
+        const remoteRootResp = await axios.get(`${PUBLIC_OFFLINE_DB}/sessions/${cleanSessionId}.json`, {
+          timeout: 7000,
+          headers: { 'Accept': 'application/json', 'User-Agent': 'OfflineDice-Verifier/1.0' }
+        });
+        const rootData = remoteRootResp.data;
+        if (rootData && typeof rootData === 'object') {
+          const rawRolls = rootData.rolls || rootData;
+          if (Array.isArray(rawRolls)) {
+            rollsList = rawRolls.filter(item => item !== null && typeof item === 'object');
+          } else if (typeof rawRolls === 'object' && rawRolls !== null) {
+            rollsList = Object.entries(rawRolls).map(([key, val]) => ({ id: key, ...val }));
+          }
+        }
+      } catch (err) {}
+
+      // Pass 2: If root did not contain rolls, try direct /rolls.json endpoint
       if (rollsList.length === 0) {
-        // Query the remote public database
-        const remoteEndpoint = `${PUBLIC_OFFLINE_DB}/sessions/${cleanSessionId}/rolls.json`;
         try {
-          const remoteResp = await axios.get(remoteEndpoint, {
-            timeout: 6000,
+          const remoteRollsResp = await axios.get(`${PUBLIC_OFFLINE_DB}/sessions/${cleanSessionId}/rolls.json`, {
+            timeout: 7000,
             headers: { 'Accept': 'application/json', 'User-Agent': 'OfflineDice-Verifier/1.0' }
           });
-
-          const rawData = remoteResp.data;
+          const rawData = remoteRollsResp.data;
           if (Array.isArray(rawData)) {
             rollsList = rawData.filter(item => item !== null && typeof item === 'object');
           } else if (typeof rawData === 'object' && rawData !== null) {
             rollsList = Object.entries(rawData).map(([key, val]) => ({ id: key, ...val }));
           }
-        } catch (fetchErr) {
-          // If remote fetch times out or 404s, seamlessly initialize isolated room session
-        }
-
-        // If session was not found on remote database or has 0 rolls:
-        // Initialize dedicated isolated session environment for this user's session!
-        if (rollsList.length === 0) {
-          rollsList = generateRoomSeededRolls(`${cleanRoomId}_${cleanSessionId}`, 36);
-        }
-
-        // Snapshot into user's isolated room database asynchronously
-        axios.put(userSessionEndpoint, rollsList, { timeout: 5000 }).catch(() => {});
-        axios.patch(`${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/meta.json`, {
-          lastSession: cleanSessionId,
-          lastActive: Date.now()
-        }, { timeout: 3000 }).catch(() => {});
+        } catch (err) {}
       }
+
+      // STRICT INTEGRITY: If the session does not exist in live Firebase, DO NOT return fake demo data!
+      if (rollsList.length === 0) {
+        return res.status(404).json({
+          success: false,
+          error: `Session '${cleanSessionId}' was not found on the live Offline Dice database. Please ensure you entered the exact Session ID from your game.`
+        });
+      }
+
+      // Sort rolls by time if available, or maintain in-game sequence
+      rollsList.sort((a, b) => {
+        if (a.time && b.time) return a.time - b.time;
+        return 0;
+      });
+
+      // Update room metadata asynchronously so user's isolated room tracks their current session
+      axios.patch(`${FIREBASE_BASE_URL}/user_rooms/${cleanRoomId}/meta.json`, {
+        lastSession: cleanSessionId,
+        lastActive: Date.now(),
+        rollsCount: rollsList.length
+      }, { timeout: 3000 }).catch(() => {});
 
       const formattedRolls = rollsList.map((roll, index) => {
         const names = Array.isArray(roll.names) ? roll.names : [];
@@ -756,7 +785,7 @@ module.exports = async (req, res) => {
         success: true,
         sessionId: cleanSessionId,
         roomId: cleanRoomId,
-        source: `Dedicated Environment #${cleanRoomId} (Snapshot Core)`,
+        source: 'Offline Dice Live Firebase (Verified Real)',
         isolated: true,
         zeroCollisions: true,
         totalRolls: formattedRolls.length,
@@ -779,7 +808,7 @@ module.exports = async (req, res) => {
     return res.json({
       success: true,
       sessionId: cleanSessionId,
-      source: 'Headless Dice Demonstration Seed',
+      source: 'Headless Dice Demonstration Seed (36 Rolls)',
       totalRolls: demoRolls.length,
       stats,
       suggestedPick,
@@ -787,31 +816,55 @@ module.exports = async (req, res) => {
     });
   }
 
-  const endpoint = `${PUBLIC_OFFLINE_DB}/sessions/${cleanSessionId}/rolls.json`;
-
   try {
-    const response = await axios.get(endpoint, {
-      timeout: 8000,
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'OfflineDice-Verifier/1.0'
-      }
-    });
-
     let rollsList = [];
-    try {
-      const rawData = response.data;
-      if (Array.isArray(rawData)) {
-        rollsList = rawData.filter(item => item !== null && typeof item === 'object');
-      } else if (typeof rawData === 'object' && rawData !== null) {
-        rollsList = Object.entries(rawData).map(([key, val]) => ({ id: key, ...val }));
-      }
-    } catch (parseErr) {}
 
-    // Graceful fallback: if public database has no rolls, generate seeded session
+    // Pass 1: Try session root endpoint (/sessions/{id}.json)
+    try {
+      const rootResp = await axios.get(`${PUBLIC_OFFLINE_DB}/sessions/${cleanSessionId}.json`, {
+        timeout: 7000,
+        headers: { 'Accept': 'application/json', 'User-Agent': 'OfflineDice-Verifier/1.0' }
+      });
+      const rootData = rootResp.data;
+      if (rootData && typeof rootData === 'object') {
+        const rawRolls = rootData.rolls || rootData;
+        if (Array.isArray(rawRolls)) {
+          rollsList = rawRolls.filter(item => item !== null && typeof item === 'object');
+        } else if (typeof rawRolls === 'object' && rawRolls !== null) {
+          rollsList = Object.entries(rawRolls).map(([key, val]) => ({ id: key, ...val }));
+        }
+      }
+    } catch (err) {}
+
+    // Pass 2: If root did not contain rolls, try direct /rolls.json endpoint
     if (rollsList.length === 0) {
-      rollsList = generateRoomSeededRolls(cleanSessionId, 36);
+      try {
+        const rollsResp = await axios.get(`${PUBLIC_OFFLINE_DB}/sessions/${cleanSessionId}/rolls.json`, {
+          timeout: 7000,
+          headers: { 'Accept': 'application/json', 'User-Agent': 'OfflineDice-Verifier/1.0' }
+        });
+        const rawData = rollsResp.data;
+        if (Array.isArray(rawData)) {
+          rollsList = rawData.filter(item => item !== null && typeof item === 'object');
+        } else if (typeof rawData === 'object' && rawData !== null) {
+          rollsList = Object.entries(rawData).map(([key, val]) => ({ id: key, ...val }));
+        }
+      } catch (err) {}
     }
+
+    // STRICT INTEGRITY: If the session does not exist in live Firebase, return 404
+    if (rollsList.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: `Session '${cleanSessionId}' was not found on the live Offline Dice database. Please ensure you entered the exact Session ID from your game.`
+      });
+    }
+
+    // Sort rolls chronologically if timestamps are present
+    rollsList.sort((a, b) => {
+      if (a.time && b.time) return a.time - b.time;
+      return 0;
+    });
 
     const formattedRolls = rollsList.map((roll, index) => {
       const names = Array.isArray(roll.names) ? roll.names : [];
@@ -842,7 +895,7 @@ module.exports = async (req, res) => {
     return res.json({
       success: true,
       sessionId: cleanSessionId,
-      source: 'Headless Dice Oracle Core',
+      source: 'Offline Dice Live Firebase (Verified Real)',
       totalRolls: formattedRolls.length,
       stats,
       suggestedPick,

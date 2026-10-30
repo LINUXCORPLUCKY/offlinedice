@@ -107,7 +107,7 @@ app.get([
     return res.json({
       success: true,
       sessionId: cleanSessionId,
-      source: 'Headless Dice Demonstration Seed',
+      source: 'Offline Dice Demonstration Seed (36 Rolls)',
       totalRolls: demoRolls.length,
       stats,
       suggestedPick,
@@ -115,34 +115,56 @@ app.get([
     });
   }
 
-  const endpoint = `https://offline-dice-verify-default-rtdb.europe-west1.firebasedatabase.app/sessions/${cleanSessionId}/rolls.json`;
+  const PUBLIC_DB = 'https://offline-dice-verify-default-rtdb.europe-west1.firebasedatabase.app';
+  let rollsList = [];
 
   try {
-    const response = await axios.get(endpoint, {
-      timeout: 8000,
-      headers: {
-        'Accept': 'application/json',
-        'User-Agent': 'OfflineDice-Verifier/1.0'
-      }
-    });
-
-    let rollsList = [];
+    // Pass 1: Try session root endpoint (/sessions/{id}.json)
     try {
-      const rawData = response.data;
-      if (Array.isArray(rawData)) {
-        rollsList = rawData.filter(item => item !== null && typeof item === 'object');
-      } else if (typeof rawData === 'object' && rawData !== null) {
-        rollsList = Object.entries(rawData).map(([key, val]) => ({
-          id: key,
-          ...val
-        }));
+      const rootResp = await axios.get(`${PUBLIC_DB}/sessions/${cleanSessionId}.json`, {
+        timeout: 7000,
+        headers: { 'Accept': 'application/json', 'User-Agent': 'OfflineDice-Verifier/1.0' }
+      });
+      const rootData = rootResp.data;
+      if (rootData && typeof rootData === 'object') {
+        const rawRolls = rootData.rolls || rootData;
+        if (Array.isArray(rawRolls)) {
+          rollsList = rawRolls.filter(item => item !== null && typeof item === 'object');
+        } else if (typeof rawRolls === 'object' && rawRolls !== null) {
+          rollsList = Object.entries(rawRolls).map(([key, val]) => ({ id: key, ...val }));
+        }
       }
-    } catch (parseErr) {}
+    } catch (err) {}
 
-    // Fallback: if session not found on remote, generate clean seeded verification rolls
+    // Pass 2: If root did not contain rolls, try direct /rolls.json endpoint
     if (rollsList.length === 0) {
-      rollsList = generateDemoData();
+      try {
+        const rollsResp = await axios.get(`${PUBLIC_DB}/sessions/${cleanSessionId}/rolls.json`, {
+          timeout: 7000,
+          headers: { 'Accept': 'application/json', 'User-Agent': 'OfflineDice-Verifier/1.0' }
+        });
+        const rawData = rollsResp.data;
+        if (Array.isArray(rawData)) {
+          rollsList = rawData.filter(item => item !== null && typeof item === 'object');
+        } else if (typeof rawData === 'object' && rawData !== null) {
+          rollsList = Object.entries(rawData).map(([key, val]) => ({ id: key, ...val }));
+        }
+      } catch (err) {}
     }
+
+    // STRICT INTEGRITY: If the session does not exist in live Firebase, return 404
+    if (rollsList.length === 0) {
+      return res.status(404).json({
+        success: false,
+        error: `Session '${cleanSessionId}' was not found on the live Offline Dice database. Please ensure you entered the exact Session ID from your game.`
+      });
+    }
+
+    // Sort chronologically if timestamps exist
+    rollsList.sort((a, b) => {
+      if (a.time && b.time) return a.time - b.time;
+      return 0;
+    });
 
     // Standardize roll schema
     const formattedRolls = rollsList.map((roll, index) => {
@@ -176,7 +198,7 @@ app.get([
     return res.json({
       success: true,
       sessionId: cleanSessionId,
-      source: 'Headless Dice Oracle Core',
+      source: 'Offline Dice Live Firebase (Verified Real)',
       totalRolls: formattedRolls.length,
       stats,
       suggestedPick,
