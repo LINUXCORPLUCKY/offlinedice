@@ -443,12 +443,25 @@
               <div class="form-group">
                 <label for="gen-duration">Subscription Duration</label>
                 <select id="gen-duration" class="panel-select">
+                  <option value="custom">⚙️ Custom Days (1 - 365 Days)</option>
                   <option value="1day">1 Day (24 Hours)</option>
                   <option value="30days" selected>30 Days (1 Month)</option>
                   <option value="60days">60 Days (2 Months)</option>
                   <option value="90days">90 Days (3 Months)</option>
                   <option value="lifetime">Lifetime Access</option>
                 </select>
+              </div>
+            </div>
+
+            <!-- Custom Days Input Row (Appears when Custom Days is selected) -->
+            <div class="form-row hidden" id="custom-days-row">
+              <div class="form-group">
+                <label for="gen-custom-days">Custom Duration (Number of Days)</label>
+                <div class="custom-days-input-wrap">
+                  <input type="number" id="gen-custom-days" class="panel-input" min="1" max="365" value="7" placeholder="e.g. 1 to 30">
+                  <span class="custom-days-unit">DAYS</span>
+                </div>
+                <span class="form-hint">Set any exact duration you want (e.g. 1, 3, 5, 7, 14, 21, 30 days).</span>
               </div>
             </div>
 

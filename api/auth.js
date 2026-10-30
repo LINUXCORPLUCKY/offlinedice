@@ -271,10 +271,28 @@ module.exports = async (req, res) => {
         }
       }
 
-      // Calculate expiration
-      const durationMs = DURATION_MAP.hasOwnProperty(duration) 
-        ? DURATION_MAP[duration] 
-        : (parseInt(duration, 10) > 0 ? parseInt(duration, 10) * 24 * 60 * 60 * 1000 : 30 * 24 * 60 * 60 * 1000);
+      // Calculate duration & expiration
+      let durationMs = null;
+      let durationLabel = duration;
+
+      // Check if customDays was provided or duration is formatted as "Xdays" / "X"
+      const customDaysNum = parseInt(body.customDays || body.days, 10);
+      if (duration === 'custom' && customDaysNum > 0) {
+        durationMs = customDaysNum * 24 * 60 * 60 * 1000;
+        durationLabel = `${customDaysNum} ${customDaysNum === 1 ? 'day' : 'days'}`;
+      } else if (DURATION_MAP.hasOwnProperty(duration)) {
+        durationMs = DURATION_MAP[duration];
+        durationLabel = duration;
+      } else {
+        const parsedDays = parseInt(duration, 10);
+        if (parsedDays > 0) {
+          durationMs = parsedDays * 24 * 60 * 60 * 1000;
+          durationLabel = `${parsedDays} ${parsedDays === 1 ? 'day' : 'days'}`;
+        } else {
+          durationMs = 30 * 24 * 60 * 60 * 1000;
+          durationLabel = '30days';
+        }
+      }
 
       const now = Date.now();
       const expiresAt = durationMs ? now + durationMs : null;
@@ -289,7 +307,7 @@ module.exports = async (req, res) => {
       const newRecord = {
         key: finalKeyString,
         role: roleToCreate,
-        duration: duration,
+        duration: durationLabel,
         createdAt: now,
         expiresAt,
         status: 'active',
