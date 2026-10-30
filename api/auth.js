@@ -1,53 +1,19 @@
 const axios = require('axios');
 const crypto = require('crypto');
+const {
+  FIREBASE_BASE_URL,
+  isMasterOwnerKey,
+  verifyOwnerPin: checkPinValid,
+  extractOwnerPin,
+  encryptRecord,
+  decryptRecord,
+  toSafeKeyId,
+  getRoomIdForKey
+} = require('./_security');
 
-const FIREBASE_BASE_URL = 'https://headlessdice-default-rtdb.asia-southeast1.firebasedatabase.app';
-const MASTER_OWNER_KEYS = ['linuxdevpy6767'];
-const MASTER_OWNER_PIN = '6767-MASTER-SECURE-ALPHA';
-
-// Strong Server Cipher Key for AES-256-GCM Database Encryption
-const SERVER_SECRET_SALT = 'e9c8a1b2d3f47560a9b8c7d6e5f4a3b210293847561029384756a1b2c3d4e5f6';
-const CIPHER_KEY = crypto.createHash('sha256').update(SERVER_SECRET_SALT).digest();
-
-// AES-256-GCM Database Encryption Helpers
-function encryptRecord(obj) {
-  if (!obj || typeof obj !== 'object') return obj;
-  try {
-    const iv = crypto.randomBytes(12);
-    const cipher = crypto.createCipheriv('aes-256-gcm', CIPHER_KEY, iv);
-    const jsonStr = JSON.stringify(obj);
-    let enc = cipher.update(jsonStr, 'utf8', 'hex');
-    enc += cipher.final('hex');
-    const tag = cipher.getAuthTag().toString('hex');
-    return {
-      _enc: true,
-      iv: iv.toString('hex'),
-      tag,
-      data: enc,
-      updatedAt: Date.now()
-    };
-  } catch (e) {
-    console.error('[Encryption Error]:', e.message);
-    return obj;
-  }
-}
-
-function decryptRecord(payload) {
-  if (!payload || typeof payload !== 'object') return null;
-  // If not encrypted, return as-is (for legacy data)
-  if (!payload._enc || !payload.iv || !payload.tag || !payload.data) {
-    return payload;
-  }
-  try {
-    const decipher = crypto.createDecipheriv('aes-256-gcm', CIPHER_KEY, Buffer.from(payload.iv, 'hex'));
-    decipher.setAuthTag(Buffer.from(payload.tag, 'hex'));
-    let dec = decipher.update(payload.data, 'hex', 'utf8');
-    dec += decipher.final('utf8');
-    return JSON.parse(dec);
-  } catch (err) {
-    console.warn('[Decryption Alert]: Failed to decrypt key record. Data may have been tampered with.');
-    return null;
-  }
+function verifyOwnerPin(req, body, query) {
+  const pin = extractOwnerPin(req, body, query);
+  return checkPinValid(pin);
 }
 
 // Duration definitions in milliseconds
@@ -62,25 +28,6 @@ const DURATION_MAP = {
   'lifetime': null
 };
 
-// Safe key encoding for Firebase RTDB path
-function toSafeKeyId(key) {
-  return Buffer.from(String(key).trim()).toString('hex');
-}
-
-// Derive clean unique Room ID for dedicated user environment
-function getRoomIdForKey(key) {
-  if (!key) return 'ROOM-GUEST-' + Math.random().toString(36).substring(2, 8).toUpperCase();
-  const clean = String(key).trim();
-  if (MASTER_OWNER_KEYS.includes(clean)) {
-    return 'ROOM-MASTER-DEV';
-  }
-  const cleanKey = clean.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-  if (cleanKey.length >= 8) {
-    return `ROOM-${cleanKey.slice(0, 4)}-${cleanKey.slice(-4)}`;
-  }
-  return `ROOM-${cleanKey}`;
-}
-
 // Generate random formatted key
 function generateRandomKey(prefix = 'HD') {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -88,22 +35,12 @@ function generateRandomKey(prefix = 'HD') {
   return `${prefix}-${segment(4)}-${segment(4)}-${segment(4)}`;
 }
 
-// Security Check: Verify Master Owner PIN
-function verifyOwnerPin(req, body, query) {
-  const pinFromHeader = (req.headers && req.headers['x-owner-pin']) || '';
-  const pinFromAuth = (req.headers && req.headers.authorization && req.headers.authorization.startsWith('Bearer PIN_'))
-    ? req.headers.authorization.replace('Bearer PIN_', '')
-    : '';
-  const pinInput = (pinFromHeader || pinFromAuth || body.ownerPin || query.ownerPin || '').trim();
-  return pinInput === MASTER_OWNER_PIN;
-}
-
 // Verify caller permission helper with strict owner immunity
 async function verifyCallerRole(authKey) {
   if (!authKey) return null;
   const cleanKey = String(authKey).trim();
   // ONLY hardcoded master keys can EVER have 'owner' role
-  if (MASTER_OWNER_KEYS.includes(cleanKey)) {
+  if (isMasterOwnerKey(cleanKey)) {
     return 'owner';
   }
 
@@ -182,7 +119,7 @@ module.exports = async (req, res) => {
         return res.status(400).json({ success: false, valid: false, error: 'Access Key is required.' });
       }
 
-      const isMaster = MASTER_OWNER_KEYS.includes(keyInput);
+      const isMaster = isMasterOwnerKey(keyInput);
       const keyId = toSafeKeyId(keyInput);
       let resp;
       try {
@@ -467,7 +404,7 @@ module.exports = async (req, res) => {
         const k = decryptRecord(rawVal);
         if (!k || !k.key) return null;
 
-        const isMaster = MASTER_OWNER_KEYS.includes(k.key);
+        const isMaster = isMasterOwnerKey(k.key);
         const isExpired = k.expiresAt && Date.now() > k.expiresAt;
         const currentStatus = k.status === 'revoked' ? 'revoked' : (isExpired ? 'expired' : k.status || 'active');
         const isHwidDisabled = k.hwidLock === false || k.hwidDisabled === true;
@@ -489,7 +426,7 @@ module.exports = async (req, res) => {
       }).filter(Boolean);
 
       // Hide Master Owner key from vault
-      keyList = keyList.filter(k => !k.isMaster && !MASTER_OWNER_KEYS.includes(k.key));
+      keyList = keyList.filter(k => !k.isMaster && !isMasterOwnerKey(k.key));
 
       // Sort newest first
       keyList.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
@@ -520,7 +457,7 @@ module.exports = async (req, res) => {
         return res.status(400).json({ success: false, error: 'Target key is required.' });
       }
 
-      if (MASTER_OWNER_KEYS.includes(targetKey)) {
+      if (isMasterOwnerKey(targetKey)) {
         return res.status(400).json({ success: false, error: 'Master Owner Key cannot be revoked.' });
       }
 
@@ -553,7 +490,7 @@ module.exports = async (req, res) => {
         return res.status(400).json({ success: false, error: 'Target key is required.' });
       }
 
-      if (MASTER_OWNER_KEYS.includes(targetKey)) {
+      if (isMasterOwnerKey(targetKey)) {
         return res.status(400).json({ success: false, error: 'Master Owner Key cannot be deleted.' });
       }
 

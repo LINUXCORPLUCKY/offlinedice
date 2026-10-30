@@ -1,5 +1,6 @@
 node_modules
-app.src.js
+*.src.js
+public/owner-panel/owner-panel.src.js
 .env
 .env.local
 .DS_Store

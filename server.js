@@ -14,6 +14,10 @@ app.use(express.static(path.join(__dirname, 'public')));
 const authHandler = require('./api/auth');
 app.all(['/api/auth', '/api/auth/*'], (req, res) => authHandler(req, res));
 
+// Verification & Isolated Rooms API (Strict Backend Authenticated)
+const verifyHandler = require('./api/verify');
+app.all(['/api/verify', '/api/verify/*'], (req, res) => verifyHandler(req, res));
+
 // Standard official color definitions
 const OFFICIAL_COLORS = {
   Red: '#FF0000',

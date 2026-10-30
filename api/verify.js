@@ -1,4 +1,5 @@
 const axios = require('axios');
+const { validateAccessKey } = require('./_security');
 
 const FIREBASE_BASE_URL = 'https://headlessdice-default-rtdb.asia-southeast1.firebasedatabase.app';
 const PUBLIC_OFFLINE_DB = 'https://offline-dice-verify-default-rtdb.europe-west1.firebasedatabase.app';
@@ -373,7 +374,7 @@ function generateRoomSeededRolls(seedKey = 'default_room', count = 36) {
 module.exports = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Auth-Key, X-Client-Hwid');
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();
@@ -385,8 +386,37 @@ module.exports = async (req, res) => {
   }
   const query = req.query || {};
 
+  // Extract Auth Credentials
+  const authKey = (
+    (req.headers && req.headers['x-auth-key']) ||
+    (req.headers && req.headers.authorization && req.headers.authorization.startsWith('Bearer ') ? req.headers.authorization.slice(7) : '') ||
+    body.authKey ||
+    query.authKey ||
+    body.key ||
+    query.key ||
+    ''
+  ).trim();
+
+  const clientHwid = (
+    (req.headers && req.headers['x-client-hwid']) ||
+    body.hwid ||
+    query.hwid ||
+    ''
+  ).trim();
+
+  // Strict Backend Authentication & Anti-Bypass Validation
+  const authCheck = await validateAccessKey(authKey, clientHwid);
+  if (!authCheck.valid) {
+    return res.status(authCheck.status || 401).json({
+      success: false,
+      valid: false,
+      hwidMismatch: Boolean(authCheck.hwidMismatch),
+      error: authCheck.error || 'Authentication Required: Please provide an active license key to access predictions.'
+    });
+  }
+
   const action = (body.action || query.action || '').trim().toLowerCase();
-  let rawRoomId = (body.roomId || query.roomId || '').trim();
+  let rawRoomId = (body.roomId || query.roomId || authCheck.roomId || '').trim();
   let rawSessionId = (body.sessionId || query.sessionId || query.id || '').trim();
 
   // URL fallback parsing
@@ -399,8 +429,8 @@ module.exports = async (req, res) => {
     }
   }
 
-  // Sanitize room ID
-  const cleanRoomId = rawRoomId ? rawRoomId.replace(/[^a-zA-Z0-9_-]/g, '') : null;
+  // Sanitize room ID (bound to verified user key environment)
+  const cleanRoomId = rawRoomId ? rawRoomId.replace(/[^a-zA-Z0-9_-]/g, '') : authCheck.roomId;
 
   // -------------------------------------------------------------------------
   // ACTION: ADD ROLL TO USER'S ISOLATED ROOM (Zero Collisions)
