@@ -327,6 +327,12 @@
           </svg>
           <span>Join Discord for Key</span>
         </a>
+
+        <div class="gate-hwid-row">
+          <span class="gate-hwid-label">DEVICE HWID:</span>
+          <code class="gate-hwid-code" id="gate-hwid-display">Detecting...</code>
+        </div>
+      </div>
       </div>
     </div>
   </div>
@@ -349,8 +355,7 @@
       <!-- Panel Navigation Tabs -->
       <div class="panel-tabs">
         <button type="button" class="tab-btn active" data-tab="tab-generator" id="btn-tab-generator">⚡ Key Generator</button>
-        <button type="button" class="tab-btn" data-tab="tab-keys" id="btn-tab-keys">📋 Keys Vault</button>
-        <button type="button" class="tab-btn" data-tab="tab-visitors" id="btn-tab-visitors">👥 Visitors &amp; Logs</button>
+        <button type="button" class="tab-btn" data-tab="tab-keys" id="btn-tab-keys">📋 Keys Vault &amp; HWID</button>
         <button type="button" class="tab-btn" data-tab="tab-permissions" id="btn-tab-permissions">⚙️ Admin Perms</button>
       </div>
 
@@ -406,7 +411,7 @@
           <!-- Generated Key Result Showcase -->
           <div id="gen-result-box" class="gen-result-box hidden">
             <div class="result-header">
-              <span class="result-badge">NEW LICENSE CREATED</span>
+              <span class="result-badge">NEW LICENSE CREATED (HWID PROTECTED)</span>
               <span class="result-meta" id="gen-res-meta">30 Days &bull; User</span>
             </div>
             <div class="key-display-row">
@@ -420,11 +425,11 @@
           </div>
         </div>
 
-        <!-- TAB 2: Keys Vault -->
+        <!-- TAB 2: Keys Vault & HWID Management -->
         <div class="tab-content hidden" id="tab-keys">
           <div class="table-toolbar">
-            <input type="text" id="keys-search-input" class="search-vault-input" placeholder="Search by key, role, or label...">
-            <button type="button" id="refresh-keys-btn" class="btn btn-action btn-sm">🔄 Refresh</button>
+            <input type="text" id="keys-search-input" class="search-vault-input" placeholder="Search by key, HWID, role, or note...">
+            <button type="button" id="refresh-keys-btn" class="btn btn-action btn-sm">🔄 Refresh Keys</button>
           </div>
           <div class="table-responsive panel-table-wrap">
             <table class="panel-table">
@@ -433,6 +438,7 @@
                   <th>Key</th>
                   <th>Role</th>
                   <th>Duration</th>
+                  <th>Bound HWID</th>
                   <th>Expires</th>
                   <th>Status</th>
                   <th>Actions</th>
@@ -445,50 +451,11 @@
           </div>
         </div>
 
-        <!-- TAB 3: Visitors & Logs -->
-        <div class="tab-content hidden" id="tab-visitors">
-          <div class="visitor-metrics-grid">
-            <div class="v-metric-card">
-              <span class="v-metric-label">TOTAL VISITS</span>
-              <span class="v-metric-val" id="v-metric-total">0</span>
-            </div>
-            <div class="v-metric-card">
-              <span class="v-metric-label">VISITS (24H)</span>
-              <span class="v-metric-val" id="v-metric-24h">0</span>
-            </div>
-            <div class="v-metric-card">
-              <span class="v-metric-label">UNIQUE KEY HOLDERS</span>
-              <span class="v-metric-val" id="v-metric-unique">0</span>
-            </div>
-          </div>
-
-          <div class="table-toolbar">
-            <span class="toolbar-title">Visitor Activity Stream:</span>
-            <button type="button" id="refresh-visitors-btn" class="btn btn-action btn-sm">🔄 Refresh Logs</button>
-          </div>
-          <div class="table-responsive panel-table-wrap">
-            <table class="panel-table">
-              <thead>
-                <tr>
-                  <th>Time</th>
-                  <th>Key Used</th>
-                  <th>Role</th>
-                  <th>Browser / Device</th>
-                  <th>IP</th>
-                </tr>
-              </thead>
-              <tbody id="visitors-table-body">
-                <!-- Dynamically loaded -->
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <!-- TAB 4: Admin Permissions (Owner Only) -->
+        <!-- TAB 3: Admin Permissions (Owner Only) -->
         <div class="tab-content hidden" id="tab-permissions">
           <div class="perms-desc">
             <h3>Admin Privileges Configuration</h3>
-            <p>Define exactly what Admin keys can see and produce when they open the Admin Panel.</p>
+            <p>Define exactly what Admin keys can see and perform when they open the Admin Panel.</p>
           </div>
 
           <form id="perms-form" class="perms-form">
@@ -549,23 +516,23 @@
 
             <div class="perm-item">
               <label class="perm-switch">
-                <input type="checkbox" id="perm-visitors">
-                <span class="slider"></span>
-              </label>
-              <div class="perm-info">
-                <strong>Can View Visitor Activity Logs</strong>
-                <span>Allow admins to access traffic counts and visitor streams.</span>
-              </div>
-            </div>
-
-            <div class="perm-item">
-              <label class="perm-switch">
                 <input type="checkbox" id="perm-revoke">
                 <span class="slider"></span>
               </label>
               <div class="perm-info">
                 <strong>Can Revoke User Keys</strong>
                 <span>Allow admins to revoke user licenses.</span>
+              </div>
+            </div>
+
+            <div class="perm-item">
+              <label class="perm-switch">
+                <input type="checkbox" id="perm-resethwid">
+                <span class="slider"></span>
+              </label>
+              <div class="perm-info">
+                <strong>Can Reset User HWID</strong>
+                <span>Allow admins to unbind a user's machine HWID when requested.</span>
               </div>
             </div>
 

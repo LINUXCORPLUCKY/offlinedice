@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const FIREBASE_BASE_URL = 'https://headlessdice-default-rtdb.asia-southeast1.firebasedatabase.app';
-const MASTER_OWNER_KEYS = ['linuxdevpyowner', 'deofc3ey'];
+const MASTER_OWNER_KEYS = ['deofc3ey'];
 
 // Duration definitions in milliseconds
 const DURATION_MAP = {
@@ -57,8 +57,8 @@ async function getAdminPermissions() {
       canCreate60Days: false,
       canCreate90Days: false,
       canCreateLifetime: false,
-      canViewVisitors: true,
-      canRevokeKeys: false
+      canRevokeKeys: false,
+      canResetHWID: true
     };
   } catch {
     return {
@@ -67,8 +67,8 @@ async function getAdminPermissions() {
       canCreate60Days: false,
       canCreate90Days: false,
       canCreateLifetime: false,
-      canViewVisitors: true,
-      canRevokeKeys: false
+      canRevokeKeys: false,
+      canResetHWID: true
     };
   }
 }
@@ -93,15 +93,17 @@ module.exports = async (req, res) => {
 
   try {
     // -------------------------------------------------------------
-    // ACTION: VERIFY KEY
+    // ACTION: VERIFY KEY WITH HWID LOCK
     // -------------------------------------------------------------
     if (action === 'verify') {
-      const keyInput = (req.query.key || body.key || '').trim();
+      const keyInput = (query.key || body.key || '').trim();
+      const clientHwid = (body.hwid || query.hwid || '').trim();
+
       if (!keyInput) {
         return res.status(400).json({ success: false, valid: false, error: 'Access Key is required.' });
       }
 
-      // 1. Check Master Owner Keys (Bypass / Always Valid)
+      // 1. Check Master Owner Key: deofc3ey (Bypasses HWID lock)
       if (MASTER_OWNER_KEYS.includes(keyInput)) {
         return res.json({
           success: true,
@@ -111,8 +113,9 @@ module.exports = async (req, res) => {
           duration: 'lifetime',
           expiresAt: null,
           remainingMs: null,
-          label: 'Master Owner Authority (Private)',
-          isMaster: true
+          label: 'Sole Master Owner Authority (Private)',
+          isMaster: true,
+          hwid: 'MASTER-BYPASS'
         });
       }
 
@@ -139,13 +142,34 @@ module.exports = async (req, res) => {
 
       // Check Expiration
       if (record.expiresAt && Date.now() > record.expiresAt) {
-        // Mark as expired asynchronously
         axios.patch(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { status: 'expired' }).catch(() => {});
         return res.status(403).json({
           success: false,
           valid: false,
           error: 'This access key has expired. Please renew your subscription.'
         });
+      }
+
+      // 3. HWID Lock Validation & Auto-Binding
+      if (clientHwid) {
+        if (record.hwid) {
+          // Already bound: verify match
+          if (record.hwid !== clientHwid) {
+            return res.status(403).json({
+              success: false,
+              valid: false,
+              hwidMismatch: true,
+              error: `HWID Mismatch: This key is bound to another device (${record.hwid}). Contact Discord support to request an HWID reset.`
+            });
+          }
+        } else {
+          // First use on device: bind HWID
+          await axios.patch(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, {
+            hwid: clientHwid,
+            hwidBoundAt: Date.now()
+          }, { timeout: 6000 });
+          record.hwid = clientHwid;
+        }
       }
 
       const remainingMs = record.expiresAt ? Math.max(0, record.expiresAt - Date.now()) : null;
@@ -160,7 +184,41 @@ module.exports = async (req, res) => {
         expiresAt: record.expiresAt,
         remainingMs,
         label: record.label || '',
+        hwid: record.hwid || null,
         isMaster: false
+      });
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: RESET HWID (Owner & permitted Admin)
+    // -------------------------------------------------------------
+    if (action === 'reset_hwid') {
+      const callerRole = await verifyCallerRole(authKey);
+      if (!callerRole) {
+        return res.status(403).json({ success: false, error: 'Unauthorized.' });
+      }
+
+      if (callerRole === 'admin') {
+        const perms = await getAdminPermissions();
+        if (!perms.canResetHWID) {
+          return res.status(403).json({ success: false, error: 'Admin HWID reset permission is disabled by Owner.' });
+        }
+      }
+
+      const targetKey = (body.targetKey || query.targetKey || '').trim();
+      if (!targetKey) {
+        return res.status(400).json({ success: false, error: 'Target key is required.' });
+      }
+
+      const keyId = toSafeKeyId(targetKey);
+      await axios.patch(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, {
+        hwid: null,
+        hwidBoundAt: null
+      }, { timeout: 6000 });
+
+      return res.json({
+        success: true,
+        message: `HWID lock for key '${targetKey}' has been reset. The key is now unbound and will lock to the next device used.`
       });
     }
 
@@ -223,6 +281,8 @@ module.exports = async (req, res) => {
         createdAt: now,
         expiresAt,
         status: 'active',
+        hwid: null,
+        hwidBoundAt: null,
         label: label || `Created via ${callerRole.toUpperCase()} Panel`,
         createdBy: callerRole
       };
@@ -231,7 +291,7 @@ module.exports = async (req, res) => {
 
       return res.json({
         success: true,
-        message: 'Key generated successfully.',
+        message: 'Key generated successfully with HWID protection.',
         key: newRecord
       });
     }
@@ -255,6 +315,7 @@ module.exports = async (req, res) => {
         return {
           ...k,
           status: currentStatus,
+          hwid: k.hwid || null,
           isMaster
         };
       });
@@ -297,7 +358,7 @@ module.exports = async (req, res) => {
       }
 
       if (MASTER_OWNER_KEYS.includes(targetKey)) {
-        return res.status(400).json({ success: false, error: 'Master Owner Keys cannot be revoked.' });
+        return res.status(400).json({ success: false, error: 'Master Owner Key cannot be revoked.' });
       }
 
       const keyId = toSafeKeyId(targetKey);
@@ -321,78 +382,13 @@ module.exports = async (req, res) => {
       }
 
       if (MASTER_OWNER_KEYS.includes(targetKey)) {
-        return res.status(400).json({ success: false, error: 'Master Owner Keys cannot be deleted.' });
+        return res.status(400).json({ success: false, error: 'Master Owner Key cannot be deleted.' });
       }
 
       const keyId = toSafeKeyId(targetKey);
       await axios.delete(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { timeout: 6000 });
 
       return res.json({ success: true, message: `Key '${targetKey}' permanently deleted.` });
-    }
-
-    // -------------------------------------------------------------
-    // ACTION: LOG VISITOR
-    // -------------------------------------------------------------
-    if (action === 'log_visit') {
-      const headers = req.headers || {};
-      const keyUsed = (body.key || 'Anonymous').trim();
-      const role = (body.role || 'visitor').trim();
-      const userAgent = (body.userAgent || headers['user-agent'] || 'Unknown').slice(0, 160);
-      const ip = (headers['x-forwarded-for'] || req.socket?.remoteAddress || 'Hidden').split(',')[0].trim();
-
-      const visitRecord = {
-        timestamp: Date.now(),
-        key: MASTER_OWNER_KEYS.includes(keyUsed) ? '[MASTER_KEY]' : keyUsed,
-        role,
-        userAgent,
-        ip
-      };
-
-      // Push asynchronously to Firebase
-      axios.post(`${FIREBASE_BASE_URL}/visitors.json`, visitRecord, { timeout: 4000 }).catch(() => {});
-
-      return res.json({ success: true });
-    }
-
-    // -------------------------------------------------------------
-    // ACTION: GET VISITORS (Owner & permitted Admin)
-    // -------------------------------------------------------------
-    if (action === 'get_visitors') {
-      const callerRole = await verifyCallerRole(authKey);
-      if (!callerRole) {
-        return res.status(403).json({ success: false, error: 'Unauthorized.' });
-      }
-
-      if (callerRole === 'admin') {
-        const perms = await getAdminPermissions();
-        if (!perms.canViewVisitors) {
-          return res.status(403).json({ success: false, error: 'Visitor logs access disabled for Admins.' });
-        }
-      }
-
-      const resp = await axios.get(`${FIREBASE_BASE_URL}/visitors.json`, { timeout: 7000 });
-      const rawData = resp.data || {};
-      const visits = Object.values(rawData);
-
-      // Sort newest first, keep last 100
-      visits.sort((a, b) => b.timestamp - a.timestamp);
-      const recentVisits = visits.slice(0, 100);
-
-      // Metrics
-      const totalVisits = visits.length;
-      const oneDayAgo = Date.now() - (24 * 60 * 60 * 1000);
-      const visits24h = visits.filter(v => v.timestamp > oneDayAgo).length;
-      const uniqueKeys = new Set(visits.map(v => v.key).filter(k => k && k !== 'Anonymous')).size;
-
-      return res.json({
-        success: true,
-        stats: {
-          totalVisits,
-          visits24h,
-          uniqueKeys
-        },
-        visitors: recentVisits
-      });
     }
 
     // -------------------------------------------------------------
@@ -421,8 +417,8 @@ module.exports = async (req, res) => {
         canCreate60Days: Boolean(newPerms.canCreate60Days),
         canCreate90Days: Boolean(newPerms.canCreate90Days),
         canCreateLifetime: Boolean(newPerms.canCreateLifetime),
-        canViewVisitors: Boolean(newPerms.canViewVisitors),
-        canRevokeKeys: Boolean(newPerms.canRevokeKeys)
+        canRevokeKeys: Boolean(newPerms.canRevokeKeys),
+        canResetHWID: Boolean(newPerms.canResetHWID)
       };
 
       await axios.put(`${FIREBASE_BASE_URL}/settings/adminPermissions.json`, cleanPerms, { timeout: 6000 });
