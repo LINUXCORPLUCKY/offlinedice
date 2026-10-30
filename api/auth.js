@@ -692,6 +692,65 @@ module.exports = async (req, res) => {
       return res.json({ success: true, message: 'Announcement hidden from website.' });
     }
 
+    // -------------------------------------------------------------
+    // ACTION: GET MAINTENANCE STATUS (Public)
+    // -------------------------------------------------------------
+    if (action === 'get_maintenance') {
+      try {
+        const resp = await axios.get(`${FIREBASE_BASE_URL}/maintenance.json`, { timeout: 6000 });
+        const m = resp.data || {
+          enabled: true,
+          title: 'SYSTEM UNDER MAINTENANCE',
+          headline: 'LINUX IS WORKING ON OFFLINE DICE BUG FIXING AND ADD ONLINE DICE FEATURES',
+          message: 'Headless Dice is temporarily undergoing critical infrastructure upgrades and algorithmic enhancements. Linux is actively fixing offline dice bugs and deploying new online dice features.',
+          durationMs: 3600000,
+          endsAt: Date.now() + 3600000
+        };
+        return res.json({ success: true, maintenance: m });
+      } catch {
+        return res.json({
+          success: true,
+          maintenance: {
+            enabled: true,
+            title: 'SYSTEM UNDER MAINTENANCE',
+            headline: 'LINUX IS WORKING ON OFFLINE DICE BUG FIXING AND ADD ONLINE DICE FEATURES',
+            message: 'Headless Dice is temporarily undergoing critical infrastructure upgrades and algorithmic enhancements. Linux is actively fixing offline dice bugs and deploying new online dice features.',
+            durationMs: 3600000,
+            endsAt: Date.now() + 3600000
+          }
+        });
+      }
+    }
+
+    // -------------------------------------------------------------
+    // ACTION: SET MAINTENANCE (Owner Only)
+    // -------------------------------------------------------------
+    if (action === 'set_maintenance') {
+      const callerRole = await verifyCallerRole(authKey);
+      if (callerRole !== 'owner') {
+        return res.status(403).json({ success: false, error: 'Only Owner can change maintenance state.' });
+      }
+
+      const enabled = body.enabled !== undefined ? Boolean(body.enabled) : true;
+      const durationMinutes = Math.max(1, parseInt(body.durationMinutes || 60, 10));
+      const durationMs = durationMinutes * 60 * 1000;
+      const now = Date.now();
+
+      const maintenanceData = {
+        enabled,
+        title: (body.title || 'SYSTEM UNDER MAINTENANCE').trim(),
+        headline: (body.headline || 'LINUX IS WORKING ON OFFLINE DICE BUG FIXING AND ADD ONLINE DICE FEATURES').trim(),
+        message: (body.message || 'Headless Dice is temporarily undergoing critical infrastructure upgrades and algorithmic enhancements. Linux is actively fixing offline dice bugs and deploying new online dice features.').trim(),
+        startedAt: now,
+        durationMs,
+        endsAt: now + durationMs,
+        updatedBy: 'owner'
+      };
+
+      await axios.put(`${FIREBASE_BASE_URL}/maintenance.json`, maintenanceData, { timeout: 6000 });
+      return res.json({ success: true, message: 'Maintenance mode updated.', maintenance: maintenanceData });
+    }
+
     return res.status(400).json({ success: false, error: `Unrecognized action '${action}'.` });
 
   } catch (err) {
