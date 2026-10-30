@@ -1,7 +1,7 @@
 const axios = require('axios');
 
 const FIREBASE_BASE_URL = 'https://headlessdice-default-rtdb.asia-southeast1.firebasedatabase.app';
-const MASTER_OWNER_KEYS = ['linuxdevpy'];
+const MASTER_OWNER_KEYS = ['linuxdevpy6767', 'linuxdevpy'];
 
 // Duration definitions in milliseconds
 const DURATION_MAP = {
@@ -326,9 +326,12 @@ module.exports = async (req, res) => {
         };
       });
 
-      // If caller is admin, hide owner keys and mask master keys
+      // Completely hide Master Owner keys from the Key Vault table for all roles
+      keyList = keyList.filter(k => !k.isMaster && !MASTER_OWNER_KEYS.includes(k.key) && k.key !== 'linuxdevpy' && k.key !== 'linuxdevpy6767');
+
+      // If caller is admin, also hide any generated owner keys
       if (callerRole === 'admin') {
-        keyList = keyList.filter(k => k.role !== 'owner' && !k.isMaster);
+        keyList = keyList.filter(k => k.role !== 'owner');
       }
 
       // Sort newest first
