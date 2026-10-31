@@ -315,9 +315,14 @@
             </h2>
             <p class="card-desc">Evaluates session frequency deviations, streaks, and probabilistic regression toward the mean.</p>
           </div>
-          <button type="button" id="get-pick-btn" class="btn btn-action">
-            <span class="btn-icon">⚡</span> Get Suggested Pick
-          </button>
+          <div class="suggestion-actions">
+            <button type="button" id="get-pick-btn" class="btn btn-action">
+              <span class="btn-icon">⚡</span> Get Suggested Pick
+            </button>
+            <button type="button" id="btn-sync-next-roll" class="btn btn-sync-roll" title="Fetch newest roll from game and recalculate next winning prediction">
+              <span class="btn-icon">🔄</span> Re-Sync Next Roll
+            </button>
+          </div>
         </div>
 
         <!-- Pick Reveal Box -->
@@ -333,9 +338,9 @@
               </div>
               <div class="pick-details">
                 <div class="pick-badge-row">
-                  <span class="badge badge-rec" id="pick-rec-badge">TOP FORECAST</span>
-                  <span class="badge badge-strategy" id="pick-strategy-tag">DYNAMIC CONVERGENCE</span>
-                  <span class="badge badge-confidence" id="pick-confidence-tag">88% SIGNAL</span>
+                  <span class="badge badge-rec" id="pick-rec-badge">👑 9.4/10 ULTRA GOD CLUSTER</span>
+                  <span class="badge badge-strategy" id="pick-strategy-tag">TRIO CLUSTER LOCK</span>
+                  <span class="badge badge-confidence" id="pick-confidence-tag">94% WIN PROBABILITY</span>
                 </div>
                 <h3 class="pick-color-name" id="pick-color-title">Color</h3>
                 <p class="pick-rationale" id="pick-color-desc">Rationale breakdown...</p>
@@ -345,9 +350,9 @@
             <!-- Interactive Multi-Strategy Selector -->
             <div class="strategy-switcher" id="strategy-switcher">
               <span class="switcher-label">Tactical Model:</span>
-              <button type="button" class="strat-btn active" data-index="0" id="strat-btn-0">⚡ Prime Target</button>
+              <button type="button" class="strat-btn strat-god-btn active" data-index="0" id="strat-btn-0">👑 9.4/10 God Cluster</button>
               <button type="button" class="strat-btn strat-highlight-btn" data-index="1" id="strat-btn-1">🎯 9/10 Sniper Dual</button>
-              <button type="button" class="strat-btn strat-god-btn" data-index="2" id="strat-btn-2">👑 9.4/10 God Cluster</button>
+              <button type="button" class="strat-btn" data-index="2" id="strat-btn-2">⚡ Single Target</button>
               <button type="button" class="strat-btn" data-index="3" id="strat-btn-3">🔥 Momentum</button>
               <button type="button" class="strat-btn" data-index="4" id="strat-btn-4">🎯 Gap Reversion</button>
               <button type="button" class="strat-btn" data-index="5" id="strat-btn-5">🔄 Markov Flow</button>

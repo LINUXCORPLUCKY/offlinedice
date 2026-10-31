@@ -287,6 +287,29 @@ function setupEventListeners(): void {
     });
   }
 
+  const btnSyncNextRoll = document.getElementById('btn-sync-next-roll');
+  if (btnSyncNextRoll) {
+    btnSyncNextRoll.addEventListener('click', async () => {
+      const activeSession = (sessionInput && sessionInput.value.trim()) || currentSessionData?.sessionId;
+      if (!activeSession) {
+        showAlert('No Active Session', 'Please enter or ingest a Session ID first.', 'warning');
+        return;
+      }
+      btnSyncNextRoll.classList.add('loading');
+      btnSyncNextRoll.innerHTML = '<span class="btn-icon">⏳</span> Syncing...';
+      try {
+        await executeVerification(activeSession);
+        if (currentSessionData) {
+          activeStrategyIndex = 0; // Default to 9.4/10 God Cluster
+          renderSuggestedPick(currentSessionData, 0);
+        }
+      } finally {
+        btnSyncNextRoll.classList.remove('loading');
+        btnSyncNextRoll.innerHTML = '<span class="btn-icon">🔄</span> Re-Sync Next Roll';
+      }
+    });
+  }
+
   document.querySelectorAll('.strat-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       if (!currentSessionData) return;
@@ -665,10 +688,22 @@ function renderSuggestedPick(session: SessionData, stratIdx: number): void {
   if (pickColorDesc) pickColorDesc.innerHTML = strat.rationale;
 
   if (pickOrb && pickOrbInner) {
-    pickOrb.style.borderColor = strat.hex;
-    pickOrb.style.boxShadow = `0 0 35px ${strat.hex}88, inset 0 0 25px ${strat.hex}66`;
-    pickOrbInner.style.backgroundColor = strat.hex;
-    pickOrbInner.style.boxShadow = `0 0 20px ${strat.hex}`;
+    if (strat.secondaryHex && strat.tertiaryHex) {
+      pickOrb.style.borderColor = strat.hex;
+      pickOrb.style.boxShadow = `0 0 35px ${strat.hex}88, inset 0 0 25px ${strat.hex}66`;
+      pickOrbInner.style.background = `linear-gradient(135deg, ${strat.hex} 0%, ${strat.secondaryHex} 50%, ${strat.tertiaryHex} 100%)`;
+      pickOrbInner.style.boxShadow = `0 0 25px ${strat.hex}`;
+    } else if (strat.secondaryHex) {
+      pickOrb.style.borderColor = strat.hex;
+      pickOrb.style.boxShadow = `0 0 35px ${strat.hex}88, inset 0 0 25px ${strat.hex}66`;
+      pickOrbInner.style.background = `linear-gradient(135deg, ${strat.hex} 0%, ${strat.secondaryHex} 100%)`;
+      pickOrbInner.style.boxShadow = `0 0 22px ${strat.hex}`;
+    } else {
+      pickOrb.style.borderColor = strat.hex;
+      pickOrb.style.boxShadow = `0 0 35px ${strat.hex}88, inset 0 0 25px ${strat.hex}66`;
+      pickOrbInner.style.background = strat.hex;
+      pickOrbInner.style.boxShadow = `0 0 20px ${strat.hex}`;
+    }
   }
 
   document.querySelectorAll('.strat-btn').forEach(btn => {

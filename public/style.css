@@ -3481,3 +3481,41 @@ input:checked + .slider:before {
   }
 }
 
+
+
+/* Next Roll Sync Button & Multi-Target Actions */
+.suggestion-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.btn-sync-roll {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 229, 255, 0.12);
+  border: 1px solid rgba(0, 229, 255, 0.45);
+  color: #00e5ff;
+  padding: 12px 20px;
+  font-size: 13px;
+  font-weight: 700;
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition: all 0.25s ease;
+  box-shadow: 0 0 14px rgba(0, 229, 255, 0.2);
+}
+
+.btn-sync-roll:hover {
+  background: linear-gradient(135deg, rgba(0, 229, 255, 0.3), rgba(176, 38, 255, 0.35));
+  border-color: #00e5ff;
+  color: #fff;
+  transform: translateY(-2px);
+  box-shadow: 0 0 22px rgba(0, 229, 255, 0.5);
+}
+
+.btn-sync-roll.loading {
+  opacity: 0.6;
+  pointer-events: none;
+}
