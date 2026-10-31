@@ -70,10 +70,13 @@ app.get(['/room', '/room.html'], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'room.html'));
 });
 
+app.get(['/maintenance', '/maintenance.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'maintenance.html'));
+});
+
 app.get([
   '/jhvbuihedfbyhibrt5gi-owner-j42n5jhn',
   '/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/',
-  '/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/*',
   '/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html'
 ], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html'));

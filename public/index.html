@@ -13,61 +13,36 @@
 </head>
 <body class="login-page-body">
 
-  <!-- Global Maintenance Splash Screen Overlay (Hidden by Default) -->
-  <div id="maintenance-overlay" class="maintenance-overlay hidden">
-    <div class="maintenance-card">
-      <div class="maintenance-glow"></div>
+  <!-- Global Maintenance / Decommission Splash Screen Overlay (Red Sign Mode) -->
+  <div id="maintenance-overlay" class="maintenance-overlay">
+    <div class="maintenance-card red-sign-mode">
+      <div class="maintenance-glow red-glow"></div>
       
       <div class="maintenance-badge-row">
-        <span class="maint-pill-pulse">
-          <span class="maint-dot"></span> LIVE MAINTENANCE ACTIVE
+        <span class="maint-pill-pulse red-pill">
+          <span class="maint-dot red-dot"></span> ⛔ SERVICE TERMINATED &bull; DOES NOT EXIST
         </span>
-        <span class="maint-pill-sub">SYSTEM UPGRADE IN PROGRESS</span>
+        <span class="maint-pill-sub red-pill-sub">PROTEST SHUTDOWN</span>
       </div>
 
       <div class="maintenance-brand-wrap">
-        <div class="maint-logo-ring">
-          <img src="logo.jpg" alt="Headless Dice Logo" class="maint-logo-img" width="90" height="90">
-          <div class="maint-pulse"></div>
+        <div class="maint-logo-ring red-ring">
+          <span style="font-size: 48px; line-height: 1;">⛔</span>
         </div>
-        <h1 class="maint-title">HEADLESS DICE</h1>
+        <h1 class="maint-title red-title">THIS WEBSITE DOES NOT EXIST</h1>
       </div>
 
-      <div class="maint-banner-box">
-        <div class="maint-headline-tag">⚡ CRITICAL INFRASTRUCTURE NOTICE</div>
-        <h2 class="maint-headline">LINUX IS WORKING ON OFFLINE DICE BUG FIXING AND ADD ONLINE DICE FEATURES</h2>
-        <p class="maint-message" id="maint-desc">
-          Headless Dice is temporarily in maintenance mode for performance optimization, algorithmic tuning, and the deployment of upcoming real-time Online Dice prediction features.
+      <div class="maint-banner-box red-banner">
+        <div class="maint-headline-tag red-tag">🚨 OFFICIAL TERMINATION NOTICE</div>
+        <h2 class="maint-headline red-headline">PERMANENTLY SHUT DOWN IN PROTEST OF RACISM AGAINST INDIA</h2>
+        <p class="maint-message red-message" id="maint-desc">
+          Headless Dice and all offline dice analytical services have been permanently suspended and taken offline. We strictly refuse to operate, host services, or provide algorithms for any user base or community where Indian developers, creators, and individuals face racism, harassment, and discrimination.
         </p>
       </div>
 
-      <!-- 1-Hour Countdown Timer Display -->
-      <div class="maint-timer-section">
-        <span class="timer-label">ESTIMATED COMPLETION COUNTDOWN:</span>
-        <div class="timer-grid">
-          <div class="timer-cell">
-            <span class="timer-num" id="maint-hrs">00</span>
-            <span class="timer-unit">HOURS</span>
-          </div>
-          <span class="timer-colon">:</span>
-          <div class="timer-cell">
-            <span class="timer-num" id="maint-mins">59</span>
-            <span class="timer-unit">MINUTES</span>
-          </div>
-          <span class="timer-colon">:</span>
-          <div class="timer-cell">
-            <span class="timer-num" id="maint-secs">59</span>
-            <span class="timer-unit">SECONDS</span>
-          </div>
-        </div>
-        <div class="timer-progress-wrap">
-          <div class="timer-progress-bar" id="maint-progress-bar"></div>
-        </div>
-      </div>
-
       <div class="maint-actions">
-        <a href="https://discord.gg/TSensK6HEc" target="_blank" rel="noopener noreferrer" class="btn btn-discord">
-          <span>Get Updates on Discord</span>
+        <a href="https://discord.gg/TSensK6HEc" target="_blank" rel="noopener noreferrer" class="btn btn-discord red-discord">
+          <span>Official Discord Community</span>
         </a>
       </div>
     </div>

@@ -22,6 +22,14 @@
       "destination": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html"
     },
     {
+      "source": "/maintenance",
+      "destination": "/maintenance.html"
+    },
+    {
+      "source": "/maintenance/(.*)",
+      "destination": "/maintenance.html"
+    },
+    {
       "source": "/room",
       "destination": "/room.html"
     },
