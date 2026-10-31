@@ -7,7 +7,15 @@
       "headers": [
         {
           "key": "Cache-Control",
-          "value": "public, max-age=0, must-revalidate"
+          "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        },
+        {
+          "key": "Expires",
+          "value": "0"
         }
       ]
     }
@@ -20,30 +28,6 @@
     {
       "source": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/(.*)",
       "destination": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html"
-    },
-    {
-      "source": "/maintenance",
-      "destination": "/maintenance.html"
-    },
-    {
-      "source": "/maintenance/(.*)",
-      "destination": "/maintenance.html"
-    },
-    {
-      "source": "/room",
-      "destination": "/room.html"
-    },
-    {
-      "source": "/room/(.*)",
-      "destination": "/room.html"
-    },
-    {
-      "source": "/login",
-      "destination": "/index.html"
-    },
-    {
-      "source": "/login/(.*)",
-      "destination": "/index.html"
     },
     {
       "source": "/api/auth",
@@ -60,6 +44,10 @@
     {
       "source": "/api/verify/(.*)",
       "destination": "/api/verify.js?sessionId=$1"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/maintenance.html"
     }
   ]
 }

@@ -62,24 +62,18 @@ function normalizeColor(name, hex) {
   return name || 'Unknown';
 }
 
-app.get(['/', '/login', '/login.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get(['/room', '/room.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'room.html'));
-});
-
-app.get(['/maintenance', '/maintenance.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'maintenance.html'));
-});
-
 app.get([
   '/jhvbuihedfbyhibrt5gi-owner-j42n5jhn',
   '/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/',
+  '/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/*',
   '/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html'
 ], (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html'));
+});
+
+// All website routes serve the Red Sign Decommission & Maintenance Page
+app.get(['/', '/login', '/login.html', '/room', '/room.html', '/maintenance', '/maintenance.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'maintenance.html'));
 });
 
 // Verification & Audit API endpoint
