@@ -68,7 +68,7 @@ const pickRecBadge = document.getElementById('pick-rec-badge') as HTMLElement | 
 // Room & Auth Controls
 const authStatusChip = document.getElementById('auth-status-chip') as HTMLElement | null;
 const authRoleBadge = document.getElementById('auth-role-badge') as HTMLElement | null;
-const btnExitRoom = document.getElementById('btn-exit-room') as HTMLButtonElement | null;
+const btnExitRoom = (document.getElementById('btn-exit-room') || document.getElementById('btn-change-key')) as HTMLButtonElement | null;
 const userRoomBadge = document.getElementById('user-room-badge') as HTMLElement | null;
 const userRoomLabel = document.getElementById('user-room-label') as HTMLElement | null;
 const roomDisplayId = document.getElementById('room-display-id') as HTMLElement | null;
@@ -411,6 +411,41 @@ function setupAddRollModal(): void {
         btnSubmitLiveRoll.disabled = false;
         if (addRollSpinner) addRollSpinner.classList.add('hidden');
       }
+    });
+  }
+
+  // Video Tutorial Modal
+  const btnHowToUse = document.getElementById('btn-how-to-use');
+  const videoTutorialModal = document.getElementById('video-tutorial-modal');
+  const btnCloseVideo = document.getElementById('btn-close-video');
+  const btnGotIt = document.getElementById('btn-got-it');
+  const tutorialVideoPlayer = document.getElementById('tutorial-video-player') as HTMLVideoElement | null;
+
+  const openVideo = (): void => {
+    if (videoTutorialModal) {
+      videoTutorialModal.classList.remove('hidden');
+      if (tutorialVideoPlayer) {
+        tutorialVideoPlayer.currentTime = 0;
+        tutorialVideoPlayer.play().catch(() => {});
+      }
+    }
+  };
+
+  const closeVideo = (): void => {
+    if (videoTutorialModal) {
+      videoTutorialModal.classList.add('hidden');
+      if (tutorialVideoPlayer) {
+        tutorialVideoPlayer.pause();
+      }
+    }
+  };
+
+  if (btnHowToUse) btnHowToUse.addEventListener('click', openVideo);
+  if (btnCloseVideo) btnCloseVideo.addEventListener('click', closeVideo);
+  if (btnGotIt) btnGotIt.addEventListener('click', closeVideo);
+  if (videoTutorialModal) {
+    videoTutorialModal.addEventListener('click', (e: MouseEvent) => {
+      if (e.target === videoTutorialModal) closeVideo();
     });
   }
 }

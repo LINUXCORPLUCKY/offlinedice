@@ -7,11 +7,23 @@
       "destination": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html"
     },
     {
+      "source": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/(.*)",
+      "destination": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html"
+    },
+    {
       "source": "/room",
       "destination": "/room.html"
     },
     {
+      "source": "/room/(.*)",
+      "destination": "/room.html"
+    },
+    {
       "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/login/(.*)",
       "destination": "/index.html"
     },
     {
