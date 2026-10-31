@@ -46,20 +46,12 @@
       "destination": "/api/verify.js?sessionId=$1"
     },
     {
-      "source": "/room",
-      "destination": "/maintenance.html"
-    },
-    {
       "source": "/login",
-      "destination": "/maintenance.html"
+      "destination": "/index.html"
     },
     {
-      "source": "/maintenance",
-      "destination": "/maintenance.html"
-    },
-    {
-      "source": "/((?!api|jhvbuihedfbyhibrt5gi-owner-j42n5jhn|.*\\.[\\w]+$).*)",
-      "destination": "/maintenance.html"
+      "source": "/room",
+      "destination": "/room.html"
     }
   ]
 }
