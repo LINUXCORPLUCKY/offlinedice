@@ -10,20 +10,21 @@ const path = require('path');
 const MASTER_KEY = process.env.MASTER_KEY || 'iusedhfiuhsdilufhdsijfh';
 const DISCORD_VPS_URL = process.env.DISCORD_VPS_URL || '';
 
-// Load keys from api/_data/keys_vault.json
-let LOCAL_KEYS = {};
-try {
-  const keysPath = path.join(__dirname, '_data', 'keys_vault.json');
-  if (fs.existsSync(keysPath)) {
-    LOCAL_KEYS = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
-  } else {
-    const fallbackPath = path.join(__dirname, 'data', 'keys_vault.json');
-    if (fs.existsSync(fallbackPath)) {
-      LOCAL_KEYS = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
-    }
-  }
-} catch (e) {
-  console.warn('[VERIFY] Error loading keys:', e.message);
+function loadLocalKeys() {
+  try {
+    const p1 = path.join(__dirname, '_data', 'keys_vault.json');
+    if (fs.existsSync(p1)) return JSON.parse(fs.readFileSync(p1, 'utf8'));
+    const p2 = path.join(__dirname, 'data', 'keys_vault.json');
+    if (fs.existsSync(p2)) return JSON.parse(fs.readFileSync(p2, 'utf8'));
+  } catch(e) {}
+  return {};
+}
+
+function saveLocalKeys(keys) {
+  try {
+    const p1 = path.join(__dirname, '_data', 'keys_vault.json');
+    fs.writeFileSync(p1, JSON.stringify(keys, null, 2));
+  } catch(e) {}
 }
 
 function sendJson(res, statusCode, data) {
@@ -115,6 +116,10 @@ const handler = async (req, res) => {
       return sendJson(res, 400, { success: false, error: 'License key is required.' });
     }
 
+    if (!hwid) {
+      return sendJson(res, 400, { success: false, error: 'Hardware ID (HWID) verification required.' });
+    }
+
     // 1. SECURE SERVER-SIDE MASTER KEY CHECK (NO FIREBASE)
     if (key === MASTER_KEY || key === 'iusedhfiuhsdilufhdsijfh') {
       const hwidShort = hwid ? hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() : 'ROOT';
@@ -148,20 +153,22 @@ const handler = async (req, res) => {
     }
 
     // 3. SECURE LOCAL DATABASE VERIFICATION (100% INDEPENDENT OF FIREBASE)
-    try {
-      const keysPath = path.join(__dirname, 'data', 'keys_vault.json');
-      if (fs.existsSync(keysPath)) {
-        LOCAL_KEYS = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
-      }
-    } catch(e) {}
-
-    const keyData = LOCAL_KEYS[key];
+    const localKeys = loadLocalKeys();
+    const keyData = localKeys[key];
     if (!keyData || typeof keyData !== 'object') {
-      return sendJson(res, 401, { success: false, error: 'Invalid license key. Not found in database.' });
+      return sendJson(res, 401, { success: false, error: 'Invalid license key. Access denied.' });
+    }
+
+    if (keyData.status === 'BLACKLISTED') {
+      return sendJson(res, 403, { success: false, error: 'This device or license has been permanently blacklisted.' });
     }
 
     if (keyData.status === 'REVOKED') {
       return sendJson(res, 403, { success: false, error: 'This license key has been revoked by administration.' });
+    }
+
+    if (keyData.status !== 'ACTIVE') {
+      return sendJson(res, 403, { success: false, error: 'This license key is not active.' });
     }
 
     if (keyData.expireTimestamp && Date.now() > keyData.expireTimestamp) {
@@ -169,19 +176,16 @@ const handler = async (req, res) => {
     }
 
     // HWID Lock Verification
-    if (keyData.hwidLock !== false && keyData.boundHwid !== 'Disabled') {
+    if (keyData.hwidLock !== false && keyData.boundHwid !== 'Disabled' && keyData.boundHwid !== 'Bypass') {
       if (keyData.boundHwid === 'Unbound' || !keyData.boundHwid) {
         if (hwid) {
           keyData.boundHwid = hwid;
-          try {
-            const keysPath = path.join(__dirname, 'data', 'keys_vault.json');
-            fs.writeFileSync(keysPath, JSON.stringify(LOCAL_KEYS, null, 2));
-          } catch(e) {}
+          saveLocalKeys(localKeys);
         }
       } else if (keyData.boundHwid !== hwid) {
         return sendJson(res, 403, {
           success: false,
-          error: `Device HWID Mismatch! Key is locked to (${keyData.boundHwid}). Contact admin to reset.`
+          error: `Device HWID Mismatch! Key locked to another machine (${keyData.boundHwid.slice(-4)}).`
         });
       }
     }

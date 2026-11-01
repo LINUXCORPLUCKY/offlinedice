@@ -8,61 +8,102 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <base href="/">
+  <style id="auth-cloak">
+    html, body { display: none !important; }
+  </style>
   <script>
-    // Immediate Gatekeeper Guard: Enforce strict auth & room isolation (Zero Breach / Zero Collision)
+    // Anti-Bypass Cryptographic Gatekeeper: Strict Server-Side Validation (Zero Bypass)
     (function() {
       try {
         var rawAuth = localStorage.getItem('headless_dice_auth') || sessionStorage.getItem('headless_dice_auth');
-        if (!rawAuth) {
-          window.location.replace('/');
-          return;
-        }
-        var auth = JSON.parse(rawAuth);
-        if (!auth || (!auth.key && !auth.token) || (auth.status !== 'ACTIVE' && auth.status !== 'Active')) {
-          window.location.replace('/');
-          return;
-        }
-
-        // Deterministic room assignment strictly bound to authenticated key & device
         var hwid = localStorage.getItem('headless_dice_hwid') || '';
-        var shortHwid = hwid ? hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() : 'NODE';
-        var shortKey = (auth.key || '').replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() || 'VIP';
+        if (!rawAuth || !hwid) {
+          localStorage.removeItem('headless_dice_auth');
+          sessionStorage.removeItem('headless_dice_auth');
+          window.location.replace('/');
+          return;
+        }
 
-        var isOwner = (auth.role === 'OWNER' || auth.key === 'iusedhfiuhsdilufhdsijfh' || auth.key === 'linux_vault_owner_9977');
-        var expectedRoom = isOwner ? ('ROOM-OWNER-' + shortHwid) : (auth.roomId && !auth.roomId.startsWith('ROOM-OWNER-') ? auth.roomId : ('ROOM-' + shortHwid + '-' + shortKey));
-
-        // Global Maintenance Mode check
+        var auth;
         try {
-          fetch('/api/system?type=maintenance&t=' + Date.now())
-            .then(function(r) { return r.json(); })
-            .then(function(m) {
-              if (m && m.enabled === true && !isOwner) {
-                window.location.replace('/maintenance');
-              }
-            })
-            .catch(function() {});
-        } catch(e) {}
+          auth = JSON.parse(rawAuth);
+        } catch(e) {
+          localStorage.removeItem('headless_dice_auth');
+          sessionStorage.removeItem('headless_dice_auth');
+          window.location.replace('/');
+          return;
+        }
 
-        // Ensure session always preserves correct authentic roomId
-        auth.roomId = expectedRoom;
-        try {
+        if (!auth || !auth.key || (auth.status !== 'ACTIVE' && auth.status !== 'Active')) {
+          localStorage.removeItem('headless_dice_auth');
+          sessionStorage.removeItem('headless_dice_auth');
+          window.location.replace('/');
+          return;
+        }
+
+        // Mandatory Server-Side Real-Time Verification against /api/verify
+        fetch('/api/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ key: auth.key, hwid: hwid })
+        })
+        .then(function(res) {
+          if (!res.ok) throw new Error('HTTP ' + res.status);
+          return res.json();
+        })
+        .then(function(data) {
+          if (!data || !data.success) {
+            localStorage.removeItem('headless_dice_auth');
+            sessionStorage.removeItem('headless_dice_auth');
+            window.location.replace('/');
+            return;
+          }
+
+          // Verified! Update auth and release cloak
+          auth.role = data.role || auth.role;
+          auth.roomId = data.roomId || auth.roomId;
           localStorage.setItem('headless_dice_auth', JSON.stringify(auth));
           sessionStorage.setItem('headless_dice_auth', JSON.stringify(auth));
-        } catch(e) {}
 
-        // URL Room Parameter Hard-Lock (Prevent tampering or entering other rooms)
-        var urlParams = new URLSearchParams(window.location.search);
-        var qRoom = urlParams.get('room');
+          var cloak = document.getElementById('auth-cloak');
+          if (cloak) cloak.remove();
+        })
+        .catch(function(err) {
+          // If server rejects or network is tampered/blocked, immediately kick
+          localStorage.removeItem('headless_dice_auth');
+          sessionStorage.removeItem('headless_dice_auth');
+          window.location.replace('/');
+        });
 
-        if (!qRoom || qRoom.toUpperCase() !== expectedRoom) {
-          var targetUrl = '/app?room=' + encodeURIComponent(expectedRoom);
-          if (window.history && window.history.replaceState) {
-            window.history.replaceState(null, '', targetUrl);
-          } else {
-            window.location.replace(targetUrl);
+        // Periodic Background Re-Verification every 25 seconds (Instant kick on Discord revoke/blacklist)
+        setInterval(function() {
+          var curAuth = localStorage.getItem('headless_dice_auth');
+          if (!curAuth) {
+            window.location.replace('/');
+            return;
           }
-        }
+          var parsed = JSON.parse(curAuth);
+          fetch('/api/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ key: parsed.key, hwid: hwid })
+          })
+          .then(function(r) { return r.json(); })
+          .then(function(d) {
+            if (!d || !d.success) {
+              localStorage.removeItem('headless_dice_auth');
+              sessionStorage.removeItem('headless_dice_auth');
+              window.location.replace('/');
+            }
+          })
+          .catch(function() {
+            // Do not kick on momentary blip during active session, but keep verified on next tick
+          });
+        }, 25000);
+
       } catch(e) {
+        localStorage.removeItem('headless_dice_auth');
+        sessionStorage.removeItem('headless_dice_auth');
         window.location.replace('/');
       }
     })();

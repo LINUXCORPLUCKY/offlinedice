@@ -13,14 +13,6 @@
   ],
   "rewrites": [
     {
-      "source": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn",
-      "destination": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html"
-    },
-    {
-      "source": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/(.*)",
-      "destination": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html"
-    },
-    {
       "source": "/maintenance",
       "destination": "/maintenance.html"
     },
