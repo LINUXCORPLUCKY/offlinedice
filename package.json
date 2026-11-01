@@ -2,9 +2,12 @@
   "name": "headless-dice",
   "version": "1.0.0",
   "description": "Headless Dice — 5-Roll Probability Engine & 1-Color Predictor for Online Dice",
+  "main": "index.js",
   "scripts": {
-    "start": "node local-server.js",
-    "dev": "node local-server.js"
+    "start": "node index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2"
   },
   "keywords": [
     "headless-dice",
