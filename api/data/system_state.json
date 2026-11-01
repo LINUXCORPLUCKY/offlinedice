@@ -1,0 +1,20 @@
+{
+  "maintenance": {
+    "enabled": false,
+    "reason": "",
+    "updatedAt": 1793560000000,
+    "author": "OWNER"
+  },
+  "announcement": {
+    "active": false,
+    "text": "",
+    "type": "info",
+    "timestamp": 1793560000000,
+    "author": "OWNER"
+  },
+  "control": {
+    "timestamp": 1793560000000,
+    "reason": "System Initialized",
+    "author": "OWNER"
+  }
+}

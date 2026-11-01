@@ -10,7 +10,7 @@ const DISCORD_VPS_URL = process.env.DISCORD_VPS_URL || '';
 
 function getSystemState() {
   try {
-    const sysPath = path.join(__dirname, 'system.json');
+    const sysPath = path.join(__dirname, 'data', 'system_state.json');
     if (fs.existsSync(sysPath)) {
       return JSON.parse(fs.readFileSync(sysPath, 'utf8'));
     }

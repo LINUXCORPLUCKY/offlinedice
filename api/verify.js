@@ -10,15 +10,15 @@ const path = require('path');
 const MASTER_KEY = process.env.MASTER_KEY || 'iusedhfiuhsdilufhdsijfh';
 const DISCORD_VPS_URL = process.env.DISCORD_VPS_URL || '';
 
-// Load keys from api/keys.json
+// Load keys from api/data/keys_vault.json
 let LOCAL_KEYS = {};
 try {
-  const keysPath = path.join(__dirname, 'keys.json');
+  const keysPath = path.join(__dirname, 'data', 'keys_vault.json');
   if (fs.existsSync(keysPath)) {
     LOCAL_KEYS = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
   }
 } catch (e) {
-  console.warn('[VERIFY] Error loading keys.json:', e.message);
+  console.warn('[VERIFY] Error loading keys:', e.message);
 }
 
 function sendJson(res, statusCode, data) {
@@ -144,7 +144,7 @@ const handler = async (req, res) => {
 
     // 3. SECURE LOCAL DATABASE VERIFICATION (100% INDEPENDENT OF FIREBASE)
     try {
-      const keysPath = path.join(__dirname, 'keys.json');
+      const keysPath = path.join(__dirname, 'data', 'keys_vault.json');
       if (fs.existsSync(keysPath)) {
         LOCAL_KEYS = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
       }
@@ -169,7 +169,7 @@ const handler = async (req, res) => {
         if (hwid) {
           keyData.boundHwid = hwid;
           try {
-            const keysPath = path.join(__dirname, 'keys.json');
+            const keysPath = path.join(__dirname, 'data', 'keys_vault.json');
             fs.writeFileSync(keysPath, JSON.stringify(LOCAL_KEYS, null, 2));
           } catch(e) {}
         }

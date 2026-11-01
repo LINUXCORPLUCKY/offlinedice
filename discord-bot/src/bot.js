@@ -186,7 +186,7 @@ function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRole
         await rest.put(Routes.applicationCommands(clientId), { body: commands });
         console.log(`[DISCORD BOT] Registered ${commands.length} global slash commands!`);
       }
-    } catch(err) {
+    } catch (err) {
       console.error('[DISCORD BOT] Failed to register commands:', err.message);
     }
   });
