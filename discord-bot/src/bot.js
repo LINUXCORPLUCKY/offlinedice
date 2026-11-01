@@ -1,19 +1,28 @@
 const { Client, GatewayIntentBits, REST, Routes, SlashCommandBuilder, EmbedBuilder, PermissionFlagsBits } = require('discord.js');
 const db = require('./database');
 
+// Designated 3 Owners with Absolute Authority
+const DEFAULT_OWNER_IDS = [
+  '1335889436898230302',
+  '1009385844920025148',
+  '1105509248240201738'
+];
+
 function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRoleIds = []) {
   if (!token) {
     console.warn('[DISCORD BOT] No DISCORD_TOKEN provided. Bot is inactive (API server running standalone).');
     return null;
   }
 
+  const allOwners = Array.from(new Set([...DEFAULT_OWNER_IDS, ...ownerUserIds]));
+
   const client = new Client({
     intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages]
   });
 
-  // Check Admin Authority
+  // Check Admin / Owner Authority
   function isAuthorized(interaction) {
-    if (ownerUserIds.includes(interaction.user.id)) return true;
+    if (allOwners.includes(interaction.user.id)) return true;
     if (interaction.member && interaction.member.roles) {
       for (const roleId of adminRoleIds) {
         if (interaction.member.roles.cache.has(roleId)) return true;
@@ -74,7 +83,51 @@ function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRole
       .addStringOption(opt => opt.setName('note').setDescription('User name or Discord tag / note'))
       .addBooleanOption(opt => opt.setName('hwid_lock').setDescription('Lock to first device hardware ID (default: True)')),
 
-    // 2. /listkeys
+    // 2. /resethwid
+    new SlashCommandBuilder()
+      .setName('resethwid')
+      .setDescription('Reset HWID hardware binding for a user who switched devices')
+      .addStringOption(opt => opt.setName('key').setDescription('License key to unlock').setRequired(true)),
+
+    // 3. /sethwid
+    new SlashCommandBuilder()
+      .setName('sethwid')
+      .setDescription('Manually set or bind an HWID to a key')
+      .addStringOption(opt => opt.setName('key').setDescription('License key').setRequired(true))
+      .addStringOption(opt => opt.setName('hwid').setDescription('Target HWID (or "Unbound" / "Disabled")').setRequired(true)),
+
+    // 4. /blacklist
+    new SlashCommandBuilder()
+      .setName('blacklist')
+      .setDescription('Instantly blacklist/revoke a license key')
+      .addStringOption(opt => opt.setName('key').setDescription('License key to blacklist').setRequired(true))
+      .addStringOption(opt => opt.setName('reason').setDescription('Reason for blacklist')),
+
+    // 5. /unblacklist
+    new SlashCommandBuilder()
+      .setName('unblacklist')
+      .setDescription('Unblacklist and restore a license key to active')
+      .addStringOption(opt => opt.setName('key').setDescription('License key to restore').setRequired(true)),
+
+    // 6. /revokekey
+    new SlashCommandBuilder()
+      .setName('revokekey')
+      .setDescription('Revoke a license key immediately')
+      .addStringOption(opt => opt.setName('key').setDescription('License key to revoke').setRequired(true)),
+
+    // 7. /deletekey
+    new SlashCommandBuilder()
+      .setName('deletekey')
+      .setDescription('Permanently delete a license key from the database')
+      .addStringOption(opt => opt.setName('key').setDescription('License key to delete').setRequired(true)),
+
+    // 8. /keyinfo
+    new SlashCommandBuilder()
+      .setName('keyinfo')
+      .setDescription('Look up full details on a specific license key')
+      .addStringOption(opt => opt.setName('key').setDescription('License key string').setRequired(true)),
+
+    // 9. /listkeys
     new SlashCommandBuilder()
       .setName('listkeys')
       .setDescription('List all license keys stored in VPS database')
@@ -83,69 +136,47 @@ function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRole
           .setDescription('Filter by status')
           .addChoices(
             { name: 'Active Only', value: 'ACTIVE' },
-            { name: 'Revoked Only', value: 'REVOKED' },
+            { name: 'Revoked/Blacklisted Only', value: 'REVOKED' },
             { name: 'All Keys', value: 'ALL' }
           )),
 
-    // 3. /keyinfo
-    new SlashCommandBuilder()
-      .setName('keyinfo')
-      .setDescription('Look up full details on a specific license key')
-      .addStringOption(opt => opt.setName('key').setDescription('License key string').setRequired(true)),
-
-    // 4. /resethwid
-    new SlashCommandBuilder()
-      .setName('resethwid')
-      .setDescription('Reset HWID hardware binding for a user who switched devices')
-      .addStringOption(opt => opt.setName('key').setDescription('License key to unlock').setRequired(true)),
-
-    // 5. /revokekey
-    new SlashCommandBuilder()
-      .setName('revokekey')
-      .setDescription('Revoke a license key immediately')
-      .addStringOption(opt => opt.setName('key').setDescription('License key to revoke').setRequired(true)),
-
-    // 6. /deletekey
-    new SlashCommandBuilder()
-      .setName('deletekey')
-      .setDescription('Permanently delete a license key from the database')
-      .addStringOption(opt => opt.setName('key').setDescription('License key to delete').setRequired(true)),
-
-    // 7. /stats
+    // 10. /stats
     new SlashCommandBuilder()
       .setName('stats')
-      .setDescription('View live platform statistics and active licenses'),
+      .setDescription('View live platform telemetry, active sessions, and database counts'),
 
-    // 8. /maintenance
+    // 11. /maintenance
     new SlashCommandBuilder()
       .setName('maintenance')
-      .setDescription('Toggle website emergency maintenance mode on/off')
+      .setDescription('Toggle emergency system maintenance mode on the website')
       .addBooleanOption(opt => opt.setName('enable').setDescription('True to turn ON maintenance, False to turn OFF').setRequired(true))
       .addStringOption(opt => opt.setName('reason').setDescription('Notice reason to display on site')),
 
-    // 9. /broadcast
+    // 12. /broadcast
     new SlashCommandBuilder()
       .setName('broadcast')
-      .setDescription('Post or clear live announcement banner on website')
+      .setDescription('Post or clear live top announcement banner on the website')
       .addStringOption(opt => opt.setName('message').setDescription('Banner text (leave empty to clear)'))
       .addStringOption(opt =>
         opt.setName('type')
-          .setDescription('Banner style type')
+          .setDescription('Banner style')
           .addChoices(
-            { name: 'Warning (Orange)', value: 'warning' },
-            { name: 'Urgent (Red)', value: 'danger' },
-            { name: 'Success (Green)', value: 'success' },
-            { name: 'Information (Cyan)', value: 'info' }
+            { name: 'Warning (Orange/Amber)', value: 'warning' },
+            { name: 'Info (Neon Blue)', value: 'info' },
+            { name: 'Success (Neon Green)', value: 'success' },
+            { name: 'Alert (Neon Red)', value: 'alert' }
           )),
 
-    // 10. /forcerefresh
+    // 13. /forcerefresh
     new SlashCommandBuilder()
       .setName('forcerefresh')
-      .setDescription('Broadcast instant force refresh to all connected web clients')
+      .setDescription('Force all connected user browsers to instantly refresh')
   ];
 
   client.once('ready', async () => {
-    console.log(`[DISCORD BOT] Logged in as ${client.user.tag}! Registering slash commands...`);
+    console.log(`[DISCORD BOT] Logged in as ${client.user.tag}!`);
+    console.log(`[DISCORD BOT] Authorized Owner User IDs: ${allOwners.join(', ')}`);
+
     const rest = new REST({ version: '10' }).setToken(token);
     try {
       if (guildId) {
@@ -211,33 +242,104 @@ function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRole
       return interaction.reply({ embeds: [embed] });
     }
 
-    // 2. /listkeys
-    if (commandName === 'listkeys') {
-      const statusFilter = interaction.options.getString('status') || 'ALL';
-      const allKeys = db.getAllKeys();
-      const list = Object.entries(allKeys).filter(([_, v]) => {
-        if (statusFilter === 'ALL') return true;
-        return v.status === statusFilter;
+    // 2. /resethwid
+    if (commandName === 'resethwid') {
+      const key = (interaction.options.getString('key') || '').trim();
+      const data = db.getKey(key);
+
+      if (!data) {
+        return interaction.reply({ content: `❌ Key \`${key}\` not found in database.`, ephemeral: true });
+      }
+
+      db.updateKey(key, { boundHwid: 'Unbound' });
+      return interaction.reply({
+        content: `✅ **HWID RESET**: Successfully reset HWID for \`${key}\`! The user can now log in from their new device.`,
+        ephemeral: false
       });
-
-      const total = list.length;
-      const preview = list.slice(0, 15).map(([k, v]) => {
-        const hwidStatus = v.boundHwid === 'Unbound' ? '🟡 Unbound' : (v.boundHwid || 'None');
-        const roleBadge = `[${v.role || 'USER'}]`;
-        const noteText = v.notes ? `(${v.notes})` : '';
-        return `• \`${k}\` ${roleBadge} — ${hwidStatus} ${noteText}`;
-      }).join('\n');
-
-      const embed = new EmbedBuilder()
-        .setTitle(`📋 LICENSE KEYS VAULT (${total} Total)`)
-        .setColor(0x3b82f6)
-        .setDescription(preview || '*No keys found matching criteria.*')
-        .setFooter({ text: total > 15 ? `Showing first 15 of ${total} keys` : `Total: ${total} keys` });
-
-      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
-    // 3. /keyinfo
+    // 3. /sethwid
+    if (commandName === 'sethwid') {
+      const key = (interaction.options.getString('key') || '').trim();
+      const hwid = (interaction.options.getString('hwid') || '').trim();
+      const data = db.getKey(key);
+
+      if (!data) {
+        return interaction.reply({ content: `❌ Key \`${key}\` not found in database.`, ephemeral: true });
+      }
+
+      db.updateKey(key, { boundHwid: hwid });
+      return interaction.reply({
+        content: `🔒 **HWID UPDATED**: Key \`${key}\` bound HWID has been set to \`${hwid}\`.`,
+        ephemeral: false
+      });
+    }
+
+    // 4. /blacklist
+    if (commandName === 'blacklist') {
+      const key = (interaction.options.getString('key') || '').trim();
+      const reason = interaction.options.getString('reason') || 'Violation of terms';
+      const data = db.getKey(key);
+
+      if (!data) {
+        return interaction.reply({ content: `❌ Key \`${key}\` not found in database.`, ephemeral: true });
+      }
+
+      db.updateKey(key, { status: 'REVOKED', blacklistReason: reason, blacklistedAt: Date.now() });
+      return interaction.reply({
+        content: `🚫 **BLACKLISTED**: Key \`${key}\` has been revoked and blacklisted. Reason: *${reason}*`,
+        ephemeral: false
+      });
+    }
+
+    // 5. /unblacklist
+    if (commandName === 'unblacklist') {
+      const key = (interaction.options.getString('key') || '').trim();
+      const data = db.getKey(key);
+
+      if (!data) {
+        return interaction.reply({ content: `❌ Key \`${key}\` not found in database.`, ephemeral: true });
+      }
+
+      db.updateKey(key, { status: 'ACTIVE', blacklistReason: undefined });
+      return interaction.reply({
+        content: `✅ **UNBLACKLISTED**: Key \`${key}\` has been unblacklisted and restored to **ACTIVE**!`,
+        ephemeral: false
+      });
+    }
+
+    // 6. /revokekey
+    if (commandName === 'revokekey') {
+      const key = (interaction.options.getString('key') || '').trim();
+      const data = db.getKey(key);
+
+      if (!data) {
+        return interaction.reply({ content: `❌ Key \`${key}\` not found in database.`, ephemeral: true });
+      }
+
+      db.updateKey(key, { status: 'REVOKED' });
+      return interaction.reply({
+        content: `🚫 Key \`${key}\` has been **REVOKED**. Access blocked immediately.`,
+        ephemeral: false
+      });
+    }
+
+    // 7. /deletekey
+    if (commandName === 'deletekey') {
+      const key = (interaction.options.getString('key') || '').trim();
+      const success = db.deleteKey(key);
+
+      if (!success) {
+        return interaction.reply({ content: `❌ Key \`${key}\` not found in database.`, ephemeral: true });
+      }
+
+      return interaction.reply({
+        content: `🗑️ Key \`${key}\` permanently deleted from database.`,
+        ephemeral: true
+      });
+    }
+
+    // 8. /keyinfo
     if (commandName === 'keyinfo') {
       const key = (interaction.options.getString('key') || '').trim();
       const data = db.getKey(key);
@@ -262,57 +364,41 @@ function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRole
           { name: 'Note', value: data.notes || '*None*', inline: false }
         );
 
+      if (data.blacklistReason) {
+        embed.addFields({ name: '⚠️ Blacklist Reason', value: `*${data.blacklistReason}*`, inline: false });
+      }
+
       return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
-    // 4. /resethwid
-    if (commandName === 'resethwid') {
-      const key = (interaction.options.getString('key') || '').trim();
-      const data = db.getKey(key);
-
-      if (!data) {
-        return interaction.reply({ content: `❌ Key \`${key}\` not found.`, ephemeral: true });
-      }
-
-      db.updateKey(key, { boundHwid: 'Unbound' });
-      return interaction.reply({
-        content: `✅ Successfully reset HWID for \`${key}\`! The user can now log in from their new device.`,
-        ephemeral: false
+    // 9. /listkeys
+    if (commandName === 'listkeys') {
+      const statusFilter = interaction.options.getString('status') || 'ALL';
+      const allKeys = db.getAllKeys();
+      const list = Object.entries(allKeys).filter(([_, v]) => {
+        if (statusFilter === 'ALL') return true;
+        return v.status === statusFilter;
       });
+
+      const total = list.length;
+      const preview = list.slice(0, 15).map(([k, v]) => {
+        const hwidStatus = v.boundHwid === 'Unbound' ? '🟡 Unbound' : (v.boundHwid || 'None');
+        const roleBadge = `[${v.role || 'USER'}]`;
+        const noteText = v.notes ? `(${v.notes})` : '';
+        const statusBadge = v.status === 'REVOKED' ? '⛔' : '🟢';
+        return `${statusBadge} \`${k}\` ${roleBadge} — ${hwidStatus} ${noteText}`;
+      }).join('\n');
+
+      const embed = new EmbedBuilder()
+        .setTitle(`📋 LICENSE KEYS VAULT (${total} Total)`)
+        .setColor(0x3b82f6)
+        .setDescription(preview || '*No keys found matching criteria.*')
+        .setFooter({ text: total > 15 ? `Showing first 15 of ${total} keys` : `Total: ${total} keys` });
+
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     }
 
-    // 5. /revokekey
-    if (commandName === 'revokekey') {
-      const key = (interaction.options.getString('key') || '').trim();
-      const data = db.getKey(key);
-
-      if (!data) {
-        return interaction.reply({ content: `❌ Key \`${key}\` not found.`, ephemeral: true });
-      }
-
-      db.updateKey(key, { status: 'REVOKED' });
-      return interaction.reply({
-        content: `🚫 Key \`${key}\` has been **REVOKED**. Access blocked immediately.`,
-        ephemeral: false
-      });
-    }
-
-    // 6. /deletekey
-    if (commandName === 'deletekey') {
-      const key = (interaction.options.getString('key') || '').trim();
-      const success = db.deleteKey(key);
-
-      if (!success) {
-        return interaction.reply({ content: `❌ Key \`${key}\` not found.`, ephemeral: true });
-      }
-
-      return interaction.reply({
-        content: `🗑️ Key \`${key}\` permanently deleted from database.`,
-        ephemeral: true
-      });
-    }
-
-    // 7. /stats
+    // 10. /stats
     if (commandName === 'stats') {
       const allKeys = Object.values(db.getAllKeys());
       const activeCount = allKeys.filter(k => k && k.status === 'ACTIVE').length;
@@ -327,20 +413,20 @@ function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRole
           { name: '🟢 Active Keys', value: `**${activeCount}**`, inline: true },
           { name: '🔴 Revoked Keys', value: `**${revokedCount}**`, inline: true },
           { name: '🌐 Total Visits', value: `**${stats.totalVisits || 0}**`, inline: true },
-          { name: '👥 Active Sessions (15m)', value: `**${Object.keys(stats.activeUsers || {}).length}**`, inline: true },
-          { name: '🛡️ Database Mode', value: '`VPS Local JSON (No Firebase)`', inline: true }
+          { name: '👥 Active Sessions', value: `**${Object.keys(stats.activeUsers || {}).length}**`, inline: true },
+          { name: '🛡️ Owners Authorized', value: `**${allOwners.length} Authorized IDs**`, inline: true }
         )
         .setTimestamp();
 
       return interaction.reply({ embeds: [embed] });
     }
 
-    // 8. /maintenance
+    // 11. /maintenance
     if (commandName === 'maintenance') {
       const enable = interaction.options.getBoolean('enable');
       const reason = interaction.options.getString('reason') || (enable ? 'Emergency Maintenance Mode' : '');
 
-      const m = db.setMaintenance({
+      db.setMaintenance({
         enabled: enable,
         reason: reason,
         author: interaction.user.tag
@@ -353,12 +439,12 @@ function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRole
       });
     }
 
-    // 9. /broadcast
+    // 12. /broadcast
     if (commandName === 'broadcast') {
       const message = interaction.options.getString('message');
       const type = interaction.options.getString('type') || 'warning';
 
-      const a = db.setAnnouncement({
+      db.setAnnouncement({
         active: !!message,
         text: message || '',
         type: type,
@@ -372,7 +458,7 @@ function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRole
       });
     }
 
-    // 10. /forcerefresh
+    // 13. /forcerefresh
     if (commandName === 'forcerefresh') {
       db.setControl({
         reason: `Discord Triggered by ${interaction.user.tag}`,
@@ -393,4 +479,3 @@ function createDiscordBot(token, clientId, guildId, ownerUserIds = [], adminRole
 }
 
 module.exports = createDiscordBot;
-

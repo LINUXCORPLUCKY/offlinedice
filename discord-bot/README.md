@@ -4,53 +4,46 @@
 
 ---
 
-## ⚡ Why This Replaces Firebase Permanently
+## ⚡ The 3 Designated Owners (Full Authority)
+The bot is hardcoded and pre-configured to authorize these 3 Discord User IDs with permanent Owner Authority:
+1. `1335889436898230302` (Tris / Linux)
+2. `1009385844920025148`
+3. `1105509248240201738`
 
-Firebase Realtime Database has public URLs (e.g. `*.firebasedatabase.app/keys.json`) that can be snooped or scraped if rules are misconfigured. 
-
-**This VPS Discord Bot replaces Firebase entirely:**
-- **No Public Database URL**: All keys, HWIDs, and sessions are stored in `data/keys.json` locally on your private VPS disk.
-- **Firewalled**: Only your VPS processes and your authenticated Vercel backend (`api/verify.js`) can access the API via a secret bearer token.
-- **Discord Bot Control**: You and Linux can generate keys, reset HWIDs, revoke abusers, and toggle maintenance directly from your private Discord channel on your phone or PC!
+These 3 owners can execute all commands: `/genkey`, `/resethwid`, `/sethwid`, `/blacklist`, `/unblacklist`, `/revokekey`, `/deletekey`, `/keyinfo`, `/listkeys`, `/stats`, `/maintenance`, `/broadcast`, and `/forcerefresh`.
 
 ---
 
-## 🚀 3-Minute VPS Setup Guide
+## 🚀 2-Minute VPS Setup Guide (Using .tar.gz)
 
-### 1. Requirements on your VPS
-- Linux (Ubuntu 20.04/22.04/24.04, Debian, CentOS, or AlmaLinux)
-- Node.js v18+ (`curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash - && sudo apt install -y nodejs`)
-- PM2 for 24/7 background uptime (`npm install -g pm2`)
-
-### 2. Upload / Clone to VPS
-Copy the `discord-bot` folder to your VPS:
+### 1. Upload & Extract on Your VPS
+Upload `discord-bot.tar.gz` to your VPS via SCP, SFTP, or MobaXterm:
 ```bash
-cd /opt
-# or in your user home directory:
-cd ~/discord-bot
+# Extract the archive
+tar -xzf discord-bot.tar.gz
+cd discord-bot
+
+# Install dependencies
 npm install
 ```
 
-### 3. Configure `.env`
-Copy the template and fill in your Discord credentials:
+### 2. Configure `.env`
 ```bash
 cp .env.example .env
 nano .env
 ```
-
-Fill in:
-```env
+Fill in your Bot Token and Client ID from Discord Developer Portal:
+```ini
 DISCORD_TOKEN=your_bot_token_here
-DISCORD_CLIENT_ID=your_application_client_id_here
+DISCORD_CLIENT_ID=your_client_id_here
 DISCORD_GUILD_ID=your_server_id_here
-OWNER_USER_IDS=your_discord_user_id
-ADMIN_ROLE_IDS=your_admin_role_id
+OWNER_USER_IDS=1335889436898230302,1009385844920025148,1105509248240201738
 PORT=4000
 API_SECRET=iusedhfiuhsdilufhdsijfh_secret_vps_token
 MASTER_KEY=iusedhfiuhsdilufhdsijfh
 ```
 
-### 4. Start 24/7 Background Service
+### 3. Start 24/7 with PM2
 ```bash
 pm2 start ecosystem.config.js
 pm2 save
@@ -70,11 +63,14 @@ pm2 status
 | Command | Arguments | What it does |
 |---|---|---|
 | `/genkey` | `role`, `duration`, `note`, `hwid_lock` | Generates a new license key with formatted Discord embed. |
-| `/listkeys` | `status` (Active / Revoked / All) | Displays all keys in the VPS database (ephemeral / private). |
-| `/keyinfo` | `key` | Inspects a key's HWID, creation date, expiry, and notes. |
 | `/resethwid` | `key` | Clears HWID lock so a user can log in from a new PC. |
-| `/revokekey` | `key` | Instantly blocks and revokes a user's license. |
+| `/sethwid` | `key`, `hwid` | Manually sets or customizes the HWID lock for a key. |
+| `/blacklist` | `key`, `reason` | Instantly blacklists a key and revokes all room access. |
+| `/unblacklist` | `key` | Unblacklists and restores a revoked key to Active. |
+| `/revokekey` | `key` | Instantly revokes a user's license. |
 | `/deletekey` | `key` | Permanently deletes a key from disk. |
+| `/keyinfo` | `key` | Inspects a key's HWID, creation date, expiry, notes, and blacklist state. |
+| `/listkeys` | `status` (Active / Revoked / All) | Displays all keys in the VPS database (ephemeral / private). |
 | `/stats` | None | Displays live server visits, active users, and key metrics. |
 | `/maintenance` | `enable: true/false`, `reason` | Puts website in maintenance or brings it live directly from Discord! |
 | `/broadcast` | `message`, `type` | Broadcasts an announcement banner to all website clients. |
@@ -84,18 +80,10 @@ pm2 status
 
 ## 🔗 Connecting Website to VPS
 
-In your Vercel Project Settings (or in `api/verify.js` & `api/admin.js`):
+In your Vercel Project Settings (or VPS host):
 Set the Environment Variable:
-- `DISCORD_VPS_URL`: `http://YOUR_VPS_IP:4000` (or `https://api.yourdomain.com`)
+- `DISCORD_VPS_URL`: `http://YOUR_VPS_IP:4000`
 - `API_SECRET`: `iusedhfiuhsdilufhdsijfh_secret_vps_token`
 - `MASTER_KEY`: `iusedhfiuhsdilufhdsijfh`
 
-When `DISCORD_VPS_URL` is set, `api/verify.js` talks directly to your private VPS microservice!
-
----
-
-## 🔒 Security Tips
-1. Keep `data/keys.json` backed up regularly (`cp data/keys.json ~/backup_$(date +%F).json`).
-2. Only allow port `4000` from Vercel or use Cloudflare Reverse Proxy / Nginx with HTTPS.
-3. Your bot token and master key are 100% private and never committed to public git repos.
-
+When `DISCORD_VPS_URL` is configured, `/api/verify` talks directly to your private VPS microservice!
