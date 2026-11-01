@@ -10,9 +10,13 @@ const DISCORD_VPS_URL = process.env.DISCORD_VPS_URL || '';
 
 function getSystemState() {
   try {
-    const sysPath = path.join(__dirname, 'data', 'system_state.json');
+    const sysPath = path.join(__dirname, '_data', 'system_state.json');
     if (fs.existsSync(sysPath)) {
       return JSON.parse(fs.readFileSync(sysPath, 'utf8'));
+    }
+    const fallbackPath = path.join(__dirname, 'data', 'system_state.json');
+    if (fs.existsSync(fallbackPath)) {
+      return JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
     }
   } catch(e) {}
   return {

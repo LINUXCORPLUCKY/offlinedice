@@ -24,23 +24,27 @@ function sendJson(res, statusCode, data) {
 
 function loadKeys() {
   try {
-    const p = path.join(__dirname, 'data', 'keys_vault.json');
-    if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8'));
+    const p1 = path.join(__dirname, '_data', 'keys_vault.json');
+    if (fs.existsSync(p1)) return JSON.parse(fs.readFileSync(p1, 'utf8'));
+    const p2 = path.join(__dirname, 'data', 'keys_vault.json');
+    if (fs.existsSync(p2)) return JSON.parse(fs.readFileSync(p2, 'utf8'));
   } catch(e) {}
   return {};
 }
 
 function saveKeys(keys) {
   try {
-    const p = path.join(__dirname, 'data', 'keys_vault.json');
-    fs.writeFileSync(p, JSON.stringify(keys, null, 2));
+    const p1 = path.join(__dirname, '_data', 'keys_vault.json');
+    fs.writeFileSync(p1, JSON.stringify(keys, null, 2));
   } catch(e) {}
 }
 
 function loadSystem() {
   try {
-    const p = path.join(__dirname, 'data', 'system_state.json');
-    if (fs.existsSync(p)) return JSON.parse(fs.readFileSync(p, 'utf8'));
+    const p1 = path.join(__dirname, '_data', 'system_state.json');
+    if (fs.existsSync(p1)) return JSON.parse(fs.readFileSync(p1, 'utf8'));
+    const p2 = path.join(__dirname, 'data', 'system_state.json');
+    if (fs.existsSync(p2)) return JSON.parse(fs.readFileSync(p2, 'utf8'));
   } catch(e) {}
   return {
     maintenance: { enabled: false },
@@ -51,8 +55,8 @@ function loadSystem() {
 
 function saveSystem(sys) {
   try {
-    const p = path.join(__dirname, 'data', 'system_state.json');
-    fs.writeFileSync(p, JSON.stringify(sys, null, 2));
+    const p1 = path.join(__dirname, '_data', 'system_state.json');
+    fs.writeFileSync(p1, JSON.stringify(sys, null, 2));
   } catch(e) {}
 }
 

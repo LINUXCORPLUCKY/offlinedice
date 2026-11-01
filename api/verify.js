@@ -10,12 +10,17 @@ const path = require('path');
 const MASTER_KEY = process.env.MASTER_KEY || 'iusedhfiuhsdilufhdsijfh';
 const DISCORD_VPS_URL = process.env.DISCORD_VPS_URL || '';
 
-// Load keys from api/data/keys_vault.json
+// Load keys from api/_data/keys_vault.json
 let LOCAL_KEYS = {};
 try {
-  const keysPath = path.join(__dirname, 'data', 'keys_vault.json');
+  const keysPath = path.join(__dirname, '_data', 'keys_vault.json');
   if (fs.existsSync(keysPath)) {
     LOCAL_KEYS = JSON.parse(fs.readFileSync(keysPath, 'utf8'));
+  } else {
+    const fallbackPath = path.join(__dirname, 'data', 'keys_vault.json');
+    if (fs.existsSync(fallbackPath)) {
+      LOCAL_KEYS = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+    }
   }
 } catch (e) {
   console.warn('[VERIFY] Error loading keys:', e.message);
