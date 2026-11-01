@@ -1,0 +1,26 @@
+{
+  "name": "headless-dice-discord-bot",
+  "version": "2.0.0",
+  "description": "Headless Dice Secure VPS License Manager & Discord Bot. Eliminates Firebase with Private Local Database.",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": [
+    "headless-dice",
+    "discord-bot",
+    "license-manager",
+    "hwid-lock",
+    "vps"
+  ],
+  "author": "Linux & Tris",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "discord.js": "^14.16.3",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.1"
+  }
+}
+

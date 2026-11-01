@@ -1,29 +1,18 @@
 {
-  "name": "headless-dice-verifier",
+  "name": "headless-dice",
   "version": "1.0.0",
-  "description": "Headless Dice - Offline Dice Audit & Verifier Dashboard with real-time Firebase RTDB ingestion and statistical analytics",
-  "main": "server.js",
+  "description": "Headless Dice — 5-Roll Probability Engine & 1-Color Predictor for Online Dice",
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js"
+    "start": "node local-server.js",
+    "dev": "node local-server.js"
   },
   "keywords": [
-    "dice",
-    "verifier",
-    "audit",
-    "csprng",
-    "provably-fair"
+    "headless-dice",
+    "online-dice",
+    "dice-predictor",
+    "markov-probability",
+    "color-dice"
   ],
-  "author": "Jalapeno",
-  "license": "MIT",
-  "dependencies": {
-    "axios": "^1.7.9",
-    "cors": "^2.8.5",
-    "express": "^4.21.2"
-  },
-  "devDependencies": {
-    "@types/node": "^26.6.6",
-    "javascript-obfuscator": "^5.9.0",
-    "typescript": "^7.0.2"
-  }
+  "author": "Headless Dice",
+  "license": "ISC"
 }

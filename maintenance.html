@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HEADLESS DICE // SYSTEM MAINTENANCE IN PROGRESS</title>
+  <link rel="icon" type="image/png" href="/assets/headless_dice_logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800;900&family=Outfit:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #07030e;
+      --card-bg: rgba(18, 9, 32, 0.94);
+      --purple-neon: #a855f7;
+      --purple-glow: rgba(168, 85, 247, 0.5);
+      --amber-neon: #f59e0b;
+      --amber-glow: rgba(245, 158, 11, 0.45);
+      --cyan-neon: #06b6d4;
+      --text-main: #f8fafc;
+      --text-muted: #cbd5e1;
+      --text-dim: #94a3b8;
+      --font-sans: 'Outfit', -apple-system, BlinkMacSystemFont, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      background-image: 
+        radial-gradient(circle at 50% 20%, #2e0854 0%, #100420 55%, #050109 100%),
+        linear-gradient(rgba(168, 85, 247, 0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(168, 85, 247, 0.08) 1px, transparent 1px);
+      background-size: 100% 100%, 36px 36px, 36px 36px;
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+      text-align: center;
+    }
+
+    .maintenance-wrapper {
+      max-width: 680px;
+      width: 100%;
+      background: var(--card-bg);
+      border: 2px solid var(--amber-neon);
+      box-shadow: 
+        0 0 50px var(--amber-glow),
+        0 25px 70px rgba(0, 0, 0, 0.95),
+        inset 0 0 30px rgba(168, 85, 247, 0.15);
+      border-radius: 24px;
+      padding: 44px 36px;
+      position: relative;
+      overflow: hidden;
+      animation: pulseBorder 3s infinite alternate ease-in-out;
+      backdrop-filter: blur(16px);
+    }
+
+    @keyframes pulseBorder {
+      from {
+        box-shadow: 0 0 35px rgba(245, 158, 11, 0.35), 0 20px 60px rgba(0, 0, 0, 0.9);
+        border-color: #f59e0b;
+      }
+      to {
+        box-shadow: 0 0 70px rgba(168, 85, 247, 0.6), 0 30px 80px rgba(0, 0, 0, 0.95);
+        border-color: #c084fc;
+      }
+    }
+
+    /* Caution Stripes Header Bar */
+    .hazard-stripes-bar {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 10px;
+      background: repeating-linear-gradient(
+        -45deg,
+        #f59e0b,
+        #f59e0b 14px,
+        #120722 14px,
+        #120722 28px
+      );
+    }
+
+    /* SIGN CLUSTER */
+    .sign-cluster {
+      display: inline-flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(180deg, rgba(245, 158, 11, 0.14) 0%, rgba(168, 85, 247, 0.22) 100%);
+      border: 2px solid rgba(245, 158, 11, 0.6);
+      border-radius: 18px;
+      padding: 24px 28px;
+      margin-bottom: 24px;
+      box-shadow: 0 0 30px rgba(245, 158, 11, 0.25);
+      position: relative;
+      width: 100%;
+    }
+
+    .sign-siren-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(245, 158, 11, 0.22);
+      border: 1px solid var(--amber-neon);
+      color: #fde68a;
+      font-family: var(--font-mono);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      padding: 5px 16px;
+      border-radius: 999px;
+      margin-bottom: 14px;
+    }
+
+    .siren-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--amber-neon);
+      box-shadow: 0 0 12px var(--amber-neon);
+      animation: sirenFlash 0.8s infinite alternate;
+    }
+
+    @keyframes sirenFlash {
+      0% { opacity: 0.3; transform: scale(0.85); }
+      100% { opacity: 1; transform: scale(1.2); }
+    }
+
+    .sign-title {
+      font-size: 34px;
+      font-weight: 900;
+      letter-spacing: -0.5px;
+      color: #ffffff;
+      text-transform: uppercase;
+      line-height: 1.15;
+      text-shadow: 
+        0 0 18px rgba(245, 158, 11, 0.75),
+        0 0 35px rgba(168, 85, 247, 0.5),
+        0 2px 4px rgba(0, 0, 0, 0.9);
+      margin-bottom: 8px;
+    }
+
+    .sign-subtext {
+      font-family: var(--font-mono);
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 2px;
+      color: #c084fc;
+      text-transform: uppercase;
+    }
+
+    /* NOTICE BOX */
+    .notice-box {
+      background: rgba(12, 4, 24, 0.88);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-left: 5px solid var(--amber-neon);
+      border-radius: 14px;
+      padding: 22px 20px;
+      text-align: left;
+      margin-bottom: 26px;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.6);
+    }
+
+    .notice-lead {
+      font-size: 16px;
+      font-weight: 800;
+      color: #fbbf24;
+      line-height: 1.5;
+      margin-bottom: 10px;
+      letter-spacing: 0.2px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .notice-body {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.7;
+    }
+
+    .notice-body strong {
+      color: #ffffff;
+      font-weight: 700;
+    }
+
+    /* SYSTEM DIAGNOSTIC STATUS CONSOLE */
+    .terminal-status-console {
+      background: #06020c;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 14px;
+      padding: 16px 20px;
+      font-family: var(--font-mono);
+      font-size: 12px;
+      color: #e2e8f0;
+      text-align: left;
+      margin-bottom: 28px;
+      line-height: 1.9;
+    }
+
+    .status-row {
+      display: flex;
+      justify-content: space-between;
+      border-bottom: 1px dashed rgba(168, 85, 247, 0.2);
+      padding: 6px 0;
+    }
+
+    .status-row:last-child {
+      border-bottom: none;
+    }
+
+    .status-key {
+      color: #94a3b8;
+    }
+
+    .status-val.updating {
+      color: #fbbf24;
+      font-weight: 800;
+      text-shadow: 0 0 8px rgba(245, 158, 11, 0.6);
+    }
+
+    .status-val.active {
+      color: #38bdf8;
+      font-weight: 800;
+    }
+
+    .status-val.paused {
+      color: #c084fc;
+      font-weight: 800;
+    }
+
+    /* BUTTONS & FOOTER */
+    .actions-cluster {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .btn-discord {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      background: linear-gradient(135deg, #5865F2, #4752C4);
+      color: #ffffff;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 800;
+      padding: 14px 32px;
+      border-radius: 12px;
+      box-shadow: 0 0 25px rgba(88, 101, 242, 0.4);
+      transition: all 0.2s ease;
+      width: 100%;
+      max-width: 380px;
+    }
+
+    .btn-discord:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 35px rgba(88, 101, 242, 0.7);
+    }
+
+    .footer-stamp {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #94a3b8;
+      margin-top: 18px;
+      letter-spacing: 1px;
+    }
+
+    @media (max-width: 640px) {
+      .maintenance-wrapper {
+        padding: 32px 20px;
+      }
+      .sign-title {
+        font-size: 24px;
+      }
+      .sign-subtext {
+        font-size: 11px;
+        letter-spacing: 1.5px;
+      }
+      .notice-lead {
+        font-size: 14px;
+      }
+      .notice-body {
+        font-size: 13px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="maintenance-wrapper">
+    <div class="hazard-stripes-bar"></div>
+
+    <!-- SIGN CLUSTER -->
+    <div class="sign-cluster">
+      <div class="sign-siren-pill">
+        <span class="siren-dot"></span>
+        <span>SYSTEM MAINTENANCE // UPGRADE IN PROGRESS</span>
+      </div>
+      <h1 class="sign-title">🔧 WEBSITE UNDER MAINTENANCE 🔧</h1>
+      <div class="sign-subtext">CORE LIBRARY &amp; ALGORITHM UPGRADE</div>
+    </div>
+
+    <!-- NOTICE STATEMENT -->
+    <div class="notice-box">
+      <div class="notice-lead">
+        <span>⚡</span>
+        <span>DEVELOPER UPDATE: LINUX WORKING ON DICE LIBRARY</span>
+      </div>
+      <p class="notice-body">
+        <strong>Linux is currently working on the new library for Online Dice.</strong>
+        <br><br>
+        We are actively implementing vital changes, updates, and engine optimizations to the website and dice algorithms. All live rooms and prediction services are temporarily paused while these updates are deployed to ensure maximum stability and accuracy.
+        <br><br>
+        The platform will be back online shortly as soon as the library deployment completes!
+      </p>
+    </div>
+
+    <!-- DIAGNOSTIC CONSOLE STATUS -->
+    <div class="terminal-status-console">
+      <div class="status-row">
+        <span class="status-key">WEBSITE STATUS:</span>
+        <span class="status-val updating">UNDER MAINTENANCE // CHANGES IN PROGRESS</span>
+      </div>
+      <div class="status-row">
+        <span class="status-key">ACTIVE TASK:</span>
+        <span class="status-val active">LINUX WORKING ON ONLINE DICE LIBRARY</span>
+      </div>
+      <div class="status-row">
+        <span class="status-key">PREDICTION ENGINES:</span>
+        <span class="status-val paused">PAUSED FOR UPGRADE</span>
+      </div>
+      <div class="status-row">
+        <span class="status-key">UPGRADE TARGET:</span>
+        <span class="status-val updating">CORE DICE LIB &amp; SYSTEM OPTIMIZATION</span>
+      </div>
+    </div>
+
+    <!-- ACTION BUTTON -->
+    <div class="actions-cluster">
+      <a href="https://discord.com/invite/TSensK6HEc" target="_blank" rel="noopener noreferrer" class="btn-discord">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.317 4.37a19.791 19.791 0 0 0-4.885-1.515a.074.074 0 0 0-.079.037c-.21.375-.444.864-.608 1.25a18.27 18.27 0 0 0-5.487 0a12.64 12.64 0 0 0-.617-1.25a.077.077 0 0 0-.079-.037A19.736 19.736 0 0 0 3.677 4.37a.07.07 0 0 0-.032.027C.533 9.046-.32 13.58.099 18.057a.082.082 0 0 0 .031.057a19.9 19.9 0 0 0 5.993 3.03a.078.078 0 0 0 .084-.028c.462-.63.874-1.295 1.226-1.994.021-.041.001-.09-.041-.106a13.107 13.107 0 0 1-1.872-.892a.077.077 0 0 1-.008-.128c.126-.093.252-.19.372-.287a.075.075 0 0 1 .077-.01c3.929 1.793 8.18 1.793 12.061 0a.077.077 0 0 1 .079.01c.12.098.246.195.373.288a.077.077 0 0 1-.006.127c-.598.35-1.22.648-1.873.891a.077.077 0 0 0-.041.107c.36.698.772 1.362 1.225 1.993a.076.076 0 0 0 .084.028a19.839 19.839 0 0 0 6.002-3.03a.077.077 0 0 0 .032-.054c.5-5.177-.838-9.674-3.549-13.66a.061.061 0 0 0-.031-.028zM8.02 15.33c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.956-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.956 2.418-2.157 2.418zm7.975 0c-1.183 0-2.157-1.085-2.157-2.419c0-1.333.955-2.419 2.157-2.419c1.21 0 2.176 1.096 2.157 2.42c0 1.333-.946 2.418-2.157 2.418z"/>
+        </svg>
+        <span>DISCORD COMMUNITY &amp; UPDATES</span>
+      </a>
+
+      <div class="footer-stamp">
+        HEADLESS DICE // SYSTEM MAINTENANCE &amp; UPGRADES
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Clean stored user sessions on landing
+    try {
+      localStorage.removeItem('headless_dice_auth');
+      sessionStorage.removeItem('headless_dice_auth');
+    } catch(e) {}
+  </script>
+</body>
+</html>

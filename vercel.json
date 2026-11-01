@@ -1,65 +1,71 @@
 {
-  "version": 2,
   "cleanUrls": true,
   "headers": [
     {
       "source": "/(.*)",
       "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-store, no-cache, must-revalidate, proxy-revalidate, max-age=0"
-        },
-        {
-          "key": "Pragma",
-          "value": "no-cache"
-        },
-        {
-          "key": "Expires",
-          "value": "0"
-        }
+        { "key": "Cache-Control", "value": "no-cache, no-store, must-revalidate, max-age=0" },
+        { "key": "Pragma", "value": "no-cache" },
+        { "key": "Expires", "value": "0" }
       ]
     }
   ],
   "rewrites": [
     {
+      "source": "/api/system",
+      "destination": "/api/system"
+    },
+    {
+      "source": "/api/admin",
+      "destination": "/api/admin"
+    },
+    {
       "source": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn",
       "destination": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html"
     },
     {
-      "source": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn/(.*)",
-      "destination": "/jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html"
-    },
-    {
-      "source": "/api/auth",
-      "destination": "/api/auth.js"
-    },
-    {
-      "source": "/api/auth/(.*)",
-      "destination": "/api/auth.js"
-    },
-    {
       "source": "/api/verify",
-      "destination": "/api/verify.js"
+      "destination": "/api/verify"
     },
     {
-      "source": "/api/verify/(.*)",
-      "destination": "/api/verify.js?sessionId=$1"
+      "source": "/api/webhook/log",
+      "destination": "/api/webhook"
     },
     {
-      "source": "/room",
-      "destination": "/maintenance.html"
+      "source": "/api/webhook",
+      "destination": "/api/webhook"
     },
     {
-      "source": "/login",
-      "destination": "/maintenance.html"
+      "source": "/assets/(.*)",
+      "destination": "/assets/$1"
+    },
+    {
+      "source": "/style.css",
+      "destination": "/style.css"
     },
     {
       "source": "/maintenance",
       "destination": "/maintenance.html"
     },
     {
-      "source": "/((?!api|jhvbuihedfbyhibrt5gi-owner-j42n5jhn|.*\\.[\\w]+$).*)",
-      "destination": "/maintenance.html"
+      "source": "/app",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/room/(.*)",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/room",
+      "destination": "/app.html"
+    },
+    {
+      "source": "/login",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/",
+      "destination": "/index.html"
     }
   ]
 }
