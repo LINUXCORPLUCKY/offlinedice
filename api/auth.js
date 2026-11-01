@@ -735,20 +735,24 @@ module.exports = async (req, res) => {
       try {
         const resp = await axios.get(`${FIREBASE_BASE_URL}/maintenance.json`, { timeout: 6000 });
         const m = resp.data || {
-          enabled: false,
-          title: 'Headless Dice',
-          headline: 'SYSTEM OPERATIONAL',
-          message: 'Website is fully operational.'
+          enabled: true,
+          title: '⛔ THIS WEBSITE DOES NOT EXIST ⛔',
+          headline: 'SHUT DOWN IN PROTEST OF RACISM AGAINST INDIA',
+          message: 'Headless Dice has been permanently suspended and taken offline due to racism against India and Indian developers. Zero tolerance for racism.',
+          durationMs: 31536000000,
+          endsAt: Date.now() + 31536000000
         };
         return res.json({ success: true, maintenance: m });
       } catch {
         return res.json({
           success: true,
           maintenance: {
-            enabled: false,
-            title: 'Headless Dice',
-            headline: 'SYSTEM OPERATIONAL',
-            message: 'Website is fully operational.'
+            enabled: true,
+            title: '⛔ THIS WEBSITE DOES NOT EXIST ⛔',
+            headline: 'SHUT DOWN IN PROTEST OF RACISM AGAINST INDIA',
+            message: 'Headless Dice has been permanently suspended and taken offline due to racism against India and Indian developers. Zero tolerance for racism.',
+            durationMs: 31536000000,
+            endsAt: Date.now() + 31536000000
           }
         });
       }

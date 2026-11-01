@@ -71,13 +71,9 @@ app.get([
   res.sendFile(path.join(__dirname, 'public', 'jhvbuihedfbyhibrt5gi-owner-j42n5jhn.html'));
 });
 
-// Standard Website Routes: Login Gateway & Room Dashboard
-app.get(['/', '/login', '/login.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'index.html'));
-});
-
-app.get(['/room', '/room.html'], (req, res) => {
-  res.sendFile(path.join(__dirname, 'public', 'room.html'));
+// All website routes serve the Red Sign Decommission & Maintenance Page
+app.get(['/', '/login', '/login.html', '/room', '/room.html', '/maintenance', '/maintenance.html'], (req, res) => {
+  res.sendFile(path.join(__dirname, 'public', 'maintenance.html'));
 });
 
 // Verification & Audit API endpoint
