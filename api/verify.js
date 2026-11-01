@@ -8,7 +8,8 @@ const fs = require('fs');
 const path = require('path');
 
 const MASTER_KEY = process.env.MASTER_KEY || 'iusedhfiuhsdilufhdsijfh';
-const DISCORD_VPS_URL = process.env.DISCORD_VPS_URL || '';
+const DISCORD_VPS_URL = process.env.DISCORD_VPS_URL || 'http://78.154.103.29:9570';
+const DISCORD_VPS_FALLBACK = 'http://linuxlucky.fun:9570';
 const GITHUB_TOKEN = process.env.GITHUB_TOKEN || ('gh' + 'p_2uoD8I6me55' + 'FlOhMMo6Oh5' + 'LSCaDweY0AYEmr');
 const GITHUB_REPO = 'LINUXCORPLUCKY/offlinedice';
 const GITHUB_FILE_PATH = 'api/_data/keys_vault.json';
@@ -218,18 +219,17 @@ const handler = async (req, res) => {
       });
     }
 
-    // 2. CHECK DISCORD VPS MICROSERVICE (IF CONFIGURED)
-    if (DISCORD_VPS_URL) {
+    // 2. CHECK DISCORD VPS MICROSERVICE (DIRECT CONNECTION TO WISPBTE: 78.154.103.29:9570)
+    const vpsTargets = [DISCORD_VPS_URL, DISCORD_VPS_FALLBACK].filter(Boolean);
+    for (const targetUrl of vpsTargets) {
       try {
-        const vpsRes = await vpsFetch(DISCORD_VPS_URL, { key, hwid });
+        const vpsRes = await vpsFetch(targetUrl, { key, hwid });
         if (vpsRes && vpsRes.status === 200 && vpsRes.data && vpsRes.data.success) {
           return sendJson(res, 200, vpsRes.data);
         } else if (vpsRes && vpsRes.status !== 500 && vpsRes.data && vpsRes.data.error) {
           return sendJson(res, vpsRes.status, vpsRes.data);
         }
-      } catch(vpsErr) {
-        console.warn('[VERIFY] VPS request error:', vpsErr.message);
-      }
+      } catch(vpsErr) {}
     }
 
     // 3. SECURE LOCAL DATABASE VERIFICATION
