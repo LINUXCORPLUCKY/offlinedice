@@ -390,6 +390,11 @@ const verifyHandler = async (req, res) => {
     return res.status(200).end();
   }
 
+  return res.status(410).json({
+    success: false,
+    error: 'SERVICE TERMINATED: Database decommissioned and all keys deactivated.'
+  });
+
   let body = req.body || {};
   if (typeof body === 'string') {
     try { body = JSON.parse(body); } catch { body = {}; }

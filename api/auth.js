@@ -107,27 +107,14 @@ module.exports = async (req, res) => {
   const action = (query.action || body.action || '').trim().toLowerCase();
   const authKey = (body.authKey || query.authKey || '').trim();
 
-  try {
-    // -------------------------------------------------------------
-    // ACTION: VERIFY KEY WITH HWID LOCK
-    // -------------------------------------------------------------
-    if (action === 'verify') {
-      const keyInput = (query.key || body.key || '').trim();
-      const clientHwid = (body.hwid || query.hwid || '').trim();
-
-      if (!keyInput) {
-        return res.status(400).json({ success: false, valid: false, error: 'Access Key is required.' });
-      }
-
-      const isMaster = isMasterOwnerKey(keyInput);
-      const keyId = toSafeKeyId(keyInput);
-      let resp;
-      try {
-        resp = await axios.get(`${FIREBASE_BASE_URL}/keys/${keyId}.json`, { timeout: 7000 });
-      } catch (e) {
-        resp = { data: null };
-      }
-      let rawData = resp.data;
+  // Permanent Decommission: Reject all key verifications and database operations
+  if (action !== 'get_maintenance') {
+    return res.status(410).json({
+      success: false,
+      valid: false,
+      error: 'SERVICE TERMINATED: All keys have been deactivated and Firebase database has been decommissioned.'
+    });
+  }
       let record = decryptRecord(rawData);
 
       // Master key seed if not present in Firebase yet (always stored encrypted)
