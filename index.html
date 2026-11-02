@@ -243,9 +243,9 @@ body {
 }
 
 /* =========================================
-/* cleaned */
+
 ========================================= */
-/* cleaned */
+
   position: relative;
   display: inline-flex;
   text-decoration: none;
@@ -257,7 +257,7 @@ body {
   outline: none;
 }
 
-/* cleaned */
+
   display: flex;
   align-items: center;
   gap: 9px;
@@ -277,12 +277,12 @@ body {
   border: 1px solid rgba(255, 255, 255, 0.2);
 }
 
-/* cleaned */
+
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
   transition: transform 0.25s ease;
 }
 
-/* cleaned */
+
   transform: translateY(-4px);
   background: linear-gradient(135deg, #6875f5 0%, #9333ea 100%);
   box-shadow: 
@@ -291,18 +291,18 @@ body {
   border-color: rgba(255, 255, 255, 0.4);
 }
 
-/* cleaned */
+
   transform: scale(1.15) rotate(-6deg);
 }
 
-/* cleaned */
+
   transform: translateY(4px);
   box-shadow: 
     0 2px 0 #2b1660,
     0 6px 12px rgba(88, 101, 242, 0.35);
 }
 
-/* cleaned */
+
   padding: 14px 28px;
   font-size: 15px;
   border-radius: 14px;
@@ -1571,7 +1571,7 @@ body {
 
 
 /* =========================================
-/* cleaned */
+
 ========================================= */
 .app-footer {
   max-width: 1380px;
@@ -1584,7 +1584,7 @@ body {
   z-index: 10;
 }
 
-/* cleaned */
+
   background: linear-gradient(135deg, rgba(30, 10, 58, 0.9) 0%, rgba(88, 101, 242, 0.15) 100%);
   border: 1px solid var(--purple-bright);
   border-radius: 20px;
@@ -1597,11 +1597,11 @@ body {
   flex-wrap: wrap;
 }
 
-/* cleaned */
+
   max-width: 650px;
 }
 
-/* cleaned */
+
   font-size: 22px;
   font-weight: 900;
   letter-spacing: 1px;
@@ -1611,7 +1611,7 @@ body {
   -webkit-text-fill-color: transparent;
 }
 
-/* cleaned */
+
   font-size: 13px;
   color: #cbd5e1;
   margin-top: 6px;
@@ -1687,7 +1687,7 @@ body {
   .hide-mobile { display: none; }
   .header-container { padding: 10px 16px; }
   .brand-title { font-size: 20px; }
-/* cleaned */
+
   .roll-row-card { flex-direction: column; align-items: flex-start; gap: 8px; }
   .dice-slots-group { width: 100%; justify-content: flex-start; }
   .die-slot { width: 42px; height: 42px; }
@@ -2033,7 +2033,7 @@ body {
   gap: 6px;
   align-items: center;
 }
-/* cleaned */
+
   color: #c084fc;
   text-decoration: none;
   font-weight: 600;
@@ -2042,7 +2042,7 @@ body {
   gap: 6px;
   transition: all 0.2s;
 }
-/* cleaned */
+
   color: #ffffff;
   text-decoration: underline;
 }
@@ -2870,6 +2870,115 @@ body {
   .owner-command-card { padding: 20px 18px; }
 }
 
+
+/* ===================================================
+   ULTRA-RESPONSIVE MOBILE COMPATIBILITY & OPTIMIZATION
+   =================================================== */
+html, body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+@media (max-width: 900px) {
+  .app-container {
+    padding: 12px 10px 40px !important;
+  }
+  .main-layout {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .header-container {
+    padding: 10px 14px !important;
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+  }
+  .brand-group {
+    gap: 10px !important;
+  }
+  .brand-title {
+    font-size: 18px !important;
+  }
+  .brand-subtitle {
+    font-size: 10px !important;
+  }
+  .glass-panel {
+    padding: 16px 14px !important;
+    border-radius: 16px !important;
+  }
+  .panel-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 10px !important;
+  }
+}
+
+@media (max-width: 600px) {
+  .color-palette-buttons {
+    display: grid !important;
+    grid-template-columns: repeat(4, 1fr) !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+  .color-btn {
+    padding: 8px 4px !important;
+    font-size: 10px !important;
+    min-height: 44px !important;
+  }
+  .roll-row-card {
+    padding: 10px 12px !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+  .roll-meta {
+    width: 100% !important;
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+  }
+  .dice-slots-group {
+    width: 100% !important;
+    justify-content: space-between !important;
+    gap: 6px !important;
+  }
+  .die-slot {
+    width: 46px !important;
+    height: 46px !important;
+    flex: 1 !important;
+    max-width: 60px !important;
+  }
+  .hero-main-content {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center !important;
+    gap: 14px !important;
+  }
+  .hero-dice-display {
+    width: 72px !important;
+    height: 72px !important;
+  }
+  .hero-dice-face {
+    width: 68px !important;
+    height: 68px !important;
+  }
+  .hero-color-name {
+    font-size: 26px !important;
+  }
+  .key-gate-card {
+    padding: 24px 18px !important;
+    margin: 10px !important;
+    width: calc(100% - 20px) !important;
+  }
+  .scanner-box {
+    padding: 24px 16px !important;
+    width: calc(100% - 20px) !important;
+  }
+  .owner-command-card {
+    padding: 20px 14px !important;
+    width: calc(100% - 16px) !important;
+  }
+}
+
 </style>
 </head>
 
@@ -3127,7 +3236,7 @@ body {
     </section>
   </main>
 
-/* cleaned */
+
   <footer class="app-footer">
     <div class="footer-bottom-line" style="justify-content: center; text-align: center; padding: 20px 0; border-top: 1px solid var(--border-glass);">
       <span>HEADLESS DICE &copy; 2026 // ONLINE DICE PREDICTOR &bull; ADVANCED 5-ROLL ALGORITHM</span>
@@ -3453,7 +3562,7 @@ body {
   <script>
 /* INLINED HEADLESS DICE APPLICATION ENGINE */
 // HEADLESS DICE — ADVANCED 4-DICE STREAM PATTERN RECOGNITION & 1-COLOR PREDICTOR
-/* cleaned */
+
 
 const COLORS = ['purple', 'blue', 'green', 'red', 'darkorange', 'gold'];
 
@@ -4934,6 +5043,58 @@ addEventListener('DOMContentLoaded', () => {
     btnLogout.addEventListener('click', handleOwnerLogout);
   }
 });
+
+
+// ==========================================
+// ZERO-BYPASS ENGINE & DOM TAMPER DEFENSE
+// ==========================================
+(function initAntiBypassShield() {
+  // Continuous verification re-check
+  const runBackgroundReauth = async () => {
+    const rawAuth = localStorage.getItem('headless_dice_auth') || sessionStorage.getItem('headless_dice_auth');
+    if (!rawAuth) return;
+    try {
+      const auth = JSON.parse(rawAuth);
+      if (!auth || !auth.key) return;
+      const hwid = getDeviceHwid();
+      const res = await fetch('/api/verify', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ key: auth.key, hwid: hwid })
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        // Tampered session or HWID mismatch detected!
+        localStorage.removeItem('headless_dice_auth');
+        sessionStorage.removeItem('headless_dice_auth');
+        isAuthVerified = false;
+        checkAuthStatus();
+        clearPredictionResultsUI();
+      }
+    } catch(e) {}
+  };
+
+  setInterval(runBackgroundReauth, 30000); // Pulse check every 30s
+
+  // DOM Mutation Watcher: Detects any unauthorized removal of the gate modal
+  const observer = new MutationObserver(() => {
+    if (!isAuthVerified) {
+      const modal = document.getElementById('key-gate-modal');
+      if (!modal) {
+        location.reload();
+      } else if (modal.style.display === 'none' || modal.style.visibility === 'hidden' || modal.style.opacity === '0') {
+        modal.style.display = 'flex';
+        modal.style.visibility = 'visible';
+        modal.style.opacity = '1';
+      }
+    }
+  });
+
+  const targetBody = document.body || document.documentElement;
+  if (targetBody) {
+    observer.observe(targetBody, { childList: true, subtree: true, attributes: true, attributeFilter: ['style', 'class'] });
+  }
+})();
 
 </script>
 </body>
