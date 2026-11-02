@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HEADLESS DICE // ACCESS PORTAL & LOGIN</title>
+  <link rel="icon" type="image/png" href="/assets/logo.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/assets/style.css">
+
+  <script>
+    // Bulletproof Universal Toast Manager
+    window.showToast = function(message) {
+      try {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'toast-container';
+          container.className = 'toast-container';
+          document.body.appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = '<span>' + message + '</span>';
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.style.animation = 'toastOut 0.3s forwards';
+          setTimeout(() => { if (toast.parentNode) toast.parentNode.removeChild(toast); }, 300);
+        }, 3200);
+      } catch(e) {}
+    };
+  </script>
+</head>
+
+<body>
+  <!-- Ambient Glowing Background Fluid Orbs -->
+  <div class="cyber-glow-orb orb-1"></div>
+  <div class="cyber-glow-orb orb-2"></div>
+  <div class="cyber-glow-orb orb-3"></div>
+
+  <div class="login-page-wrapper">
+    <div class="login-glass-card">
+      <div class="login-logo-wrap">
+        <img src="/assets/logo.png" alt="Headless Dice Logo" class="login-logo">
+        <div class="login-logo-aura"></div>
+      </div>
+
+      <div class="login-badge-paid">🔒 SECURE ACCESS GATEWAY</div>
+      <h1 class="login-title">HEADLESS DICE</h1>
+      <p class="login-desc">Enter your license key or master code to unlock your dedicated Markov solver instance.</p>
+
+      <!-- HWID Grabber Box -->
+      <div class="gate-hwid-box">
+        <div class="hwid-label-row">
+          <span class="hwid-title">YOUR DEVICE HWID (HARDWARE ID):</span>
+          <span class="hwid-bound-tag">🔒 Device Locked</span>
+        </div>
+        <div class="hwid-display-row">
+          <code id="gate-hwid-text" class="hwid-code">HD-HWID-0000-0000</code>
+          <button id="btn-copy-gate-hwid" class="btn-copy-hwid" title="Copy your HWID to clipboard">
+            <span>📋 Copy HWID</span>
+          </button>
+        </div>
+        <p class="hwid-subtext">Licenses with HWID Lock enabled bind permanently to this hardware ID upon first unlock.</p>
+      </div>
+
+      <!-- Key Input Form -->
+      <div class="gate-input-form">
+        <label for="gate-key-input" class="gate-input-label">LICENSE KEY / OWNER CODE:</label>
+        <div class="gate-input-wrap">
+          <input type="text" id="gate-key-input" class="gate-key-input" placeholder="e.g. HD-USER-XXXX-XXXX-XXXX or master code" autocomplete="off" spellcheck="false" autofocus>
+          <button id="btn-unlock-gate" class="btn-unlock-glow">
+            <span>⚡ UNLOCK INSTANCE & ENTER ROOM</span>
+          </button>
+        </div>
+        <div id="gate-status-msg" class="gate-status-msg"></div>
+      </div>
+
+      <div class="login-footer-text">
+        <span>Need a license key or HWID reset? <a href="https://discord.com/invite/TSensK6HEc" target="_blank" style="color: var(--neon-cyan); text-decoration: none; font-weight: 700;">Join Discord Support</a>.</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container" class="toast-container"></div>
+
+  <!-- Audio Chimes -->
+  <audio id="sfx-lock" preload="auto" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"></audio>
+
+  <script src="/assets/login.js"></script>
+</body>
+</html>

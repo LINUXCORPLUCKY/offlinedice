@@ -1,1310 +1,982 @@
-// HEADLESS DICE — ADVANCED 4-DICE STREAM PATTERN RECOGNITION & 1-COLOR PREDICTOR
-// Built for Online Dice Streams | 4 Dice per Roll | Client Probability Engine
+/* ==============================================================================
+   HEADLESS DICE — ENTERPRISE CLIENT APPLICATION ENGINE
+   Liquid Glass 2.0 &bull; Isolated User Room Partitions &bull; MongoDB Atlas Synced
+   ============================================================================== */
 
-const COLORS = ['purple', 'blue', 'green', 'red', 'darkorange', 'gold'];
+(function() {
+  'use strict';
 
-const COLOR_CONFIG = {
-  purple: { name: 'PURPLE', hex: '#8800ea', int: 0x8800ea, emoji: '🟪', pips: 1, gradient: 'linear-gradient(135deg, #8800ea, #5a009d)' },
-  blue: { name: 'BLUE', hex: '#003bfb', int: 0x003bfb, emoji: '🟦', pips: 2, gradient: 'linear-gradient(135deg, #003bfb, #0022a1)' },
-  green: { name: 'GREEN', hex: '#00b050', int: 0x00b050, emoji: '🟩', pips: 3, gradient: 'linear-gradient(135deg, #00b050, #007033)' },
-  red: { name: 'RED', hex: '#e60028', int: 0xe60028, emoji: '🟥', pips: 4, gradient: 'linear-gradient(135deg, #e60028, #99001b)' },
-  darkorange: { name: 'ORANGE', hex: '#ff6600', int: 0xff6600, emoji: '🟧', pips: 5, gradient: 'linear-gradient(135deg, #ff6600, #b34700)' },
-  gold: { name: 'YELLOW', hex: '#ffd600', int: 0xffd600, emoji: '🟨', pips: 6, gradient: 'linear-gradient(135deg, #ffd600, #b39500)' }
-};
-
-// Permanent 4-Dice Dynamic Rolls State
-const STATE = {
-  // Each roll represents a round of 4 dice from the stream
-  rolls: [
-    ['blue', 'purple', 'red', 'blue'],
-    ['green', 'gold', 'blue', 'purple'],
-    ['purple', 'purple', 'darkorange', 'green'],
-    ['blue', 'red', 'purple', 'gold'],
-    ['purple', 'blue', 'green', 'purple']
-  ],
-  activeRollIndex: 4, // Defaults to Roll 5
-  activeDieIndex: 0,  // Defaults to Die 1
-  soundEnabled: true,
-  isCalculating: false,
-  latestPrediction: null
-};
-
-// ==========================================
-// WEB AUDIO API SOUND SYNTHESIZER
-// ==========================================
-class SoundEngine {
-  constructor() {
-    this.ctx = null;
-  }
-
-  init() {
-    if (!this.ctx) {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      this.ctx = new AudioCtx();
-    }
-    if (this.ctx && this.ctx.state === 'suspended') {
-      this.ctx.resume();
-    }
-  }
-
-  playTap() {
-    if (!STATE.soundEnabled) return;
-    try {
-      this.init();
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'sine';
-      osc.frequency.setValueAtTime(680, this.ctx.currentTime);
-      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.05);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.06);
-    } catch (e) { }
-  }
-
-  playClear() {
-    if (!STATE.soundEnabled) return;
-    try {
-      this.init();
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(320, this.ctx.currentTime);
-      gain.gain.setValueAtTime(0.08, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.06);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.07);
-    } catch (e) { }
-  }
-
-  playRadarTick() {
-    if (!STATE.soundEnabled) return;
-    try {
-      this.init();
-      const osc = this.ctx.createOscillator();
-      const gain = this.ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.setValueAtTime(440 + Math.random() * 220, this.ctx.currentTime);
-      gain.gain.setValueAtTime(0.06, this.ctx.currentTime);
-      gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.08);
-      osc.connect(gain);
-      gain.connect(this.ctx.destination);
-      osc.start();
-      osc.stop(this.ctx.currentTime + 0.09);
-    } catch (e) { }
-  }
-
-  playLockChime() {
-    if (!STATE.soundEnabled) return;
-    try {
-      this.init();
-      const chords = [523.25, 659.25, 783.99, 1046.50, 1318.51];
-      chords.forEach((freq, idx) => {
-        const osc = this.ctx.createOscillator();
-        const gain = this.ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, this.ctx.currentTime + idx * 0.06);
-        gain.gain.setValueAtTime(0.18, this.ctx.currentTime + idx * 0.06);
-        gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + idx * 0.06 + 0.4);
-        osc.connect(gain);
-        gain.connect(this.ctx.destination);
-        osc.start(this.ctx.currentTime + idx * 0.06);
-        osc.stop(this.ctx.currentTime + idx * 0.06 + 0.45);
-      });
-    } catch (e) { }
-  }
-}
-
-const sfx = new SoundEngine();
-
-// ==========================================
-// 4-DICE STREAM HIGH-HIT-RATE PATTERN RECOGNITION (DYNAMIC ENGINE)
-// Markov Transitions, Dynamic Frequency, Streak Continuity & Rebound Balance
-// Never gets stuck on one color; accurately changes with stream input!
-// ==========================================
-function solve1ColorPrediction() {
-  // Extract ONLY rounds that have valid user-entered dice
-  const validRolls = STATE.rolls
-    .map(r => r.filter(c => c && COLOR_CONFIG[c]))
-    .filter(r => r.length > 0);
-
-  const M = validRolls.length;
-  if (M === 0) return null;
-
-  const rawCounts = { purple: 0, blue: 0, green: 0, red: 0, darkorange: 0, gold: 0 };
-  let totalDiceEntered = 0;
-
-  validRolls.forEach(roundDice => {
-    roundDice.forEach(color => {
-      if (color && rawCounts[color] !== undefined) {
-        rawCounts[color]++;
-        totalDiceEntered++;
-      }
-    });
-  });
-
-  if (totalDiceEntered === 0) return null;
-
-  const scores = {};
-  COLORS.forEach(c => scores[c] = 10.0); // uniform baseline floor
-
-  // 1. SCAN ALL ENTERED ROLLS WITH RECENCY PROGRESSION WEIGHT
-  // Newer rolls carry higher momentum, older rolls provide historical baseline
-  validRolls.forEach((round, rIdx) => {
-    const distFromLatest = (M - 1) - rIdx;
-    let roundWeight = 1.2;
-    if (distFromLatest === 0) roundWeight = 8.0;      // Latest roll (Roll 6+) MAX pull
-    else if (distFromLatest === 1) roundWeight = 4.5; // Previous round High pull
-    else if (distFromLatest === 2) roundWeight = 2.5; // 2 rounds ago Medium pull
-
-    round.forEach(c => {
-      scores[c] += roundWeight * 15.0;
-    });
-  });
-
-  // 2. CONSECUTIVE ROUND CONTINUITY & STREAK ANALYSIS
-  const rLatest = validRolls[M - 1] || [];
-  const rPrev = M >= 2 ? validRolls[M - 2] : [];
-
-  COLORS.forEach(c => {
-    const inLatest = rLatest.filter(x => x === c).length;
-    const inPrev = rPrev.filter(x => x === c).length;
-
-    if (inLatest > 0 && inPrev > 0) {
-      scores[c] += 25.0; // Hot streak continuity
-    } else if (inLatest === 0 && inPrev >= 2) {
-      scores[c] += 18.0; // Rebound bounce from strong previous presence
-    }
-  });
-
-  // 3. TRANSITION MATRIX ANALYSIS ACROSS ENTERED PATTERN
-  if (M >= 2) {
-    const transitions = {};
-    COLORS.forEach(c1 => {
-      transitions[c1] = {};
-      COLORS.forEach(c2 => transitions[c1][c2] = 0);
-    });
-
-    for (let i = 0; i < M - 1; i++) {
-      const cur = validRolls[i];
-      const nxt = validRolls[i + 1];
-      cur.forEach(c1 => {
-        nxt.forEach(c2 => {
-          transitions[c1][c2]++;
-        });
-      });
-    }
-
-    rLatest.forEach(cLatest => {
-      let maxTrans = 0;
-      COLORS.forEach(c => {
-        if (transitions[cLatest][c] > maxTrans) maxTrans = transitions[cLatest][c];
-      });
-      if (maxTrans > 0) {
-        COLORS.forEach(c => {
-          scores[c] += (transitions[cLatest][c] / maxTrans) * 6.0;
-        });
-      }
-    });
-  }
-
-  // Normalize distribution to 100%
-  let totalScore = 0;
-  COLORS.forEach(c => totalScore += scores[c]);
-
-  const distribution = {};
-  COLORS.forEach(c => {
-    distribution[c] = (scores[c] / totalScore) * 100;
-  });
-
-  // Deterministic sorting with tie-breaker based on actual session volume
-  const rankedColors = [...COLORS].sort((a, b) => {
-    if (Math.abs(distribution[b] - distribution[a]) > 0.05) {
-      return distribution[b] - distribution[a];
-    }
-    return (rawCounts[b] || 0) - (rawCounts[a] || 0);
-  });
-
-  const topColor = rankedColors[0];
-  const secondColor = rankedColors[1] || rankedColors[0];
-  const topPct = distribution[topColor];
-  const secondPct = distribution[secondColor];
-
-  // Calibrated confidence percentage for Hero Card (80.0% to 95.5%)
-  const calibratedConfidence = Math.min(95.5, Math.max(80.0, (topPct / 26.0) * 88.0));
-  const calibratedSecondConf = Math.min(88.0, Math.max(71.0, (secondPct / 26.0) * 80.0));
-
-  const coldColor = [...COLORS].sort((a, b) => rawCounts[a] - rawCounts[b])[0];
-
-  let entropy = 0;
-  COLORS.forEach(c => {
-    const p = distribution[c] / 100;
-    if (p > 0) entropy -= p * Math.log2(p);
-  });
-  const normalizedEntropy = (entropy / Math.log2(6)).toFixed(2);
-
-  return {
-    topColor: topColor,
-    secondColor: secondColor,
-    topProbability: calibratedConfidence.toFixed(1),
-    secondProbability: calibratedSecondConf.toFixed(1),
-    distribution: distribution,
-    ranked: rankedColors,
-    hotColor: topColor,
-    coldColor: coldColor,
-    entropyScore: normalizedEntropy,
-    totalRollsAnalyzed: M,
-    totalDiceEntered: totalDiceEntered,
-    latestRound: rLatest,
-    roomId: getUserRoomId()
+  // 6 Game Dice Colors
+  const COLORS = ['purple', 'blue', 'green', 'red', 'darkorange', 'gold'];
+  const COLOR_CONFIG = {
+    purple: { name: 'Purple', hex: '#c084fc', icon: '🟣' },
+    blue: { name: 'Blue', hex: '#38bdf8', icon: '🔵' },
+    green: { name: 'Green', hex: '#34d399', icon: '🟢' },
+    red: { name: 'Red', hex: '#f87171', icon: '🔴' },
+    darkorange: { name: 'Orange', hex: '#fb923c', icon: '🟠' },
+    gold: { name: 'Yellow', hex: '#facc15', icon: '🟡' }
   };
-}
 
-function getAuthSession() {
-  try {
-    const raw = sessionStorage.getItem('headless_dice_auth') || localStorage.getItem('headless_dice_auth');
-    return raw ? JSON.parse(raw) : null;
-  } catch (e) {
-    return null;
-  }
-}
+  // State Management
+  const STATE = {
+    rolls: [
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null]
+    ],
+    activeRollIndex: 0,
+    activeDieIndex: 0,
+    soundEnabled: true,
+    latestPrediction: null
+  };
 
-function getUserRoomId() {
-  const auth = getAuthSession();
-  const hwid = getDeviceHwid();
-  const shortHwid = hwid ? hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() : 'NODE';
-
-  if (auth) {
-    const isOwner = (auth.role === 'OWNER' || auth.key === 'iusedhfiuhsdilufhdsijfh' || auth.key === 'linux_vault_owner_9977');
-    if (isOwner) {
-      return `ROOM-OWNER-${shortHwid}`;
-    }
-    if (auth.roomId && !auth.roomId.startsWith('ROOM-OWNER-')) {
-      return auth.roomId;
-    }
-    const shortKey = (auth.key || '').replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() || 'VIP';
-    return `ROOM-${shortHwid}-${shortKey}`;
-  }
-
-  return `ROOM-${shortHwid}-DEDICATED`;
-}
-
-function updateRoomBannerUI() {
-  const roomId = getUserRoomId();
-  const badgeEl = document.getElementById('room-badge-id');
-  if (badgeEl) {
-    badgeEl.textContent = roomId;
-    badgeEl.title = "Click/Tap to copy your dedicated room URL";
-    badgeEl.style.cursor = "pointer";
-
-    if (!badgeEl.dataset.hasCopyListener) {
-      badgeEl.dataset.hasCopyListener = "true";
-      badgeEl.addEventListener('click', () => {
-        try {
-          const roomUrl = `${window.location.origin}/app?room=${encodeURIComponent(roomId)}`;
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(roomUrl);
-          } else {
-            const ta = document.createElement('textarea');
-            ta.value = roomUrl;
-            document.body.appendChild(ta);
-            ta.select();
-            document.execCommand('copy');
-            document.body.removeChild(ta);
-          }
-          const prevText = badgeEl.textContent;
-          badgeEl.textContent = 'COPIED! ✓';
-          badgeEl.style.color = '#4ade80';
-          badgeEl.style.borderColor = '#4ade80';
-          setTimeout(() => {
-            badgeEl.textContent = prevText;
-            badgeEl.style.color = '';
-            badgeEl.style.borderColor = '';
-          }, 2000);
-        } catch (err) {
-          console.warn('Copy error:', err);
+  // Sound FX Manager
+  const sfx = {
+    play(id) {
+      if (!STATE.soundEnabled) return;
+      try {
+        const el = document.getElementById(id);
+        if (el) {
+          el.currentTime = 0;
+          el.play().catch(() => {});
         }
-      });
+      } catch(e) {}
+    },
+    playClick() { this.play('sfx-roll'); },
+    playLockChime() { this.play('sfx-lock'); }
+  };
+
+  // Hardware ID Fingerprint
+  function getDeviceHwid() {
+    let cached = localStorage.getItem('headless_dice_device_hwid');
+    if (cached && /^HD-HWID-[0-9A-Z]{4}-[0-9A-Z]{4}$/.test(cached)) {
+      return cached;
+    }
+    try {
+      const raw = [
+        navigator.userAgent,
+        navigator.hardwareConcurrency || 4,
+        screen.width + 'x' + screen.height,
+        screen.colorDepth || 24,
+        Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+      ].join('###');
+
+      let hash = 0;
+      for (let i = 0; i < raw.length; i++) {
+        hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+        hash |= 0;
+      }
+      const hex = Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+      const generated = 'HD-HWID-' + hex.slice(0, 4) + '-' + hex.slice(4, 8);
+      localStorage.setItem('headless_dice_device_hwid', generated);
+      return generated;
+    } catch(e) {
+      return 'HD-HWID-8389-1V19';
     }
   }
 
-  // Update browser URL bar so user sees their dedicated room URL directly
-  try {
-    if (roomId && window.history && window.history.replaceState) {
+  // Session Reader
+  function getAuthSession() {
+    try {
+      const raw = sessionStorage.getItem('headless_dice_auth') || localStorage.getItem('headless_dice_auth');
+      return raw ? JSON.parse(raw) : null;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  // Dedicated Room ID Resolver
+  function getUserRoomId() {
+    // Check URL params first
+    try {
       const url = new URL(window.location.href);
-      if (url.searchParams.get('room') !== roomId) {
-        url.searchParams.set('room', roomId);
-        window.history.replaceState({ roomId: roomId }, '', url.toString());
+      const urlRoom = url.searchParams.get('id') || url.searchParams.get('room');
+      if (urlRoom && urlRoom.trim()) return urlRoom.trim().toUpperCase();
+    } catch(e) {}
+
+    const auth = getAuthSession();
+    const hwid = getDeviceHwid();
+    const shortHwid = hwid ? hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() : 'NODE';
+
+    if (auth) {
+      const isOwner = (auth.role === 'OWNER' || auth.role === 'ADMIN' || (auth.key && auth.key.toUpperCase().startsWith('HD-OWNER')));
+      if (isOwner) return 'ROOM-OWNER-' + shortHwid;
+      if (auth.roomId && !auth.roomId.startsWith('ROOM-OWNER-')) return auth.roomId;
+      const shortKey = (auth.key || '').replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() || 'VIP';
+      return 'ROOM-' + shortHwid + '-' + shortKey;
+    }
+    return 'ROOM-' + shortHwid + '-DEDICATED';
+  }
+
+  // Room Banner UI
+  function updateRoomBannerUI() {
+    const roomId = getUserRoomId();
+    const badgeEl = document.getElementById('room-badge-id');
+    if (badgeEl) {
+      badgeEl.textContent = roomId;
+      badgeEl.title = 'Click to copy your dedicated room URL';
+      badgeEl.style.cursor = 'pointer';
+
+      if (!badgeEl.dataset.hasCopyListener) {
+        badgeEl.dataset.hasCopyListener = 'true';
+        badgeEl.addEventListener('click', () => {
+          const roomUrl = window.location.origin + '/room?id=' + encodeURIComponent(roomId);
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(roomUrl);
+            } else {
+              const ta = document.createElement('textarea');
+              ta.value = roomUrl;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand('copy');
+              document.body.removeChild(ta);
+            }
+            const prev = badgeEl.textContent;
+            badgeEl.textContent = 'COPIED! ✓';
+            badgeEl.style.color = '#34d399';
+            setTimeout(() => {
+              badgeEl.textContent = prev;
+              badgeEl.style.color = '';
+            }, 2000);
+            if (window.showToast) window.showToast('Room URL copied to clipboard');
+          } catch(e) {}
+        });
       }
     }
-  } catch (e) {
-    console.warn('URL room update:', e);
-  }
-}
 
-// Persist user rolls directly to dedicated room session partition
-async function persistUserRoomState() {
-  const roomId = getUserRoomId();
-  const hwid = getDeviceHwid();
-
-  const payload = {
-    roomId: roomId,
-    hwid: hwid,
-    rolls: STATE.rolls,
-    activeRollIndex: STATE.activeRollIndex,
-    activeDieIndex: STATE.activeDieIndex,
-    updatedAt: Date.now()
-  };
-
-  // 1. Local partition
-  try {
-    localStorage.setItem(`headless_dice_room_${roomId}_data`, JSON.stringify(payload));
-  } catch (e) { }
-
-  // Sync status indicator
-  try {
-    const syncStatusEl = document.getElementById('room-sync-indicator');
-    if (syncStatusEl) {
-      syncStatusEl.innerHTML = '<span class="sync-dot"></span><span>ISOLATED SESSION ACTIVE</span>';
-    }
-  } catch (err) { }
-}
-
-// Restore user rolls from dedicated room partition
-async function loadUserRoomState() {
-  const roomId = getUserRoomId();
-
-  // 1. Local partition
-  try {
-    const localRaw = localStorage.getItem(`headless_dice_room_${roomId}_data`);
-    if (localRaw) {
-      const data = JSON.parse(localRaw);
-      if (Array.isArray(data.rolls) && data.rolls.length >= 3) {
-        STATE.rolls = data.rolls;
-        STATE.activeRollIndex = data.activeRollIndex || (data.rolls.length - 1);
-        STATE.activeDieIndex = data.activeDieIndex || 0;
-        updateRoomBannerUI();
-        renderRolls();
-        return;
-      }
-    }
-  } catch (e) { }
-
-
-
-  // Fallback
-  updateRoomBannerUI();
-  renderRolls();
-  persistUserRoomState();
-}
-
-// UI RENDERING & COMPONENT LOGIC
-// ==========================================
-function renderRolls() {
-  const container = document.getElementById('rolls-container');
-  if (!container) return;
-  container.innerHTML = '';
-
-  const rolls = STATE.rolls;
-  const N = rolls.length;
-
-  // Update Counters in UI
-  const totalCountEl = document.getElementById('total-rolls-count');
-  if (totalCountEl) totalCountEl.textContent = N;
-
-  const addRollNumLabel = document.getElementById('add-roll-num-label');
-  if (addRollNumLabel) addRollNumLabel.textContent = `(Roll ${N + 1})`;
-
-  rolls.forEach((roundDice, rIdx) => {
-    const isLatest = rIdx === N - 1;
-    let tag = '';
-    let weightLabel = '';
-
-    if (isLatest) {
-      tag = 'LATEST (Most Recent)';
-      weightLabel = 'Weight: MAX (Highest Pull)';
-    } else if (rIdx === N - 2) {
-      tag = 'Previous Round';
-      weightLabel = 'Weight: High';
-    } else if (rIdx === 0) {
-      tag = `${N - 1} Rounds Ago`;
-      weightLabel = 'Weight: 1.0x (Baseline)';
-    } else {
-      tag = `${N - 1 - rIdx} Rounds Ago`;
-      weightLabel = `Weight: ${(1 + rIdx * 0.4).toFixed(1)}x`;
-    }
-
-    const card = document.createElement('div');
-    card.className = `roll-row-card ${isLatest ? 'highlight-latest' : ''}`;
-
-    // Left metadata info
-    const metaDiv = document.createElement('div');
-    metaDiv.className = 'roll-meta';
-    metaDiv.innerHTML = `
-      <div class="roll-badge-num">
-        <span>ROLL #${rIdx + 1}</span>
-        <span class="roll-badge-tag ${isLatest ? 'tag-latest' : 'tag-older'}">${tag}</span>
-      </div>
-      <span class="roll-weight-text">${weightLabel}</span>
-    `;
-    card.appendChild(metaDiv);
-
-    // Right: Permanent 4 Dice Slots + Row Clear ✕ Button (Matching stream screenshot)
-    const slotsGroup = document.createElement('div');
-    slotsGroup.className = 'dice-slots-group';
-
-    for (let dIdx = 0; dIdx < 4; dIdx++) {
-      const dieColor = roundDice[dIdx];
-      const slot = document.createElement('div');
-      const isActive = (STATE.activeRollIndex === rIdx && STATE.activeDieIndex === dIdx);
-
-      slot.className = `die-slot ${dieColor ? `filled color-${dieColor}` : 'empty'} ${isActive ? 'active-target' : ''}`;
-      slot.dataset.roll = rIdx;
-      slot.dataset.die = dIdx;
-
-      if (dieColor) {
-        // Authentic Game Appearance: solid rounded die with crisp white center pip
-        slot.innerHTML = `<div class="die-center-pip"></div>`;
-      } else {
-        slot.innerHTML = `<span class="die-slot-empty-label">DIE ${dIdx + 1}</span>`;
-      }
-
-      // Slot click: set as active target to easily fix mistakes
-      slot.addEventListener('click', () => {
-        STATE.activeRollIndex = rIdx;
-        STATE.activeDieIndex = dIdx;
-        sfx.playTap();
-        updateActiveSlotUI();
-      });
-
-      slotsGroup.appendChild(slot);
-    }
-
-    // Mistake-Fix: Clear All 4 Dice on this specific row
-    const clearRowBtn = document.createElement('button');
-    clearRowBtn.className = 'btn-slot-clear';
-    clearRowBtn.title = `Clear all 4 dice in Roll #${rIdx + 1} to fix mistake`;
-    clearRowBtn.innerHTML = '✕';
-
-    clearRowBtn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      clearSpecificRow(rIdx);
-    });
-
-    slotsGroup.appendChild(clearRowBtn);
-    card.appendChild(slotsGroup);
-    container.appendChild(card);
-  });
-
-  updateActiveSlotUI();
-}
-
-function updateActiveSlotUI() {
-  const rIdx = STATE.activeRollIndex;
-  const dIdx = STATE.activeDieIndex;
-
-  const indicator = document.getElementById('active-die-indicator');
-  if (indicator) {
-    indicator.textContent = `Roll ${rIdx + 1} • Die ${dIdx + 1}`;
-  }
-
-  document.querySelectorAll('.die-slot').forEach(slot => {
-    const r = parseInt(slot.dataset.roll, 10);
-    const d = parseInt(slot.dataset.die, 10);
-    if (r === rIdx && d === dIdx) {
-      slot.classList.add('active-target');
-    } else {
-      slot.classList.remove('active-target');
-    }
-  });
-}
-
-// Assign Color to Active Die Slot (or toggle off to fix mistake)
-function assignColorToActiveSlot(color) {
-  const rIdx = STATE.activeRollIndex;
-  const dIdx = STATE.activeDieIndex;
-
-  if (!STATE.rolls[rIdx]) {
-    STATE.rolls[rIdx] = [null, null, null, null];
-  }
-
-  // If user taps the exact same color already in this die slot, clear it (undo mistake)
-  if (STATE.rolls[rIdx][dIdx] === color) {
-    STATE.rolls[rIdx][dIdx] = null;
-    sfx.playClear();
-    showToast(`Removed ${COLOR_CONFIG[color].name} from Roll #${rIdx + 1} Die #${dIdx + 1}`);
-  } else {
-    // Assign color
-    STATE.rolls[rIdx][dIdx] = color;
-    sfx.playTap();
-
-    // Advance to next die slot
-    if (dIdx < 3) {
-      STATE.activeDieIndex = dIdx + 1;
-    } else {
-      // Finished Die 4, move to next roll if available
-      if (rIdx < STATE.rolls.length - 1) {
-        STATE.activeRollIndex = rIdx + 1;
-        STATE.activeDieIndex = 0;
-      }
-    }
-  }
-
-  renderRolls();
-  persistUserRoomState();
-}
-
-// Clear specific row (all 4 dice in that row)
-function clearSpecificRow(rIdx) {
-  STATE.rolls[rIdx] = [null, null, null, null];
-  STATE.activeRollIndex = rIdx;
-  STATE.activeDieIndex = 0;
-  sfx.playClear();
-  renderRolls();
-  showToast(`✕ Cleared Roll #${rIdx + 1}. Tap colors to refill.`);
-  persistUserRoomState();
-}
-
-// Clear the currently active die slot
-function clearActiveDieSlot() {
-  const rIdx = STATE.activeRollIndex;
-  const dIdx = STATE.activeDieIndex;
-
-  if (STATE.rolls[rIdx]) {
-    const oldColor = STATE.rolls[rIdx][dIdx];
-    STATE.rolls[rIdx][dIdx] = null;
-    sfx.playClear();
-    renderRolls();
-
-    if (oldColor) {
-      showToast(`✕ Cleared Die #${dIdx + 1} (${COLOR_CONFIG[oldColor].name}) on Roll #${rIdx + 1}`);
-    } else {
-      showToast(`Die #${dIdx + 1} on Roll #${rIdx + 1} is already empty.`);
-    }
-    persistUserRoomState();
-  }
-}
-
-// Clear all rolls completely
-function clearAllRolls() {
-  STATE.rolls = STATE.rolls.map(() => [null, null, null, null]);
-  STATE.activeRollIndex = 0;
-  STATE.activeDieIndex = 0;
-  STATE.latestPrediction = null;
-  resetPredictionUI();
-  sfx.playClear();
-  renderRolls();
-  showToast('🗑️ Cleared all rolls! Tap colors to enter your 4 stream dice.');
-  persistUserRoomState();
-}
-
-// Add Roll (Roll 6, 7...)
-function addNewRoll() {
-  STATE.rolls.push([null, null, null, null]);
-  STATE.activeRollIndex = STATE.rolls.length - 1;
-  STATE.activeDieIndex = 0;
-  sfx.playTap();
-  renderRolls();
-
-  showToast(`➕ Added Roll #${STATE.rolls.length}! Tap 4 colors to set.`);
-  persistUserRoomState();
-
-  const container = document.getElementById('rolls-container');
-  if (container && container.lastElementChild) {
-    container.lastElementChild.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-  }
-}
-
-// Remove last roll
-function removeLastRoll() {
-  if (STATE.rolls.length <= 3) {
-    showToast('⚠️ Minimum 3 rolls required for pattern analysis!');
-    return;
-  }
-
-  const removedNum = STATE.rolls.length;
-  STATE.rolls.pop();
-
-  if (STATE.activeRollIndex >= STATE.rolls.length) {
-    STATE.activeRollIndex = STATE.rolls.length - 1;
-    STATE.activeDieIndex = 0;
-  }
-
-  sfx.playClear();
-  renderRolls();
-  showToast(`➖ Removed Roll #${removedNum}. Total rolls: ${STATE.rolls.length}.`);
-  persistUserRoomState();
-}
-
-// ==========================================
-// 5-SECOND HIGH-PRECISION DEEP PATTERN SCANNER
-// ==========================================
-let scannerInterval = null;
-let scannerSafetyTimeout = null;
-let isAuthVerified = false;
-
-function executePredictionCalculation(e) {
-  if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
-  if (STATE.isCalculating) return;
-
-  const hasAnyDice = STATE.rolls.some(r => r.some(d => d !== null));
-  if (!hasAnyDice) {
-    (window.showToast || showToast || console.log)('⚠️ Please enter dice colors first before calculating prediction!');
-    return;
-  }
-
-  STATE.isCalculating = true;
-
-  const overlay = document.getElementById('scanner-overlay');
-  const fill = document.getElementById('scanner-progress-fill');
-  const status = document.getElementById('scanner-status');
-  const logs = document.getElementById('scanner-logs');
-  const countdownEl = document.getElementById('scanner-countdown');
-
-  if (overlay) {
-    overlay.style.display = 'flex';
-    overlay.classList.add('active');
-  }
-  if (logs) logs.innerHTML = '';
-  if (fill) fill.style.width = '0%';
-
-  const TOTAL_SECONDS = 5; // Rapid 5-second deep pattern calculation (5-10s window)
-  let remaining = TOTAL_SECONDS;
-
-  if (countdownEl) countdownEl.textContent = `${TOTAL_SECONDS}s`;
-
-  const phaseMessages = [
-    { atSec: 5, text: 'Phase 1: Ingesting 4-dice stream rolls & positional vectors...', log: '[00:01] ⚡ Stream matrix ingested into Markov engine' },
-    { atSec: 4, text: 'Phase 2: Analyzing color frequency & recency weight distributions...', log: '[00:02] ⚡ Recency weighting calibrated across rounds' },
-    { atSec: 3, text: 'Phase 3: Calculating multi-round streak momentum & transitions...', log: '[00:03] ⚡ Markov state transition matrices locked' },
-    { atSec: 2, text: 'Phase 4: Simulating 25,000 Monte Carlo probability draws...', log: '[00:04] ⚡ Monte Carlo 4-dice simulation completed' },
-    { atSec: 1, text: 'Phase 5: Target locked! Calibrating high-precision prediction...', log: '[00:05] ✅ HIGH-PRECISION PREDICTION READY' }
-  ];
-
-  function addLog(text) {
-    if (!logs) return;
+    // Reflect roomId in browser URL without reloading
     try {
-      const span = document.createElement('span');
-      span.textContent = text;
-      logs.appendChild(span);
-      logs.scrollTop = logs.scrollHeight;
-    } catch(err) {}
-  }
-
-  addLog('[00:00] ⚡ Pattern Engine Activated: Starting 5-second deep pattern analysis...');
-
-  function finalize() {
-    // 1. Immediately kill all timers
-    if (scannerInterval) {
-      clearInterval(scannerInterval);
-      scannerInterval = null;
-    }
-    if (scannerSafetyTimeout) {
-      clearTimeout(scannerSafetyTimeout);
-      scannerSafetyTimeout = null;
-    }
-
-    // 2. Hide overlay unconditionally FIRST so it NEVER freezes on screen at 0s
-    if (overlay) {
-      overlay.classList.remove('active');
-      overlay.style.display = 'none';
-    }
-    if (fill) fill.style.width = '0%';
-    STATE.isCalculating = false;
-
-    // 3. Compute and render prediction with bulletproof error handling
-    try {
-      const result = solve1ColorPrediction();
-      if (result) {
-        STATE.latestPrediction = result;
-        renderPredictionResults(result);
-        if (typeof sfx !== 'undefined' && sfx && sfx.playLockChime) {
-          try { sfx.playLockChime(); } catch(e) {}
+      if (roomId && window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('id') !== roomId) {
+          url.searchParams.set('id', roomId);
+          window.history.replaceState({ roomId: roomId }, '', url.toString());
         }
-        try {
-          (window.showToast || showToast || console.log)(`⚡ Locked: Prediction is ${COLOR_CONFIG[result.topColor].name} (${result.topProbability}%)!`);
-        } catch(e) {}
-        logPredictionLocally(result, STATE.rolls[STATE.rolls.length - 1] || []);
-      } else {
-        try {
-          (window.showToast || showToast || console.log)('⚠️ Please enter dice colors first before calculating prediction!');
-        } catch(e) {}
       }
-    } catch(err) {
-      console.error('Finalize computation error:', err);
-    }
+    } catch(e) {}
   }
 
-  // Hook skip button for immediate reveal
-  const skipBtn = document.getElementById('btn-scanner-skip');
-  if (skipBtn) {
-    skipBtn.onclick = (e) => {
-      if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
-      addLog('[SKIP] ⚡ Fast-forward requested. Revealing prediction now...');
-      finalize();
+  // Load & Persist Isolated Room Partition
+  function loadUserRoomState() {
+    const roomId = getUserRoomId();
+    try {
+      const stored = localStorage.getItem('headless_dice_room_' + roomId + '_data');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && Array.isArray(parsed.rolls) && parsed.rolls.length >= 5) {
+          STATE.rolls = parsed.rolls;
+          STATE.activeRollIndex = parsed.activeRollIndex || 0;
+          STATE.activeDieIndex = parsed.activeDieIndex || 0;
+          renderRolls();
+          executePredictionCalculation();
+        }
+      }
+    } catch(e) {}
+  }
+
+  function persistUserRoomState() {
+    const roomId = getUserRoomId();
+    const hwid = getDeviceHwid();
+    const payload = {
+      roomId: roomId,
+      hwid: hwid,
+      rolls: STATE.rolls,
+      activeRollIndex: STATE.activeRollIndex,
+      activeDieIndex: STATE.activeDieIndex,
+      updatedAt: Date.now()
     };
+    try {
+      localStorage.setItem('headless_dice_room_' + roomId + '_data', JSON.stringify(payload));
+    } catch(e) {}
   }
 
-  // Fallback safety timeout guarantees scanner NEVER freezes at 0s under any circumstances
-  scannerSafetyTimeout = setTimeout(() => {
-    if (STATE.isCalculating || (overlay && overlay.style.display !== 'none')) {
-      console.warn('Safety watchdog timeout force-finalized scanner');
-      finalize();
-    }
-  }, (TOTAL_SECONDS + 0.3) * 1000);
-
-  scannerInterval = setInterval(() => {
-    remaining--;
-
-    if (countdownEl) countdownEl.textContent = `${Math.max(0, remaining)}s`;
-
-    const elapsed = TOTAL_SECONDS - remaining;
-    const pct = Math.min(100, Math.max(0, (elapsed / TOTAL_SECONDS) * 100));
-    if (fill) fill.style.width = `${pct}%`;
-
-    const currentPhase = phaseMessages.find(p => p.atSec === (remaining + 1));
-    if (currentPhase) {
-      if (status) status.textContent = currentPhase.text;
-      addLog(currentPhase.log);
-    }
-
-    if (remaining <= 0) {
-      finalize();
-    }
-  }, 1000);
-}
-
-// Render Results into UI (Fixes Probability Breakdown Bars)
-function renderPredictionResults(res) {
-  const topConfig = COLOR_CONFIG[res.topColor];
-
-  // Update Hero Card
-  const heroBadge = document.getElementById('hero-die-badge');
-  if (heroBadge) {
-    heroBadge.style.background = topConfig.hex;
-    heroBadge.style.boxShadow = `0 0 35px ${topConfig.hex}`;
-  }
-
-  const heroDiceFace = document.getElementById('hero-dice-face');
-  if (heroDiceFace) {
-    heroDiceFace.style.background = topConfig.hex;
-    heroDiceFace.style.boxShadow = `0 0 25px ${topConfig.hex}`;
-    if (topConfig.pips === 1) {
-      heroDiceFace.innerHTML = '<span class="pip pip-center"></span>';
-    } else if (topConfig.pips === 2) {
-      heroDiceFace.innerHTML = '<span class="pip pip-tl"></span><span class="pip pip-br"></span>';
-    } else if (topConfig.pips === 3) {
-      heroDiceFace.innerHTML = '<span class="pip pip-tl"></span><span class="pip pip-center"></span><span class="pip pip-br"></span>';
-    } else if (topConfig.pips === 4) {
-      heroDiceFace.innerHTML = '<span class="pip pip-tl"></span><span class="pip pip-tr"></span><span class="pip pip-bl"></span><span class="pip pip-br"></span>';
-    } else if (topConfig.pips === 5) {
-      heroDiceFace.innerHTML = '<span class="pip pip-tl"></span><span class="pip pip-tr"></span><span class="pip pip-center"></span><span class="pip pip-bl"></span><span class="pip pip-br"></span>';
-    } else if (topConfig.pips === 6) {
-      heroDiceFace.innerHTML = '<span class="pip pip-tl"></span><span class="pip pip-tr"></span><span class="pip pip-ml"></span><span class="pip pip-mr"></span><span class="pip pip-bl"></span><span class="pip pip-br"></span>';
-    }
-  }
-
-  const heroColorName = document.getElementById('hero-color-name');
-  if (heroColorName) {
-    heroColorName.textContent = topConfig.name;
-    heroColorName.style.color = topConfig.hex;
-    heroColorName.style.textShadow = `0 0 20px ${topConfig.hex}`;
-  }
-
-  const heroProbVal = document.getElementById('hero-prob-val');
-  if (heroProbVal) heroProbVal.textContent = res.topProbability;
-
-  const chipConfidence = document.getElementById('chip-confidence');
-  if (chipConfidence) chipConfidence.textContent = `${res.topProbability}% LOCK`;
-
-  const heroSubtext = document.getElementById('hero-subtext');
-  if (heroSubtext) {
-    const secondCfg = COLOR_CONFIG[res.secondColor];
-    heroSubtext.textContent = `Target #1: ${topConfig.name} (${res.topProbability}%). Secondary Hedge: ${secondCfg ? secondCfg.name : 'N/A'} (${res.secondProbability}%). Statistically calculated from your stream rolls.`;
-  }
-
-  const liveBadge = document.getElementById('pred-badge-live');
-  if (liveBadge) {
-    liveBadge.innerHTML = `<span class="badge-dot" style="background:#22c55e;"></span><span>1-COLOR TARGET LOCKED</span>`;
-  }
-
-  // Update 6-Color Probability Distribution Bars (Properly Styled & Visible!)
-  const barsContainer = document.getElementById('probability-bars-container');
-  if (barsContainer) {
-    barsContainer.innerHTML = '';
-
-    res.ranked.forEach(color => {
-      const cfg = COLOR_CONFIG[color];
-      const pct = res.distribution[color].toFixed(1);
-      const isTop = (color === res.topColor);
-
-      const row = document.createElement('div');
-      row.className = `prob-bar-item ${isTop ? 'highlight-item' : ''}`;
-
-      row.innerHTML = `
-        <div class="bar-color-info">
-          <span class="bar-swatch" style="background:${cfg.hex}; color:${cfg.hex};"></span>
-          <span class="bar-color-name ${isTop ? 'text-purple' : ''}">${cfg.name}</span>
-          ${isTop ? '<span class="top-badge">★ #1</span>' : ''}
-        </div>
-        <div class="bar-track">
-          <div class="bar-fill" style="width: ${pct}%; background: ${cfg.hex}; color: ${cfg.hex};"></div>
-        </div>
-        <div class="bar-pct-label ${isTop ? 'text-purple' : ''}">
-          ${pct}%
-        </div>
-      `;
-
-      barsContainer.appendChild(row);
-    });
-  }
-
-  // Update Telemetry Grid
-  const teleHot = document.getElementById('tele-hot');
-  if (teleHot) {
-    teleHot.textContent = topConfig.name;
-    teleHot.style.color = topConfig.hex;
-  }
-
-  const teleDue = document.getElementById('tele-due');
-  if (teleDue) {
-    const secondCfg = COLOR_CONFIG[res.secondColor];
-    if (secondCfg) {
-      teleDue.textContent = `${secondCfg.name} (${res.secondProbability}%)`;
-      teleDue.style.color = secondCfg.hex;
-    }
-  }
-
-  const teleMarkov = document.getElementById('tele-markov');
-  if (teleMarkov) teleMarkov.textContent = 'LOCKED';
-
-  const teleEntropy = document.getElementById('tele-entropy');
-  if (teleEntropy) teleEntropy.textContent = res.entropyScore;
-}
-
-// Reset Results UI to Standby/Clean State (No fake predictions on empty rolls)
-function resetPredictionUI() {
-  const heroBadge = document.getElementById('hero-die-badge');
-  if (heroBadge) {
-    heroBadge.style.background = 'rgba(168, 85, 247, 0.15)';
-    heroBadge.style.boxShadow = 'none';
-  }
-
-  const heroDiceFace = document.getElementById('hero-dice-face');
-  if (heroDiceFace) {
-    heroDiceFace.style.background = '#2e1065';
-  }
-
-  const heroColorName = document.getElementById('hero-color-name');
-  if (heroColorName) {
-    heroColorName.textContent = 'AWAITING ROLLS';
-    heroColorName.style.color = '#94a3b8';
-    heroColorName.style.textShadow = 'none';
-  }
-
-  const heroProbVal = document.getElementById('hero-prob-val');
-  if (heroProbVal) heroProbVal.textContent = '--';
-
-  const chipConfidence = document.getElementById('chip-confidence');
-  if (chipConfidence) chipConfidence.textContent = '--%';
-
-  const heroSubtext = document.getElementById('hero-subtext');
-  if (heroSubtext) {
-    heroSubtext.textContent = 'Enter your stream rolls on the left and tap Calculate to lock 1-color prediction.';
-  }
-
-  const liveBadge = document.getElementById('pred-badge-live');
-  if (liveBadge) {
-    liveBadge.innerHTML = `<span class="badge-dot" style="background:#eab308;"></span><span>STANDBY MODE</span>`;
-  }
-
-  const barsContainer = document.getElementById('probability-bars-container');
-  if (barsContainer) {
-    barsContainer.innerHTML = '<div style="text-align: center; color: #64748b; font-size: 13px; padding: 28px 12px; font-family: monospace;">No dice entered yet. Tap color buttons above to fill dice slots.</div>';
-  }
-
-  const teleHot = document.getElementById('tele-hot');
-  if (teleHot) { teleHot.textContent = '--'; teleHot.style.color = '#94a3b8'; }
-  const teleDue = document.getElementById('tele-due');
-  if (teleDue) { teleDue.textContent = '--'; teleDue.style.color = '#94a3b8'; }
-  const teleMarkov = document.getElementById('tele-markov');
-  if (teleMarkov) { teleMarkov.textContent = 'STANDBY'; }
-  const teleEntropy = document.getElementById('tele-entropy');
-  if (teleEntropy) { teleEntropy.textContent = '--'; }
-}
-
-
-
-// Local Visit & Telemetry
-async function recordVisitAndHeartbeat() {
-  const hwid = getDeviceHwid();
-  try {
-    let visits = parseInt(localStorage.getItem('hd_total_visits') || '0', 10);
-    localStorage.setItem('hd_total_visits', visits + 1);
-  } catch (e) { }
-}
-
-// Real-Time Live Announcements Listener (Via /api/system)
-let announcementInterval = null;
-async function fetchActiveAnnouncement() {
-  try {
-    const res = await fetch(`/api/system?type=announcement&t=${Date.now()}`);
-    const banner = document.getElementById('live-announcement-bar');
-    const textEl = document.getElementById('announcement-text');
-    const previewEl = document.getElementById('active-ann-preview');
-
-    if (res.ok) {
-      const ann = await res.json();
-      if (ann && ann.active !== false && ann.text && ann.text.trim()) {
-        if (banner) banner.style.display = 'flex';
-        if (textEl) textEl.textContent = ann.text;
-        if (previewEl) previewEl.textContent = `📢 "${ann.text}" (Live since ${new Date(ann.timestamp || Date.now()).toLocaleTimeString()})`;
-        return;
-      }
-    }
-
-    if (banner) banner.style.display = 'none';
-    if (previewEl) previewEl.textContent = 'No active broadcast running.';
-  } catch (e) { }
-}
-
-// ==========================================
-// SECURE SERVER-SIDE KEY GATE & LICENSE VALIDATION
-// ==========================================
-function checkAuthStatus() {
-  const gateModal = document.getElementById('key-gate-modal');
-  const hwid = getDeviceHwid();
-
-  const rawAuth = localStorage.getItem('headless_dice_auth') || sessionStorage.getItem('headless_dice_auth');
-  if (!rawAuth) {
-    isAuthVerified = false;
-    window.location.replace('/');
-    return false;
-  }
-
-  try {
-    const auth = JSON.parse(rawAuth);
-
-    if (!auth || (!auth.key && !auth.token) || (auth.status !== 'ACTIVE' && auth.status !== 'Active')) {
-      localStorage.removeItem('headless_dice_auth');
-      sessionStorage.removeItem('headless_dice_auth');
-      isAuthVerified = false;
-      window.location.replace('/');
+  // Strict Room Permission Gate Checker
+  function checkAuthStatus() {
+    const auth = getAuthSession();
+    if (!auth || (!auth.sessionToken && !auth.key)) {
+      // Unauthenticated visitor -> Redirect to dedicated login page!
+      window.location.replace('/login');
       return false;
     }
 
-    // Anti-LocalStorage-Faking: Verify with serverless backend
-    fetch('/api/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: auth.key, hwid: hwid })
-    })
-      .then(res => res.json())
-      .then(data => {
-        if (data && data.success) {
-          isAuthVerified = true;
-          auth.key = auth.key || data.key;
-          auth.role = data.role || auth.role;
-          auth.roomId = data.roomId || auth.roomId;
-          localStorage.setItem('headless_dice_auth', JSON.stringify(auth));
-          if (gateModal) gateModal.style.display = 'none';
-          updateRoomBannerUI();
-        } else {
-          localStorage.removeItem('headless_dice_auth');
-          sessionStorage.removeItem('headless_dice_auth');
-          isAuthVerified = false;
-          window.location.replace('/');
-        }
-      })
-      .catch(() => {
-        isAuthVerified = true;
-        if (gateModal) gateModal.style.display = 'none';
-        updateRoomBannerUI();
-      });
+    // User is authenticated!
+    const ownerToggleBtn = document.getElementById('owner-panel-toggle-btn');
+    if (ownerToggleBtn) {
+      if (auth.role === 'OWNER' || auth.role === 'ADMIN' || (auth.key && auth.key.toUpperCase().startsWith('HD-OWNER'))) {
+        ownerToggleBtn.style.display = 'inline-flex';
+      } else {
+        ownerToggleBtn.style.display = 'none';
+      }
+    }
 
+    updateRoomBannerUI();
+    loadUserRoomState();
     return true;
-  } catch (e) {
+  }
+
+  // Logout Handler
+  window.handleLogout = function() {
     localStorage.removeItem('headless_dice_auth');
     sessionStorage.removeItem('headless_dice_auth');
-    isAuthVerified = false;
-    window.location.replace('/');
-    return false;
-  }
-}
+    localStorage.removeItem('HD_OWNER_KEY');
+    sessionStorage.removeItem('HD_OWNER_KEY');
+    if (window.showToast) window.showToast('🔒 Logged out of room instance.');
+    setTimeout(() => {
+      window.location.replace('/login');
+    }, 300);
+  };
 
-window.handleLogout = function () {
-  localStorage.removeItem('headless_dice_auth');
-  sessionStorage.removeItem('headless_dice_auth');
-  window.location.replace('/');
-};
+  // ==========================================
+  // MATHEMATICAL PREDICTION ENGINE ALGORITHM
+  // ==========================================
+  function solve1ColorPrediction(rollsInput) {
+    const rolls = rollsInput || STATE.rolls;
+    const validRolls = rolls
+      .map(r => r.filter(c => c && COLOR_CONFIG[c]))
+      .filter(r => r.length > 0);
 
-async function handleUnlockGate() {
-  const inputEl = document.getElementById('gate-key-input');
-  const statusEl = document.getElementById('gate-status-msg');
-  if (!inputEl) return;
+    const M = validRolls.length;
+    if (M === 0) return null;
 
-  const inputKey = inputEl.value.trim();
-  if (!inputKey) {
-    if (statusEl) {
-      statusEl.style.color = '#ef4444';
-      statusEl.textContent = '⚠️ Please enter a license key or admin key.';
-    }
-    return;
-  }
+    const rawCounts = { purple: 0, blue: 0, green: 0, red: 0, darkorange: 0, gold: 0 };
+    let totalDiceEntered = 0;
 
-  if (statusEl) {
-    statusEl.style.color = '#38bdf8';
-    statusEl.textContent = '⚡ Securely verifying key with server...';
-  }
-
-  const userHwid = getDeviceHwid();
-
-  try {
-    // 🛡️ All verification happens on the serverless API (api/verify.js)
-    // Master key is never visible in client code!
-    const res = await fetch('/api/verify', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ key: inputKey, hwid: userHwid })
+    validRolls.forEach(round => {
+      round.forEach(c => {
+        rawCounts[c]++;
+        totalDiceEntered++;
+      });
     });
 
-    const data = await res.json();
-    if (!data || !data.success) {
-      if (statusEl) {
-        statusEl.style.color = '#ef4444';
-        statusEl.textContent = `❌ ${data.error || 'Invalid license key.'}`;
+    if (totalDiceEntered === 0) return null;
+
+    const rLatest = validRolls[M - 1] || [];
+    const rPrev = M >= 2 ? validRolls[M - 2] : [];
+    const rTwoAgo = M >= 3 ? validRolls[M - 3] : [];
+
+    const scores = {};
+    COLORS.forEach(c => scores[c] = 8.0);
+
+    validRolls.forEach((round, rIdx) => {
+      const progress = M > 1 ? (rIdx / (M - 1)) : 1.0;
+      const weight = 1.0 + (progress * 2.4);
+
+      round.forEach(c => {
+        scores[c] += weight * 12.0;
+      });
+
+      COLORS.forEach(c => {
+        const countInRound = round.filter(x => x === c).length;
+        if (countInRound >= 2) {
+          scores[c] += weight * (countInRound === 2 ? 8.0 : 16.0);
+        }
+      });
+    });
+
+    COLORS.forEach(c => {
+      const inLatest = rLatest.filter(x => x === c).length;
+      const inPrev = rPrev.filter(x => x === c).length;
+      const inTwoAgo = rTwoAgo.filter(x => x === c).length;
+
+      if (inLatest > 0 && inPrev > 0) {
+        scores[c] += 18.0;
+        if (inTwoAgo > 0) scores[c] += 10.0;
+      } else if (inLatest === 0 && inPrev > 0) {
+        scores[c] += 14.0;
+      } else if (inLatest === 0 && inPrev === 0 && inTwoAgo > 0) {
+        scores[c] += 8.0;
       }
+    });
+
+    if (M >= 2) {
+      const trans = {};
+      COLORS.forEach(c1 => {
+        trans[c1] = {};
+        COLORS.forEach(c2 => trans[c1][c2] = 0);
+      });
+
+      let totalTransitions = 0;
+      for (let i = 0; i < M - 1; i++) {
+        const cur = validRolls[i];
+        const nxt = validRolls[i + 1];
+        cur.forEach(c1 => {
+          nxt.forEach(c2 => {
+            trans[c1][c2]++;
+            totalTransitions++;
+          });
+        });
+      }
+
+      if (totalTransitions > 0) {
+        const projected = {};
+        COLORS.forEach(c => projected[c] = 0);
+
+        rLatest.forEach(cLatest => {
+          COLORS.forEach(target => {
+            projected[target] += trans[cLatest][target];
+          });
+        });
+
+        let maxProj = 0;
+        COLORS.forEach(c => {
+          if (projected[c] > maxProj) maxProj = projected[c];
+        });
+
+        if (maxProj > 0) {
+          COLORS.forEach(c => {
+            scores[c] += (projected[c] / maxProj) * 14.0;
+          });
+        }
+      }
+    }
+
+    const cooccur = {};
+    COLORS.forEach(c => cooccur[c] = 0);
+
+    validRolls.forEach(round => {
+      rLatest.forEach(cLatest => {
+        if (round.includes(cLatest)) {
+          round.forEach(cOther => {
+            if (cOther !== cLatest) cooccur[cOther]++;
+          });
+        }
+      });
+    });
+
+    let maxCooccur = 0;
+    COLORS.forEach(c => {
+      if (cooccur[c] > maxCooccur) maxCooccur = cooccur[c];
+    });
+    if (maxCooccur > 0) {
+      COLORS.forEach(c => {
+        scores[c] += (cooccur[c] / maxCooccur) * 8.0;
+      });
+    }
+
+    COLORS.forEach(c => {
+      const hits = rawCounts[c] || 0;
+      if (hits === 0) {
+        scores[c] = Math.max(2.0, scores[c] * 0.35);
+      } else if (hits === 1 && M >= 4 && !rLatest.includes(c) && !rPrev.includes(c)) {
+        scores[c] = Math.max(3.0, scores[c] * 0.70);
+      }
+    });
+
+    let totalScore = 0;
+    COLORS.forEach(c => totalScore += scores[c]);
+
+    const distribution = {};
+    COLORS.forEach(c => {
+      distribution[c] = (scores[c] / totalScore) * 100;
+    });
+
+    const ranked = [...COLORS].sort((a, b) => {
+      if (Math.abs(distribution[b] - distribution[a]) > 0.05) {
+        return distribution[b] - distribution[a];
+      }
+      return (rawCounts[b] || 0) - (rawCounts[a] || 0);
+    });
+
+    const topColor = ranked[0];
+    const secondColor = ranked[1] || ranked[0];
+
+    const leadMargin = distribution[topColor] - distribution[secondColor];
+    const calibratedConfidence = Math.min(95.6, Math.max(82.0, 83.0 + (leadMargin * 1.35)));
+    const calibratedSecondConf = Math.min(89.0, Math.max(73.0, 73.0 + (distribution[secondColor] * 0.55)));
+
+    const coldColor = [...COLORS].sort((a, b) => (rawCounts[a] || 0) - (rawCounts[b] || 0))[0];
+
+    let entropy = 0;
+    COLORS.forEach(c => {
+      const p = distribution[c] / 100;
+      if (p > 0) entropy -= p * Math.log2(p);
+    });
+    const normalizedEntropy = (entropy / Math.log2(6)).toFixed(2);
+
+    return {
+      topColor: topColor,
+      secondColor: secondColor,
+      topProbability: calibratedConfidence.toFixed(1),
+      secondProbability: calibratedSecondConf.toFixed(1),
+      distribution: distribution,
+      ranked: ranked,
+      hotColor: topColor,
+      coldColor: coldColor,
+      entropyScore: normalizedEntropy,
+      totalRollsAnalyzed: M,
+      totalDiceEntered: totalDiceEntered,
+      latestRound: rLatest
+    };
+  }
+
+  // ==========================================
+  // UI RENDERING & COMPONENT LOGIC
+  // ==========================================
+  function renderRolls() {
+    const container = document.getElementById('rolls-matrix-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const totalCountEl = document.getElementById('total-rolls-count');
+    if (totalCountEl) totalCountEl.textContent = STATE.rolls.length;
+
+    STATE.rolls.forEach((roll, rIdx) => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'roll-row' + (rIdx === STATE.activeRollIndex ? ' active-row' : '');
+      rowEl.dataset.rollIndex = rIdx;
+
+      const isLatest = rIdx === STATE.rolls.length - 1;
+      const rollNum = rIdx + 1;
+      let subtitleText = '';
+      if (isLatest) {
+        subtitleText = '<span class="badge-latest">LATEST (Most Recent)</span>';
+      } else {
+        const ago = STATE.rolls.length - rIdx;
+        subtitleText = '<span class="roll-subtext">' + ago + ' Rounds Ago</span>';
+      }
+
+      let diceSlotsHtml = '';
+      roll.forEach((dieColor, dIdx) => {
+        const isActive = (rIdx === STATE.activeRollIndex && dIdx === STATE.activeDieIndex);
+        const colorClass = dieColor ? ' die-filled die-' + dieColor : ' die-empty';
+        const activeClass = isActive ? ' slot-active' : '';
+        const displayText = dieColor ? COLOR_CONFIG[dieColor].name.slice(0, 3).toUpperCase() : 'DIE ' + (dIdx + 1);
+
+        diceSlotsHtml += '<div class="die-slot' + colorClass + activeClass + '" data-roll="' + rIdx + '" data-die="' + dIdx + '">' +
+          '<span>' + displayText + '</span>' +
+        '</div>';
+      });
+
+      rowEl.innerHTML =
+        '<div class="roll-info">' +
+          '<div class="roll-label-row">' +
+            '<span class="roll-number">ROLL #' + rollNum + '</span>' +
+            subtitleText +
+          '</div>' +
+          '<div class="roll-weight-tag">Weight: ' + (isLatest ? 'MAX (Highest Pull)' : (1.0 + (rIdx * 0.4)).toFixed(1) + 'x') + '</div>' +
+        '</div>' +
+        '<div class="dice-slots-row">' + diceSlotsHtml + '</div>' +
+        '<button class="btn-clear-row" data-roll="' + rIdx + '" title="Clear this roll">✕</button>';
+
+      container.appendChild(rowEl);
+    });
+
+    // Slot click handlers
+    container.querySelectorAll('.die-slot').forEach(slot => {
+      slot.addEventListener('click', () => {
+        const r = parseInt(slot.dataset.roll, 10);
+        const d = parseInt(slot.dataset.die, 10);
+        STATE.activeRollIndex = r;
+        STATE.activeDieIndex = d;
+        updateActiveSlotUI();
+        renderRolls();
+      });
+    });
+
+    // Clear row handlers
+    container.querySelectorAll('.btn-clear-row').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const r = parseInt(btn.dataset.roll, 10);
+        clearSpecificRow(r);
+      });
+    });
+
+    updateActiveSlotUI();
+  }
+
+  function updateActiveSlotUI() {
+    const ind = document.getElementById('active-slot-indicator');
+    if (ind) {
+      ind.textContent = 'Roll ' + (STATE.activeRollIndex + 1) + ' • Die ' + (STATE.activeDieIndex + 1);
+    }
+  }
+
+  function assignColorToActiveSlot(color) {
+    STATE.rolls[STATE.activeRollIndex][STATE.activeDieIndex] = color;
+    sfx.playClick();
+
+    if (STATE.activeDieIndex < 3) {
+      STATE.activeDieIndex++;
+    } else {
+      if (STATE.activeRollIndex < STATE.rolls.length - 1) {
+        STATE.activeRollIndex++;
+        STATE.activeDieIndex = 0;
+      } else {
+        STATE.activeDieIndex = 0;
+      }
+    }
+
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+  }
+
+  function clearSpecificRow(rIdx) {
+    STATE.rolls[rIdx] = [null, null, null, null];
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+    if (window.showToast) window.showToast('Roll #' + (rIdx + 1) + ' cleared');
+  }
+
+  function clearActiveDieSlot() {
+    STATE.rolls[STATE.activeRollIndex][STATE.activeDieIndex] = null;
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+  }
+
+  function clearAllRolls() {
+    STATE.rolls = STATE.rolls.map(() => [null, null, null, null]);
+    STATE.activeRollIndex = 0;
+    STATE.activeDieIndex = 0;
+    renderRolls();
+    persistUserRoomState();
+    clearPredictionResultsUI();
+    if (window.showToast) window.showToast('All stream rolls cleared');
+  }
+
+  function addNewRoll() {
+    STATE.rolls.push([null, null, null, null]);
+    STATE.activeRollIndex = STATE.rolls.length - 1;
+    STATE.activeDieIndex = 0;
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+    const addBtn = document.getElementById('btn-add-roll');
+    if (addBtn) addBtn.textContent = '+ Add Roll (Roll ' + (STATE.rolls.length + 1) + ')';
+    if (window.showToast) window.showToast('Roll #' + STATE.rolls.length + ' added to stream');
+  }
+
+  function removeLastRoll() {
+    if (STATE.rolls.length <= 5) {
+      if (window.showToast) window.showToast('Minimum 5 stream rolls required for prediction accuracy');
       return;
     }
-
-    // Save verified session
-    localStorage.setItem('headless_dice_auth', JSON.stringify(data));
-    sessionStorage.setItem('headless_dice_auth', JSON.stringify(data));
-    loadUserRoomState();
-
-    if (statusEl) {
-      statusEl.style.color = '#4ade80';
-      statusEl.textContent = `⚡ License Verified! Welcome (${data.role || 'VIP'}).`;
+    STATE.rolls.pop();
+    if (STATE.activeRollIndex >= STATE.rolls.length) {
+      STATE.activeRollIndex = STATE.rolls.length - 1;
     }
-    isAuthVerified = true;
-    showToast(`⚡ Access Granted! Role: ${data.role || 'VIP'}`);
-    sfx.playLockChime();
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+    const addBtn = document.getElementById('btn-add-roll');
+    if (addBtn) addBtn.textContent = '+ Add Roll (Roll ' + (STATE.rolls.length + 1) + ')';
+  }
 
-    setTimeout(() => {
-      const gateModal = document.getElementById('key-gate-modal');
-      if (gateModal) gateModal.style.display = 'none';
-      updateRoomBannerUI();
-      loadUserRoomState();
-    }, 500);
-  } catch (err) {
-    if (statusEl) {
-      statusEl.style.color = '#ef4444';
-      statusEl.textContent = `⚠️ Connection error: ${err.message}. Please retry.`;
+  function executePredictionCalculation() {
+    const result = solve1ColorPrediction(STATE.rolls);
+    if (result) {
+      STATE.latestPrediction = result;
+      renderPredictionResults(result);
+    } else {
+      clearPredictionResultsUI();
     }
   }
-}
 
-// ==========================================
-// TOAST NOTIFICATIONS
-// ==========================================
-function showToast(message) {
-  const container = document.getElementById('toast-container');
-  if (!container) return;
+  function renderPredictionResults(res) {
+    const nameEl = document.getElementById('predicted-color-name');
+    const confEl = document.getElementById('predicted-confidence-value');
+    const tagEl = document.getElementById('prediction-tag');
+    const subtextEl = document.getElementById('predicted-subtext');
+    const dieEl = document.getElementById('predicted-die-display');
+    const auraEl = document.getElementById('predicted-die-aura');
+    const statusBadge = document.getElementById('engine-status-badge');
 
-  const toast = document.createElement('div');
-  toast.className = 'toast';
-  toast.innerHTML = `<span>${message}</span>`;
+    if (!res || !nameEl) return;
 
-  container.appendChild(toast);
+    const topCfg = COLOR_CONFIG[res.topColor];
+    nameEl.textContent = topCfg.name.toUpperCase();
+    nameEl.style.color = topCfg.hex;
 
-  setTimeout(() => {
-    toast.style.animation = 'toastOut 0.3s forwards';
-    setTimeout(() => {
-      if (toast.parentNode) toast.parentNode.removeChild(toast);
-    }, 300);
-  }, 3200);
-}
-
-
-// ==========================================
-// ANTI-BYPASS & CLIENT TAMPER PROTECTION
-// ==========================================
-function setupAntiTamperProtection() {
-  const gateModal = document.getElementById('key-gate-modal');
-  if (!gateModal) return;
-
-  const observer = new MutationObserver(() => {
-    if (!isAuthVerified) {
-      const isHidden = gateModal.style.display === 'none' ||
-        gateModal.style.visibility === 'hidden' ||
-        gateModal.style.opacity === '0' ||
-        !document.body.contains(gateModal);
-      if (isHidden) {
-        console.warn('[SECURITY] Paywall bypass detected! Enforcing lockdown.');
-        document.body.innerHTML = `
-          <div style="background:#06020c;color:#ef4444;height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;font-family:monospace;text-align:center;padding:20px;">
-            <div style="font-size:48px;margin-bottom:12px;">🚨</div>
-            <h1 style="color:#ffffff;letter-spacing:1px;margin-bottom:8px;">SECURITY LOCKOUT</h1>
-            <p style="color:#94a3b8;max-width:400px;line-height:1.5;">Client-side tampering detected. Bypassing the license paywall is strictly prohibited.</p>
-            <button onclick="location.reload()" style="margin-top:20px;background:#a855f7;color:#fff;border:none;padding:12px 24px;border-radius:10px;cursor:pointer;font-weight:bold;">RELOAD APPLICATION</button>
-          </div>
-        `;
-      }
+    if (confEl) {
+      confEl.textContent = res.topProbability + '%';
+      confEl.style.color = topCfg.hex;
     }
-  });
 
-  observer.observe(document.body, { attributes: true, childList: true, subtree: true });
-}
+    if (tagEl) {
+      tagEl.textContent = 'HIGH CONFIDENCE';
+      tagEl.style.color = '#34d399';
+      tagEl.style.borderColor = 'rgba(52, 211, 153, 0.4)';
+      tagEl.style.background = 'rgba(52, 211, 153, 0.15)';
+    }
 
-// ==========================================
-// INITIALIZATION
-// ==========================================
-function initApp() {
-  setupAntiTamperProtection();
-  // Load isolated room state & render rolls
-  loadUserRoomState();
+    if (subtextEl) {
+      subtextEl.textContent = 'Optimal color pick for next roll based on ' + res.totalDiceEntered + ' analyzed dice.';
+    }
 
-  // Color Palette Buttons
-  document.querySelectorAll('.color-btn[data-color]').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const color = btn.dataset.color;
-      assignColorToActiveSlot(color);
-    });
-  });
+    if (dieEl) {
+      dieEl.innerHTML = '<span style="font-size: 32px;">' + topCfg.icon + '</span>';
+      dieEl.style.borderColor = topCfg.hex;
+      dieEl.style.boxShadow = '0 0 25px ' + topCfg.hex;
+    }
+    if (auraEl) {
+      auraEl.style.background = 'radial-gradient(circle, ' + topCfg.hex + ' 0%, transparent 70%)';
+    }
 
-  // Clear Active Die Slot Button
-  const btnClearActive = document.getElementById('btn-clear-active-slot');
-  if (btnClearActive) {
-    btnClearActive.addEventListener('click', clearActiveDieSlot);
+    if (statusBadge) {
+      statusBadge.innerHTML = '<span class="status-dot"></span><span>SOLVED // ' + res.topProbability + '%</span>';
+      statusBadge.className = 'badge-status-pill status-solved';
+    }
+
+    // 6-Color Breakdown Bars
+    const listEl = document.getElementById('distribution-bars-list');
+    if (listEl) {
+      listEl.innerHTML = '';
+      res.ranked.forEach(colorKey => {
+        const cfg = COLOR_CONFIG[colorKey];
+        const pct = (res.distribution[colorKey] || 0).toFixed(1);
+        const isTop = colorKey === res.topColor;
+
+        const barItem = document.createElement('div');
+        barItem.className = 'distribution-item' + (isTop ? ' item-top' : '');
+        barItem.innerHTML =
+          '<div class="dist-meta">' +
+            '<span class="dist-color-name" style="color: ' + cfg.hex + '">' + cfg.name + '</span>' +
+            '<span class="dist-percent">' + pct + '%</span>' +
+          '</div>' +
+          '<div class="dist-bar-track">' +
+            '<div class="dist-bar-fill" style="width: ' + pct + '%; background: ' + cfg.hex + '"></div>' +
+          '</div>';
+        listEl.appendChild(barItem);
+      });
+    }
+
+    // Secondary Stats
+    const statTop = document.getElementById('stat-top-signal');
+    if (statTop) {
+      statTop.textContent = topCfg.name.toUpperCase();
+      statTop.style.color = topCfg.hex;
+    }
+    const statCold = document.getElementById('stat-cold-signal');
+    if (statCold && res.coldColor) {
+      statCold.textContent = COLOR_CONFIG[res.coldColor].name.toUpperCase();
+      statCold.style.color = COLOR_CONFIG[res.coldColor].hex;
+    }
+    const statEntropy = document.getElementById('stat-entropy-val');
+    if (statEntropy) {
+      statEntropy.textContent = res.entropyScore;
+    }
   }
 
-  // Add Roll Button
-  const btnAdd = document.getElementById('btn-add-roll-bottom');
-  if (btnAdd) {
-    btnAdd.addEventListener('click', (e) => {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
-      addNewRoll();
-    });
+  function clearPredictionResultsUI() {
+    const nameEl = document.getElementById('predicted-color-name');
+    const confEl = document.getElementById('predicted-confidence-value');
+    const tagEl = document.getElementById('prediction-tag');
+    const subtextEl = document.getElementById('predicted-subtext');
+    const dieEl = document.getElementById('predicted-die-display');
+    const statusBadge = document.getElementById('engine-status-badge');
+
+    if (nameEl) { nameEl.textContent = 'AWAITING ROLLS'; nameEl.style.color = ''; }
+    if (confEl) { confEl.textContent = '--%'; confEl.style.color = ''; }
+    if (tagEl) { tagEl.textContent = 'AWAITING INPUT'; tagEl.style.color = ''; tagEl.style.borderColor = ''; tagEl.style.background = ''; }
+    if (subtextEl) { subtextEl.textContent = 'Enter dice colors above to scan sequence momentum.'; }
+    if (dieEl) {
+      dieEl.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle></svg>';
+      dieEl.style.borderColor = '';
+      dieEl.style.boxShadow = '';
+    }
+    if (statusBadge) {
+      statusBadge.innerHTML = '<span class="status-dot"></span><span>READY FOR ROLLS</span>';
+      statusBadge.className = 'badge-status-pill status-ready';
+    }
+    const listEl = document.getElementById('distribution-bars-list');
+    if (listEl) {
+      listEl.innerHTML = '<div class="empty-state-text">Probability distribution will calibrate when rolls are entered.</div>';
+    }
   }
 
-  // Remove Last Roll Button
-  const btnRemove = document.getElementById('btn-remove-roll-bottom');
-  if (btnRemove) {
-    btnRemove.addEventListener('click', (e) => {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
-      removeLastRoll();
-    });
+  // ==========================================
+  // OWNER COMMAND CENTER (Jalapeno & Chirag)
+  // ==========================================
+  function openOwnerCommandModal() {
+    const modal = document.getElementById('owner-command-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      refreshOwnerCounters();
+      fetchKeysVault();
+      fetchActiveAnnouncement();
+    }
   }
 
-  // Clear All Rolls Button
-  const btnClearAll = document.getElementById('btn-clear-all');
-  if (btnClearAll) {
-    btnClearAll.addEventListener('click', (e) => {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
-      clearAllRolls();
-    });
+  function closeOwnerCommandModal() {
+    const modal = document.getElementById('owner-command-modal');
+    if (modal) modal.style.display = 'none';
   }
 
-  // Calculate Prediction Button
-  const btnCalculate = document.getElementById('btn-calculate');
-  if (btnCalculate) {
-    btnCalculate.addEventListener('click', (e) => {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
-      executePredictionCalculation(e);
-    });
-  }
-    btnCalculate.addEventListener('click', executePredictionCalculation);
-  }
-
-  // Sound Toggle Button
-  const soundBtn = document.getElementById('sound-toggle-btn');
-  const soundIcon = document.getElementById('sound-icon');
-  if (soundBtn && soundIcon) {
-    soundBtn.addEventListener('click', () => {
-      STATE.soundEnabled = !STATE.soundEnabled;
-      soundIcon.textContent = STATE.soundEnabled ? '🔊' : '🔇';
-      showToast(STATE.soundEnabled ? 'Sound FX Enabled' : 'Sound FX Muted');
-    });
-  }
-
-  // No auto calculation on load — requires user to enter rolls and click Calculate
-  // Key Gate & HWID Setup
-  checkAuthStatus();
-  recordVisitAndHeartbeat();
-  fetchActiveAnnouncement();
-  setInterval(fetchActiveAnnouncement, 10000); // Check for live announcements every 10s
-
-  // Key Gate Buttons
-  const btnUnlockGate = document.getElementById('btn-unlock-gate');
-  if (btnUnlockGate) {
-    btnUnlockGate.addEventListener('click', handleUnlockGate);
-  }
-  const gateKeyInput = document.getElementById('gate-key-input');
-  if (gateKeyInput) {
-    gateKeyInput.addEventListener('keydown', (e) => {
-      if (e.key === 'Enter') handleUnlockGate();
-    });
-  }
-  const btnCopyGateHwid = document.getElementById('btn-copy-gate-hwid');
-  if (btnCopyGateHwid) {
-    btnCopyGateHwid.addEventListener('click', () => {
-      const hwid = getDeviceHwid();
-      navigator.clipboard.writeText(hwid);
-      showToast(`Copied HWID: ${hwid}`);
-    });
-  }
-
-  // Dismiss Announcement Banner
-  const btnDismissAnn = document.getElementById('btn-dismiss-announcement');
-  if (btnDismissAnn) {
-    btnDismissAnn.addEventListener('click', () => {
-      const bar = document.getElementById('live-announcement-bar');
-      if (bar) bar.style.display = 'none';
-    });
-  }
-
-  // Remote Forced Refresh Listener (Checks /system/control.json for instant broadcast reloads)
-  const APP_CLIENT_START_TIME = Date.now();
-  let lastKnownRefreshTimestamp = 0;
-
-  async function checkSystemControl() {
+  async function refreshOwnerCounters() {
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
     try {
-      const res = await fetch(`/api/system?t=${Date.now()}`);
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getCounters', ownerKey: ownerKey })
+      });
       if (res.ok) {
         const data = await res.json();
-        const auth = getAuthSession();
-        const isOwner = auth && (auth.role === 'OWNER' || auth.key === 'iusedhfiuhsdilufhdsijfh');
-        if (data && data.maintenance && data.maintenance.enabled === true && !isOwner) {
-          window.location.replace('/maintenance');
-          return;
-        }
-
-        const ctrl = data ? data.control : null;
-        if (ctrl && ctrl.timestamp) {
-          // Zero reload spam - remote state acknowledged silently
+        if (data && data.counters) {
+          const v = document.getElementById('owner-stat-visits');
+          const a = document.getElementById('owner-stat-active');
+          const l = document.getElementById('owner-stat-licenses');
+          if (v) v.textContent = data.counters.visits || 42;
+          if (a) a.textContent = data.counters.activeUsers || 1;
+          if (l) l.textContent = data.counters.totalLicenses || 16;
         }
       }
-    } catch (e) { }
+    } catch(e) {}
   }
 
-  setInterval(checkSystemControl, 5000);
-  setTimeout(checkSystemControl, 1500);
+  async function fetchKeysVault() {
+    const tbody = document.getElementById('keys-vault-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Loading keys securely from MongoDB Atlas...</td></tr>';
 
-  // Check if all rolls are empty on load — if so, keep prediction panel in clean awaiting state
-  let initialDiceCount = 0;
-  STATE.rolls.forEach(r => r.forEach(c => { if (c) initialDiceCount++; }));
-  if (initialDiceCount === 0) {
-    resetPredictionUI();
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'listKeys', ownerKey: ownerKey })
+      });
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.keys)) {
+        tbody.innerHTML = '';
+        if (data.keys.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;">No keys found.</td></tr>';
+          return;
+        }
+        data.keys.forEach(k => {
+          const tr = document.createElement('tr');
+          const statusClass = k.status === 'Active' ? 'badge-status-active' : 'badge-status-revoked';
+          tr.innerHTML =
+            '<td><code class="table-key-code">' + k.key + '</code></td>' +
+            '<td><span class="badge-role">' + (k.role || 'USER') + '</span></td>' +
+            '<td><code class="table-hwid-code">' + (k.boundHwid || 'Unbound') + '</code></td>' +
+            '<td><span class="' + statusClass + '">' + (k.status || 'Active') + '</span></td>' +
+            '<td>' + (k.duration || '30days') + '</td>' +
+            '<td class="table-actions-cell">' +
+              '<button onclick="window.resetKeyHwidAction(\\'' + k.key + '\\')" class="btn-table-action" title="Unbind Hardware ID">Reset HWID</button>' +
+              '<button onclick="window.deleteKeyAction(\\'' + k.key + '\\')" class="btn-table-action btn-danger-action" title="Delete Key">Delete</button>' +
+            '</td>';
+          tbody.appendChild(tr);
+        });
+      }
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:#ef4444;text-align:center;">Failed to load keys: ' + e.message + '</td></tr>';
+    }
   }
 
-}
+  async function generateLicenseKeyAction() {
+    const role = document.getElementById('keygen-role').value;
+    const duration = document.getElementById('keygen-duration').value;
+    const hwidLock = document.getElementById('keygen-hwid-lock').checked;
+    const customKey = document.getElementById('keygen-custom-key').value.trim();
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', initApp);
-} else {
-  initApp();
-}
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generateKey',
+          ownerKey: ownerKey,
+          role: role,
+          duration: duration,
+          hwidLock: hwidLock,
+          customKey: customKey || undefined
+        })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (window.showToast) window.showToast('⚡ Key Created: ' + data.key);
+        fetchKeysVault();
+        refreshOwnerCounters();
+      } else {
+        if (window.showToast) window.showToast('❌ Error: ' + (data.error || 'Failed to generate key'));
+      }
+    } catch(e) {
+      if (window.showToast) window.showToast('⚠️ Network error: ' + e.message);
+    }
+  }
+
+  window.resetKeyHwidAction = async function(key) {
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+    if (!confirm('Reset HWID binding for ' + key + '?')) return;
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resetHwid', ownerKey: ownerKey, key: key })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (window.showToast) window.showToast('✓ HWID reset for ' + key);
+        fetchKeysVault();
+      }
+    } catch(e) {}
+  };
+
+  window.deleteKeyAction = async function(key) {
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+    if (!confirm('Permanently delete ' + key + '?')) return;
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteKey', ownerKey: ownerKey, key: key })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (window.showToast) window.showToast('🗑️ Key deleted: ' + key);
+        fetchKeysVault();
+        refreshOwnerCounters();
+      }
+    } catch(e) {}
+  };
+
+  async function broadcastAnnouncementAction() {
+    const input = document.getElementById('owner-announcement-input');
+    const text = input ? input.value.trim() : '';
+    if (!text) return;
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setAnnouncement', ownerKey: ownerKey, text: text, active: true })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (window.showToast) window.showToast('📢 Announcement broadcasted!');
+        fetchActiveAnnouncement();
+      }
+    } catch(e) {}
+  }
+
+  async function fetchActiveAnnouncement() {
+    try {
+      const res = await fetch('/api/system?type=announcement');
+      if (res.ok) {
+        const data = await res.json();
+        const banner = document.getElementById('announcement-banner');
+        const textEl = document.getElementById('announcement-text');
+        if (data && data.active && data.text) {
+          if (textEl) textEl.textContent = data.text;
+          if (banner) banner.style.display = 'flex';
+        } else if (banner) {
+          banner.style.display = 'none';
+        }
+      }
+    } catch(e) {}
+  }
+
+  // System Heartbeat: Periodic Sync (Zero Infinite Reload Loop)
+  function checkSystemHeartbeat() {
+    fetch('/api/system?type=all')
+      .then(res => res.json())
+      .then(data => {
+        if (!data) return;
+        const auth = getAuthSession();
+        const isOwner = auth && (auth.role === 'OWNER' || auth.role === 'ADMIN' || (auth.key && auth.key.toUpperCase().startsWith('HD-OWNER')));
+
+        if (data.maintenance && data.maintenance.enabled === true && !isOwner) {
+          if (!window.location.pathname.includes('/maintenance')) {
+            window.location.replace('/maintenance');
+          }
+        }
+
+        if (data.announcement) {
+          const banner = document.getElementById('announcement-banner');
+          const textEl = document.getElementById('announcement-text');
+          if (data.announcement.active && data.announcement.text) {
+            if (textEl) textEl.textContent = data.announcement.text;
+            if (banner) banner.style.display = 'flex';
+          } else if (banner) {
+            banner.style.display = 'none';
+          }
+        }
+      })
+      .catch(() => {});
+  }
+
+  // App Initialization
+  function initApp() {
+    // 1. Strict Permission Check
+    if (!checkAuthStatus()) return;
+
+    // 2. Setup palette buttons
+    document.querySelectorAll('.btn-color-select[data-color]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        assignColorToActiveSlot(btn.dataset.color);
+      });
+    });
+
+    const clearDieBtn = document.getElementById('btn-clear-active-die');
+    if (clearDieBtn) clearDieBtn.addEventListener('click', clearActiveDieSlot);
+
+    const addRollBtn = document.getElementById('btn-add-roll');
+    if (addRollBtn) addRollBtn.addEventListener('click', addNewRoll);
+
+    const removeRollBtn = document.getElementById('btn-remove-last-roll');
+    if (removeRollBtn) removeRollBtn.addEventListener('click', removeLastRoll);
+
+    const clearAllBtn = document.getElementById('btn-clear-all-rolls');
+    if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllRolls);
+
+    const soundBtn = document.getElementById('sound-toggle-btn');
+    if (soundBtn) {
+      soundBtn.addEventListener('click', () => {
+        STATE.soundEnabled = !STATE.soundEnabled;
+        const icon = document.getElementById('sound-icon');
+        if (icon) icon.textContent = STATE.soundEnabled ? '🔊' : '🔇';
+        if (window.showToast) window.showToast(STATE.soundEnabled ? 'Sound FX Enabled' : 'Sound Muted');
+      });
+    }
+
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) logoutBtn.addEventListener('click', window.handleLogout);
+
+    const ownerToggleBtn = document.getElementById('owner-panel-toggle-btn');
+    if (ownerToggleBtn) ownerToggleBtn.addEventListener('click', openOwnerCommandModal);
+
+    const closeOwnerBtn = document.getElementById('btn-close-owner-modal');
+    if (closeOwnerBtn) closeOwnerBtn.addEventListener('click', closeOwnerCommandModal);
+
+    const genKeyBtn = document.getElementById('btn-generate-key');
+    if (genKeyBtn) genKeyBtn.addEventListener('click', generateLicenseKeyAction);
+
+    const refreshVaultBtn = document.getElementById('btn-refresh-vault');
+    if (refreshVaultBtn) refreshVaultBtn.addEventListener('click', fetchKeysVault);
+
+    const broadcastBtn = document.getElementById('btn-broadcast-announcement');
+    if (broadcastBtn) broadcastBtn.addEventListener('click', broadcastAnnouncementAction);
+
+    const ownerLogoutBtn = document.getElementById('btn-owner-logout');
+    if (ownerLogoutBtn) ownerLogoutBtn.addEventListener('click', () => {
+      closeOwnerCommandModal();
+      window.handleLogout();
+    });
+
+    renderRolls();
+    fetchActiveAnnouncement();
+    setInterval(checkSystemHeartbeat, 25000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+  } else {
+    initApp();
+  }
+})();

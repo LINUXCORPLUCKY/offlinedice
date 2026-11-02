@@ -35,7 +35,7 @@ app.all('/api/system', (req, res) => systemHandler(req, res));
 app.all('/api/webhook', (req, res) => webhookHandler(req, res));
 app.all('/api/webhook/log', (req, res) => webhookHandler(req, res));
 
-// Maintenance Mode Checker (Guarantees zero breach during maintenance)
+// Maintenance Mode Checker
 function isMaintenanceActive() {
   try {
     const sysPath = path.join(__dirname, 'api', '_data', 'system_state.json');
@@ -46,30 +46,33 @@ function isMaintenanceActive() {
       }
     }
   } catch(e) {}
-  return false; // Default to normal operations unless explicitly enabled
+  return false;
 }
 
-// Page Routes (Owner & Admin portals remain accessible for system management)
+// Page Routes
+app.get('/login', (req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'login.html'));
+});
+
+app.get('/room', (req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
+app.get('/room/*', (req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
+
+app.get('/app', (req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'app.html'));
+});
+
 app.get('/owner', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
 app.get('/maintenance', (req, res) => res.sendFile(path.join(__dirname, 'maintenance.html')));
 
-app.get('/app', (req, res) => {
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-app.get('/room', (req, res) => {
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-app.get('/room/*', (req, res) => {
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
-app.get('/login', (req, res) => {
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
 app.get('/', (req, res) => {
   if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
   res.sendFile(path.join(__dirname, 'index.html'));
