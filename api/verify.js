@@ -5,10 +5,10 @@
 
 const { authenticateLicenseKey, SESSION_COOKIE_NAME } = require('../lib/auth');
 
-function sendJson(res, statusCode, data) {
+function sendJson(res, statusCode, data, req) {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json');
-  const origin = reqOrigin(res.req);
+  const origin = reqOrigin(req || res.req);
   if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
   res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -60,7 +60,7 @@ module.exports = async (req, res) => {
     const body = (await getBody()) || {};
     const key = body.key;
     const hwid = body.hwid;
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const clientIp = (req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || (req.socket && req.socket.remoteAddress) || (req.connection && req.connection.remoteAddress) || '127.0.0.1';
 
     const result = await authenticateLicenseKey({ key, hwid, ip: clientIp });
 

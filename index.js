@@ -19,9 +19,14 @@ app.use((req, res, next) => {
   next();
 });
 
-// Serve assets folder statically
+// Explicit Static Asset Handlers (Guaranteed Content-Type)
+app.get('/style.css', (req, res) => res.type('text/css').sendFile(path.join(__dirname, 'style.css')));
+app.get('/assets/style.css', (req, res) => res.type('text/css').sendFile(path.join(__dirname, 'assets', 'style.css')));
+app.get('/assets/app.js', (req, res) => res.type('application/javascript').sendFile(path.join(__dirname, 'assets', 'app.js')));
+app.get('/assets/login.js', (req, res) => res.type('application/javascript').sendFile(path.join(__dirname, 'assets', 'login.js')));
+app.get('/assets/logo.png', (req, res) => res.type('image/png').sendFile(path.join(__dirname, 'assets', 'logo.png')));
+app.get('/assets/headless_dice_logo.png', (req, res) => res.type('image/png').sendFile(path.join(__dirname, 'assets', 'headless_dice_logo.png')));
 app.use('/assets', express.static(path.join(__dirname, 'assets')));
-app.get('/style.css', (req, res) => res.sendFile(path.join(__dirname, 'style.css')));
 
 // API Handlers
 const verifyHandler = require('./api/verify');
@@ -35,49 +40,27 @@ app.all('/api/system', (req, res) => systemHandler(req, res));
 app.all('/api/webhook', (req, res) => webhookHandler(req, res));
 app.all('/api/webhook/log', (req, res) => webhookHandler(req, res));
 
-// Maintenance Mode Checker
-function isMaintenanceActive() {
-  try {
-    const sysPath = path.join(__dirname, 'api', '_data', 'system_state.json');
-    if (fs.existsSync(sysPath)) {
-      const state = JSON.parse(fs.readFileSync(sysPath, 'utf8'));
-      if (state && state.maintenance && typeof state.maintenance.enabled === 'boolean') {
-        return state.maintenance.enabled;
-      }
-    }
-  } catch(e) {}
-  return false;
-}
+// Page Routes
+app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
+app.get('/room', (req, res) => res.sendFile(path.join(__dirname, 'app.html')));
+app.get('/room/*', (req, res) => res.sendFile(path.join(__dirname, 'app.html')));
+app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'app.html')));
+app.get('/owner', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
+app.get('/maintenance', (req, res) => res.sendFile(path.join(__dirname, 'maintenance.html')));
+app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'login.html')));
 
-// Universal Path Handler (Works regardless of Vercel rewrite headers)
-app.use((req, res, next) => {
+// Catch-All Route Router
+app.use((req, res) => {
   const reqUrl = (req.originalUrl || req.url || '').split('?')[0];
-
-  if (reqUrl === '/login') {
-    if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-    return res.sendFile(path.join(__dirname, 'login.html'));
+  if (reqUrl.startsWith('/assets/') || reqUrl === '/style.css') {
+    return res.status(404).end();
   }
-
-  if (reqUrl.startsWith('/room') || reqUrl === '/app') {
-    if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-    return res.sendFile(path.join(__dirname, 'app.html'));
-  }
-
-  if (reqUrl === '/owner' || reqUrl === '/admin') {
-    return res.sendFile(path.join(__dirname, 'owner-panel.html'));
-  }
-
-  if (reqUrl === '/maintenance') {
-    return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  }
-
-  if (reqUrl.startsWith('/api/')) {
-    return next();
-  }
-
-  // Root or other pages
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  return res.sendFile(path.join(__dirname, 'index.html'));
+  if (reqUrl === '/login') return res.sendFile(path.join(__dirname, 'login.html'));
+  if (reqUrl.startsWith('/room') || reqUrl === '/app') return res.sendFile(path.join(__dirname, 'app.html'));
+  if (reqUrl === '/owner' || reqUrl === '/admin') return res.sendFile(path.join(__dirname, 'owner-panel.html'));
+  if (reqUrl === '/maintenance') return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  return res.sendFile(path.join(__dirname, 'login.html'));
 });
 
 module.exports = app;

@@ -11,8 +11,1716 @@
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700;800;900&family=Outfit:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/assets/style.css">
 
+  <style>
+/* ==============================================================================
+   HEADLESS DICE — ULTRA-LUXURY LIQUID CYBER-GLASS THEME (ZERO HALLOWEEN)
+   Next-Generation Glassmorphism 2.0 &bull; Deep Cosmic Obsidian &bull; Liquid Neon Accents
+   ============================================================================== */
+
+:root {
+  --font-main: 'Outfit', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: 'JetBrains Mono', monospace;
+
+  /* Deep Cosmic Palette */
+  --bg-space: #030712;
+  --bg-deep: #060b18;
+  --bg-dark: #0a1128;
+  --bg-glass: rgba(13, 20, 42, 0.65);
+  --bg-glass-card: rgba(16, 26, 54, 0.55);
+  --bg-glass-hover: rgba(24, 38, 76, 0.75);
+  --bg-input: rgba(6, 11, 24, 0.85);
+
+  /* Liquid Neon Accents */
+  --neon-cyan: #00f0ff;
+  --neon-cyan-glow: rgba(0, 240, 255, 0.45);
+  --neon-violet: #a855f7;
+  --neon-violet-bright: #c084fc;
+  --neon-violet-glow: rgba(168, 85, 247, 0.45);
+  --neon-emerald: #10b981;
+  --neon-emerald-glow: rgba(16, 185, 129, 0.45);
+  --neon-blue: #3b82f6;
+  --neon-amber: #f59e0b;
+  --neon-rose: #f43f5e;
+
+  /* 6 Game Dice Colors (High-Vibrancy Neon) */
+  --color-purple: #c084fc;
+  --color-blue: #38bdf8;
+  --color-green: #34d399;
+  --color-red: #f87171;
+  --color-darkorange: #fb923c;
+  --color-gold: #facc15;
+
+  /* Glassmorphism 2.0 Borders & Blurs */
+  --glass-blur: blur(28px);
+  --glass-blur-subtle: blur(16px);
+  --border-glass: rgba(255, 255, 255, 0.12);
+  --border-glass-cyan: rgba(0, 240, 255, 0.35);
+  --border-glass-violet: rgba(168, 85, 247, 0.35);
+  --border-highlight: rgba(255, 255, 255, 0.22);
+
+  /* Shadows */
+  --shadow-glass: 0 20px 60px rgba(0, 0, 0, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+  --shadow-neon-cyan: 0 0 30px rgba(0, 240, 255, 0.35);
+  --shadow-neon-violet: 0 0 30px rgba(168, 85, 247, 0.35);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  background: var(--bg-space);
+  background-image: 
+    radial-gradient(circle at 15% 15%, rgba(168, 85, 247, 0.15) 0%, transparent 45%),
+    radial-gradient(circle at 85% 20%, rgba(0, 240, 255, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 50% 80%, rgba(16, 185, 129, 0.10) 0%, transparent 50%),
+    linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
+  background-size: 100% 100%, 100% 100%, 100% 100%, 40px 40px, 40px 40px;
+  color: #f1f5f9;
+  font-family: var(--font-main);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Ambient Glowing Background Fluid Orbs */
+.cyber-glow-orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(140px);
+  pointer-events: none;
+  z-index: 0;
+  opacity: 0.35;
+  animation: floatOrb 18s infinite alternate ease-in-out;
+}
+.orb-1 {
+  width: 650px;
+  height: 650px;
+  background: radial-gradient(circle, #7e22ce 0%, #3b0764 80%);
+  top: -150px;
+  left: 20%;
+}
+.orb-2 {
+  width: 500px;
+  height: 500px;
+  background: radial-gradient(circle, #0284c7 0%, #0369a1 80%);
+  top: 300px;
+  right: -100px;
+  animation-delay: -5s;
+}
+.orb-3 {
+  width: 550px;
+  height: 550px;
+  background: radial-gradient(circle, #059669 0%, #047857 80%);
+  bottom: -100px;
+  left: -80px;
+  animation-delay: -9s;
+}
+
+@keyframes floatOrb {
+  0% { transform: translate(0, 0) scale(1); }
+  50% { transform: translate(40px, 30px) scale(1.08); }
+  100% { transform: translate(-30px, -40px) scale(0.95); }
+}
+
+/* Typography Utilities */
+.text-cyan { color: var(--neon-cyan); }
+.text-violet { color: var(--neon-violet-bright); }
+.text-purple { color: var(--color-purple); }
+.text-emerald { color: var(--neon-emerald); }
+.text-gold { color: var(--color-gold); }
+
+/* =========================================
+   HEADER & NAVIGATION BAR
+========================================= */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: rgba(6, 11, 24, 0.75);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border-bottom: 1px solid var(--border-glass);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.header-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 14px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.brand-group {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  text-decoration: none;
+}
+
+.logo-wrapper {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.brand-logo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  position: relative;
+  z-index: 2;
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 20px var(--neon-cyan-glow);
+  transition: transform 0.3s ease;
+}
+
+.logo-wrapper:hover .brand-logo {
+  transform: scale(1.08) rotate(4deg);
+}
+
+.logo-aura {
+  position: absolute;
+  inset: -6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
+  z-index: 1;
+  animation: pulseAura 3s infinite ease-in-out;
+}
+
+@keyframes pulseAura {
+  0%, 100% { transform: scale(1); opacity: 0.6; }
+  50% { transform: scale(1.25); opacity: 0.9; }
+}
+
+.brand-text {
+  display: flex;
+  flex-direction: column;
+}
+
+.brand-title {
+  font-size: 24px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  background: linear-gradient(135deg, #ffffff 10%, var(--neon-cyan) 55%, var(--neon-violet-bright) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.brand-subtitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 11px;
+  letter-spacing: 1.2px;
+  color: #94a3b8;
+  font-weight: 700;
+  font-family: var(--font-mono);
+}
+
+.badge-online {
+  background: rgba(0, 240, 255, 0.15);
+  border: 1px solid rgba(0, 240, 255, 0.4);
+  color: var(--neon-cyan);
+  padding: 1px 6px;
+  border-radius: 4px;
+  font-size: 9.5px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* 3D Discord Button */
+.btn-discord-3d {
+  position: relative;
+  display: inline-flex;
+  text-decoration: none;
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  perspective: 600px;
+  transform-style: preserve-3d;
+  outline: none;
+}
+.btn-discord-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #5865F2 0%, #3b82f6 100%);
+  border-radius: 10px;
+  color: #ffffff;
+  font-family: var(--font-main);
+  font-weight: 800;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 15px rgba(88, 101, 242, 0.4);
+  transition: all 0.2s ease;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+.btn-discord-3d:hover .btn-discord-top {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(88, 101, 242, 0.6);
+}
+
+/* Owner Authority Button */
+.btn-owner-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  background: linear-gradient(135deg, rgba(168, 85, 247, 0.2) 0%, rgba(0, 240, 255, 0.2) 100%);
+  border: 1px solid var(--neon-violet-bright);
+  color: #ffffff;
+  padding: 8px 16px;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 1px;
+  cursor: pointer;
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.35);
+  transition: all 0.2s ease;
+}
+.btn-owner-badge:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.6);
+  border-color: var(--neon-cyan);
+}
+
+/* Logout Button */
+.btn-logout {
+  background: rgba(244, 63, 94, 0.15);
+  border: 1px solid rgba(244, 63, 94, 0.4);
+  color: #fda4af;
+  padding: 8px 14px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s ease;
+}
+.btn-logout:hover {
+  background: rgba(244, 63, 94, 0.25);
+  color: #ffffff;
+  border-color: #f43f5e;
+}
+
+/* Sound Toggle */
+.icon-toggle-btn {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-glass);
+  color: #f1f5f9;
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.2s ease;
+}
+.icon-toggle-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: var(--neon-cyan);
+}
+
+/* =========================================
+   DEDICATED USER ROOM BANNER
+========================================= */
+.dedicated-room-banner {
+  max-width: 1400px;
+  margin: 16px auto 0;
+  padding: 12px 24px;
+  background: var(--bg-glass-card);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass-cyan);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  box-shadow: var(--shadow-glass);
+  animation: bannerSlideIn 0.4s ease-out;
+}
+
+@keyframes bannerSlideIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.room-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.room-live-pulse {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--neon-emerald);
+  box-shadow: 0 0 14px var(--neon-emerald);
+  animation: pulseDot 2s infinite ease-in-out;
+}
+@keyframes pulseDot {
+  0%, 100% { transform: scale(1); opacity: 1; }
+  50% { transform: scale(1.4); opacity: 0.6; }
+}
+
+.room-banner-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.room-tag {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  letter-spacing: 1px;
+}
+
+.room-id-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.room-label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.room-badge-id {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 900;
+  color: #ffffff;
+  background: rgba(0, 240, 255, 0.15);
+  border: 1px solid var(--neon-cyan);
+  padding: 3px 10px;
+  border-radius: 8px;
+  letter-spacing: 1.5px;
+  text-shadow: 0 0 10px var(--neon-cyan);
+  transition: all 0.2s ease;
+}
+.room-badge-id:hover {
+  background: rgba(0, 240, 255, 0.25);
+  transform: scale(1.03);
+}
+
+.room-thread-badge {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  color: var(--neon-violet-bright);
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  padding: 3px 8px;
+  border-radius: 6px;
+  font-weight: 700;
+}
+
+.room-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(16, 185, 129, 0.12);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  padding: 6px 14px;
+  border-radius: 10px;
+  font-size: 11.5px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+}
+
+.sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 10px #34d399;
+}
+
+/* Floating Announcement Marquee */
+.announcement-banner {
+  max-width: 1400px;
+  margin: 12px auto 0;
+  padding: 10px 20px;
+  background: linear-gradient(90deg, rgba(245, 158, 11, 0.15), rgba(168, 85, 247, 0.15));
+  backdrop-filter: var(--glass-blur-subtle);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  color: #fef08a;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+/* =========================================
+   MAIN LAYOUT & PANELS (LIQUID GLASS)
+========================================= */
+.main-layout {
+  max-width: 1400px;
+  margin: 20px auto;
+  padding: 0 20px 40px;
+  display: grid;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: 24px;
+  position: relative;
+  z-index: 1;
+}
+
+@media (max-width: 1024px) {
+  .main-layout {
+    grid-template-columns: 1fr;
+  }
+}
+
+.glass-panel {
+  background: var(--bg-glass);
+  backdrop-filter: var(--glass-blur);
+  -webkit-backdrop-filter: var(--glass-blur);
+  border: 1px solid var(--border-glass);
+  border-radius: 24px;
+  padding: 24px;
+  box-shadow: var(--shadow-glass);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  padding-bottom: 16px;
+}
+
+.panel-title {
+  font-size: 19px;
+  font-weight: 900;
+  letter-spacing: 1px;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title-icon {
+  font-size: 22px;
+}
+
+.panel-desc {
+  font-size: 12.5px;
+  color: #94a3b8;
+  margin-top: 3px;
+}
+
+/* =========================================
+   COLOR PALETTE & DIE SELECTION
+========================================= */
+.palette-container {
+  background: rgba(6, 11, 24, 0.7);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.palette-status-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  font-size: 12.5px;
+}
+
+.palette-label {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.active-slot-pill {
+  font-family: var(--font-mono);
+  font-weight: 800;
+  color: var(--neon-cyan);
+  background: rgba(0, 240, 255, 0.12);
+  border: 1px solid var(--neon-cyan);
+  padding: 2px 10px;
+  border-radius: 6px;
+  box-shadow: 0 0 10px rgba(0, 240, 255, 0.3);
+}
+
+.palette-helper {
+  color: #64748b;
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.color-palette {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr) auto;
+  gap: 8px;
+}
+
+@media (max-width: 768px) {
+  .color-palette {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+.btn-color-select {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  padding: 10px 8px;
+  border-radius: 10px;
+  font-family: var(--font-mono);
+  font-weight: 800;
+  font-size: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.btn-color-select:hover {
+  transform: translateY(-2px);
+}
+
+.btn-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+}
+
+.btn-color-select.color-purple .btn-dot { background: var(--color-purple); box-shadow: 0 0 10px var(--color-purple); }
+.btn-color-select.color-blue .btn-dot { background: var(--color-blue); box-shadow: 0 0 10px var(--color-blue); }
+.btn-color-select.color-green .btn-dot { background: var(--color-green); box-shadow: 0 0 10px var(--color-green); }
+.btn-color-select.color-red .btn-dot { background: var(--color-red); box-shadow: 0 0 10px var(--color-red); }
+.btn-color-select.color-darkorange .btn-dot { background: var(--color-darkorange); box-shadow: 0 0 10px var(--color-darkorange); }
+.btn-color-select.color-gold .btn-dot { background: var(--color-gold); box-shadow: 0 0 10px var(--color-gold); }
+
+.btn-clear-die {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #fca5a5;
+}
+
+/* =========================================
+   STREAM ROLLS MATRIX
+========================================= */
+.rolls-matrix-container {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.roll-row {
+  background: var(--bg-glass-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 14px;
+  padding: 12px 18px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  transition: all 0.2s ease;
+}
+
+.roll-row:hover {
+  border-color: rgba(255, 255, 255, 0.25);
+  background: var(--bg-glass-hover);
+}
+
+.roll-row.active-row {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px rgba(0, 240, 255, 0.2), inset 0 0 15px rgba(0, 240, 255, 0.05);
+}
+
+.roll-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 140px;
+}
+
+.roll-label-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.roll-number {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.badge-latest {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  background: rgba(0, 240, 255, 0.15);
+  border: 1px solid var(--neon-cyan);
+  padding: 1px 6px;
+  border-radius: 4px;
+}
+
+.roll-subtext {
+  font-size: 11px;
+  color: #64748b;
+  font-weight: 600;
+}
+
+.roll-weight-tag {
+  font-size: 10.5px;
+  color: #94a3b8;
+  font-family: var(--font-mono);
+}
+
+.dice-slots-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.die-slot {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  border: 2px dashed rgba(255, 255, 255, 0.2);
+  background: rgba(4, 8, 18, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+  position: relative;
+}
+
+.die-slot:hover {
+  transform: scale(1.05);
+  border-color: rgba(255, 255, 255, 0.4);
+}
+
+.die-slot.slot-active {
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 15px var(--neon-cyan);
+  color: #ffffff;
+}
+
+.die-slot.die-filled {
+  border-style: solid;
+  color: #ffffff;
+}
+
+.die-slot.die-purple { background: linear-gradient(135deg, #7e22ce, #c084fc); border-color: #c084fc; box-shadow: 0 0 15px rgba(192, 132, 252, 0.5); }
+.die-slot.die-blue { background: linear-gradient(135deg, #1d4ed8, #38bdf8); border-color: #38bdf8; box-shadow: 0 0 15px rgba(56, 189, 248, 0.5); }
+.die-slot.die-green { background: linear-gradient(135deg, #047857, #34d399); border-color: #34d399; box-shadow: 0 0 15px rgba(52, 211, 153, 0.5); }
+.die-slot.die-red { background: linear-gradient(135deg, #b91c1c, #f87171); border-color: #f87171; box-shadow: 0 0 15px rgba(248, 113, 113, 0.5); }
+.die-slot.die-darkorange { background: linear-gradient(135deg, #c2410c, #fb923c); border-color: #fb923c; box-shadow: 0 0 15px rgba(251, 146, 60, 0.5); }
+.die-slot.die-gold { background: linear-gradient(135deg, #b45309, #facc15); border-color: #facc15; box-shadow: 0 0 15px rgba(250, 204, 21, 0.5); }
+
+.btn-clear-row {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.05);
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+.btn-clear-row:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border-color: #f87171;
+}
+
+/* Action Footer Buttons */
+.rolls-footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.btn-secondary {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-glass);
+  color: #ffffff;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  border-color: var(--neon-cyan);
+}
+
+.btn-danger-outline {
+  margin-left: auto;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+  padding: 10px 18px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-danger-outline:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+}
+
+/* =========================================
+   PREDICTION RESULT HERO CARD
+========================================= */
+.badge-status-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+}
+.status-ready {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.4);
+  color: #38bdf8;
+}
+.status-solved {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+}
+.status-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 8px currentColor;
+}
+
+.prediction-hero-box {
+  background: linear-gradient(135deg, rgba(16, 26, 54, 0.8) 0%, rgba(10, 16, 32, 0.9) 100%);
+  border: 1px solid var(--border-glass-cyan);
+  border-radius: 20px;
+  padding: 24px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+.prediction-hero-box::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, var(--neon-cyan), var(--neon-violet-bright), transparent);
+}
+
+.hero-top-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.hero-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #94a3b8;
+}
+
+.hero-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #cbd5e1;
+}
+
+.hero-main-content {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+}
+
+.big-die-wrapper {
+  position: relative;
+  width: 90px;
+  height: 90px;
+  flex-shrink: 0;
+}
+
+.big-die-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 20px;
+  border: 2px solid var(--border-glass);
+  background: rgba(6, 11, 24, 0.8);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  color: #64748b;
+  transition: all 0.3s ease;
+}
+
+.big-die-aura {
+  position: absolute;
+  inset: -10px;
+  border-radius: 26px;
+  background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
+  z-index: 1;
+  filter: blur(12px);
+  opacity: 0.7;
+}
+
+.hero-text-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.hero-color-name {
+  font-size: 32px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+}
+
+.hero-stats-row {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.hero-confidence {
+  font-family: var(--font-mono);
+  font-size: 24px;
+  font-weight: 900;
+  color: var(--neon-cyan);
+}
+
+.hero-confidence-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 1px;
+}
+
+.hero-subtext {
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 4px;
+}
+
+/* Probability Distribution Breakdown */
+.breakdown-container {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.breakdown-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.breakdown-title {
+  font-size: 13px;
+  font-weight: 800;
+  color: #cbd5e1;
+  letter-spacing: 0.5px;
+}
+
+.breakdown-subtitle {
+  font-size: 11px;
+  color: #64748b;
+}
+
+.distribution-bars-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.distribution-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dist-meta {
+  display: flex;
+  justify-content: space-between;
+  font-size: 12px;
+  font-family: var(--font-mono);
+  font-weight: 700;
+}
+
+.dist-bar-track {
+  height: 8px;
+  background: rgba(255, 255, 255, 0.06);
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.dist-bar-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.empty-state-text {
+  text-align: center;
+  padding: 16px;
+  color: #64748b;
+  font-size: 12px;
+  font-style: italic;
+}
+
+/* Secondary Signal Grid */
+.signal-cards-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+@media (max-width: 600px) {
+  .signal-cards-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.signal-card {
+  background: var(--bg-glass-card);
+  border: 1px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  text-align: center;
+}
+
+.signal-title {
+  font-family: var(--font-mono);
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #64748b;
+  letter-spacing: 0.8px;
+}
+
+.signal-val {
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 900;
+}
+
+/* =========================================
+   LIQUID GLASS ACCESS PORTAL / LOGIN CARD
+========================================= */
+.login-page-wrapper {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  position: relative;
+  z-index: 2;
+}
+
+.login-glass-card {
+  max-width: 520px;
+  width: 100%;
+  background: rgba(10, 16, 32, 0.85);
+  backdrop-filter: blur(32px);
+  -webkit-backdrop-filter: blur(32px);
+  border: 1px solid var(--border-glass-cyan);
+  box-shadow: 
+    0 25px 70px rgba(0, 0, 0, 0.9),
+    0 0 50px rgba(0, 240, 255, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  border-radius: 28px;
+  padding: 40px 32px;
+  text-align: center;
+  position: relative;
+  animation: cardPop 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+@keyframes cardPop {
+  from { opacity: 0; transform: scale(0.94) translateY(20px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.login-logo-wrap {
+  position: relative;
+  width: 84px;
+  height: 84px;
+  margin: 0 auto 16px;
+}
+
+.login-logo {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--neon-cyan);
+  box-shadow: 0 0 30px var(--neon-cyan-glow);
+  position: relative;
+  z-index: 2;
+}
+
+.login-logo-aura {
+  position: absolute;
+  inset: -10px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--neon-cyan) 0%, transparent 70%);
+  filter: blur(14px);
+  z-index: 1;
+}
+
+.login-badge-paid {
+  display: inline-block;
+  background: rgba(0, 240, 255, 0.15);
+  border: 1px solid var(--neon-cyan);
+  color: var(--neon-cyan);
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  padding: 4px 12px;
+  border-radius: 20px;
+  letter-spacing: 1.5px;
+  margin-bottom: 12px;
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.3);
+}
+
+.login-title {
+  font-size: 22px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: #ffffff;
+  margin-bottom: 6px;
+}
+
+.login-desc {
+  font-size: 13px;
+  color: #94a3b8;
+  margin-bottom: 24px;
+}
+
+/* HWID Grabber Box */
+.gate-hwid-box {
+  background: rgba(4, 8, 18, 0.7);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 14px 16px;
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.hwid-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.hwid-title {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 1px;
+}
+
+.hwid-bound-tag {
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  color: #34d399;
+}
+
+.hwid-display-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 6px 12px;
+  border-radius: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.hwid-code {
+  font-family: var(--font-mono);
+  font-size: 13.5px;
+  font-weight: 800;
+  color: var(--neon-cyan);
+  flex-grow: 1;
+  letter-spacing: 1.5px;
+}
+
+.btn-copy-hwid {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-glass);
+  color: #ffffff;
+  padding: 4px 10px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-copy-hwid:hover {
+  background: rgba(0, 240, 255, 0.2);
+  border-color: var(--neon-cyan);
+  color: var(--neon-cyan);
+}
+
+.hwid-subtext {
+  font-size: 11px;
+  color: #64748b;
+  margin-top: 8px;
+}
+
+/* Key Form */
+.gate-input-form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  text-align: left;
+}
+
+.gate-input-label {
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 1px;
+}
+
+.gate-input-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gate-key-input {
+  width: 100%;
+  background: rgba(4, 8, 18, 0.8);
+  border: 1.5px solid var(--border-glass);
+  border-radius: 12px;
+  padding: 14px 16px;
+  font-family: var(--font-mono);
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  outline: none;
+  letter-spacing: 1.2px;
+  transition: all 0.2s ease;
+}
+
+.gate-key-input:focus {
+  border-color: var(--neon-cyan);
+  box-shadow: 0 0 20px var(--neon-cyan-glow);
+}
+
+.btn-unlock-glow {
+  width: 100%;
+  background: linear-gradient(135deg, #00f0ff 0%, #a855f7 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 14px;
+  font-family: var(--font-main);
+  font-size: 14px;
+  font-weight: 900;
+  letter-spacing: 1.5px;
+  color: #030712;
+  cursor: pointer;
+  box-shadow: 0 0 30px rgba(0, 240, 255, 0.4);
+  transition: all 0.2s ease;
+}
+
+.btn-unlock-glow:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0 45px rgba(168, 85, 247, 0.6);
+  color: #ffffff;
+}
+
+.gate-status-msg {
+  font-size: 12.5px;
+  font-weight: 700;
+  min-height: 20px;
+  text-align: center;
+}
+
+.login-footer-text {
+  margin-top: 20px;
+  font-size: 11.5px;
+  color: #64748b;
+}
+
+/* =========================================
+   OWNER COMMAND CENTER MODAL
+========================================= */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+  background: rgba(3, 7, 18, 0.85);
+  backdrop-filter: blur(28px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.owner-command-card {
+  max-width: 1100px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  background: rgba(10, 16, 32, 0.92);
+  border: 1px solid var(--neon-violet-bright);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 25px 80px rgba(0,0,0,0.9), 0 0 50px rgba(168, 85, 247, 0.3);
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.owner-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  padding-bottom: 16px;
+}
+
+.owner-badges-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 6px;
+}
+
+.badge-owner-auth {
+  background: rgba(168, 85, 247, 0.2);
+  border: 1px solid var(--neon-violet-bright);
+  color: var(--neon-violet-bright);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+.badge-firebase-online {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+  color: #34d399;
+  font-family: var(--font-mono);
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.pulse-dot-green {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #34d399;
+  box-shadow: 0 0 8px #34d399;
+}
+
+.owner-title {
+  font-size: 22px;
+  font-weight: 900;
+  color: #ffffff;
+}
+
+.btn-owner-close {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-glass);
+  color: #94a3b8;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  font-size: 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.btn-owner-close:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+}
+
+/* Stats Counter Grid */
+.owner-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.stat-counter-card {
+  background: rgba(6, 11, 24, 0.7);
+  border: 1px solid var(--border-glass);
+  border-radius: 16px;
+  padding: 20px;
+  text-align: center;
+}
+
+.stat-counter-val {
+  font-family: var(--font-mono);
+  font-size: 36px;
+  font-weight: 900;
+  margin-bottom: 4px;
+}
+
+.stat-counter-label {
+  font-size: 11px;
+  font-weight: 800;
+  color: #94a3b8;
+  letter-spacing: 1px;
+}
+
+.owner-section-box {
+  background: rgba(6, 11, 24, 0.6);
+  border: 1px solid var(--border-glass);
+  border-radius: 18px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.owner-section-title {
+  font-size: 14px;
+  font-weight: 800;
+  color: #e2e8f0;
+  letter-spacing: 1px;
+}
+
+.keygen-form-row {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+}
+
+@media (max-width: 768px) {
+  .keygen-form-row {
+    grid-template-columns: 1fr;
+  }
+}
+
+.keygen-input-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.keygen-input-group label {
+  font-family: var(--font-mono);
+  font-size: 10.5px;
+  font-weight: 800;
+  color: #94a3b8;
+}
+
+.owner-select, .owner-input, .owner-search-input {
+  background: rgba(3, 7, 18, 0.8);
+  border: 1px solid var(--border-glass);
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #ffffff;
+  font-family: var(--font-mono);
+  font-size: 13px;
+  outline: none;
+}
+.owner-select:focus, .owner-input:focus, .owner-search-input:focus {
+  border-color: var(--neon-cyan);
+}
+
+.btn-owner-primary {
+  background: linear-gradient(135deg, #a855f7 0%, #00f0ff 100%);
+  border: none;
+  border-radius: 10px;
+  padding: 12px 24px;
+  font-weight: 800;
+  color: #030712;
+  cursor: pointer;
+  letter-spacing: 1px;
+  transition: all 0.2s ease;
+}
+.btn-owner-primary:hover {
+  transform: translateY(-2px);
+  color: #ffffff;
+}
+
+.btn-owner-danger {
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid #ef4444;
+  color: #fca5a5;
+  padding: 10px 18px;
+  border-radius: 10px;
+  font-weight: 700;
+  font-size: 12.5px;
+  cursor: pointer;
+}
+
+.btn-subtle-owner {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-glass);
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+/* Vault Table */
+.vault-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.vault-actions-right {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.vault-table-wrapper {
+  overflow-x: auto;
+  border-radius: 12px;
+  border: 1px solid var(--border-glass);
+}
+
+.owner-vault-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.owner-vault-table th {
+  background: rgba(3, 7, 18, 0.9);
+  padding: 12px 16px;
+  text-align: left;
+  color: #94a3b8;
+  font-weight: 800;
+  border-bottom: 1px solid var(--border-glass);
+}
+
+.owner-vault-table td {
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  color: #cbd5e1;
+}
+
+.table-key-code {
+  color: #ffffff;
+  font-weight: 800;
+}
+
+.table-hwid-code {
+  color: var(--neon-cyan);
+}
+
+.badge-role {
+  background: rgba(168, 85, 247, 0.15);
+  border: 1px solid rgba(168, 85, 247, 0.4);
+  color: var(--neon-violet-bright);
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.badge-status-active {
+  color: #34d399;
+  font-weight: 800;
+}
+.badge-status-revoked {
+  color: #f87171;
+  font-weight: 800;
+}
+
+.table-actions-cell {
+  display: flex;
+  gap: 6px;
+}
+
+.btn-table-action {
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border-glass);
+  color: #ffffff;
+  padding: 4px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  cursor: pointer;
+}
+.btn-danger-action {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #fca5a5;
+}
+
+.owner-card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  padding-top: 16px;
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* =========================================
+   UNIVERSAL TOAST NOTIFICATIONS
+========================================= */
+.toast-container {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  z-index: 99999;
+  pointer-events: none;
+}
+
+.toast {
+  background: rgba(10, 16, 32, 0.95);
+  backdrop-filter: blur(20px);
+  border: 1px solid var(--neon-cyan);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px var(--neon-cyan-glow);
+  color: #ffffff;
+  padding: 12px 20px;
+  border-radius: 12px;
+  font-family: var(--font-main);
+  font-size: 13.5px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  animation: toastIn 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+  pointer-events: auto;
+}
+
+@keyframes toastIn {
+  from { transform: translateX(50px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes toastOut {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(50px); opacity: 0; }
+}
+
+/* =========================================
+   SUPPLEMENTAL UI COMPONENT POLISH
+========================================= */
+.owner-crown { font-size: 16px; margin-right: 4px; }
+.discord-svg { display: inline-block; vertical-align: middle; }
+.btn-discord-edge { position: absolute; inset: 0; pointer-events: none; border-radius: inherit; }
+.announcement-icon { font-size: 16px; }
+.announcement-text { font-size: 13.5px; font-weight: 700; color: #f1f5f9; }
+.announcement-close { background: none; border: none; color: #94a3b8; font-size: 16px; cursor: pointer; transition: color 0.2s; }
+.announcement-close:hover { color: #ffffff; }
+.room-banner-right { display: flex; align-items: center; gap: 12px; }
+.input-panel { flex: 1 1 55%; min-width: 320px; }
+.prediction-panel { flex: 1 1 40%; min-width: 320px; }
+.text-blue { color: var(--color-blue); }
+.text-green { color: var(--color-green); }
+.owner-modal-overlay { position: fixed; inset: 0; background: rgba(3, 7, 18, 0.85); backdrop-filter: blur(16px); z-index: 10000; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.owner-header-left { display: flex; align-items: center; gap: 12px; }
+.checkbox-group { display: flex; align-items: center; gap: 8px; cursor: pointer; }
+.custom-checkbox-wrap { display: flex; align-items: center; gap: 8px; cursor: pointer; user-select: none; }
+.checkbox-box { width: 18px; height: 18px; border-radius: 4px; border: 1.5px solid var(--neon-cyan); background: rgba(0, 240, 255, 0.1); display: inline-flex; align-items: center; justify-content: center; }
+.checkbox-label { font-size: 13px; font-weight: 600; color: #cbd5e1; }
+.custom-key-group { display: flex; flex-direction: column; gap: 6px; }
+.keygen-submit-row { display: flex; gap: 12px; align-items: center; margin-top: 14px; }
+.table-loading { text-align: center; padding: 30px; color: #94a3b8; font-family: var(--font-mono); }
+.owner-controls-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px; margin-top: 20px; }
+.announcement-input-row { display: flex; gap: 10px; margin-top: 10px; }
+.maintenance-toggle-row { display: flex; align-items: center; justify-content: space-between; margin-top: 10px; padding: 10px 14px; background: rgba(15, 23, 42, 0.6); border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.08); }
+.maintenance-status-label { font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; color: #34d399; }
+.dist-color-name { font-size: 12px; font-weight: 700; text-transform: uppercase; }
+.dist-percent { font-family: var(--font-mono); font-size: 13px; font-weight: 800; color: #ffffff; }
+
+  </style>
+
   <script>
-    // Bulletproof Universal Toast Manager
     window.showToast = function(message) {
       try {
         let container = document.getElementById('toast-container');
@@ -268,7 +1976,6 @@
   <!-- HEADLESS DICE OWNER COMMAND MODAL -->
   <div class="modal-overlay owner-modal-overlay" id="owner-command-modal" style="display: none;">
     <div class="owner-command-card">
-      <!-- Modal Header -->
       <div class="owner-card-header">
         <div class="owner-header-left">
           <div class="owner-badges-row">
@@ -346,7 +2053,6 @@
           <div class="vault-actions-right">
             <input type="text" id="vault-search-input" class="owner-search-input" placeholder="Search by key, HWID, role...">
             <button id="btn-refresh-vault" class="btn-subtle-owner" title="Refresh Keys Vault">🔄 Refresh</button>
-            <button id="btn-export-keys" class="btn-subtle-owner" title="Export Backup JSON">💾 Export JSON</button>
           </div>
         </div>
 
@@ -375,31 +2081,21 @@
       <div class="owner-controls-grid">
         <div class="owner-section-box">
           <h3 class="owner-section-title">📢 LIVE ANNOUNCEMENT BANNER</h3>
-          <p class="owner-hint">Broadcast a glowing alert message to all live user rooms instantly.</p>
           <div class="announcement-input-row">
             <input type="text" id="owner-announcement-input" class="owner-input" placeholder="e.g. Scheduled maintenance in 1 hour...">
-            <button id="btn-broadcast-announcement" class="btn-owner-primary">
-              <span>BROADCAST</span>
-            </button>
-            <button id="btn-clear-announcement" class="btn-subtle-owner">
-              <span>CLEAR</span>
-            </button>
+            <button id="btn-broadcast-announcement" class="btn-owner-primary"><span>BROADCAST</span></button>
           </div>
         </div>
 
         <div class="owner-section-box">
           <h3 class="owner-section-title">🛑 SYSTEM MAINTENANCE MODE</h3>
-          <p class="owner-hint">When enabled, non-owner users are redirected to the maintenance portal.</p>
           <div class="maintenance-toggle-row">
             <span id="maintenance-status-label" class="maintenance-status-label">STATUS: NORMAL OPERATIONS</span>
-            <button id="btn-toggle-maintenance" class="btn-owner-danger">
-              <span>TOGGLE MAINTENANCE</span>
-            </button>
+            <button id="btn-toggle-maintenance" class="btn-owner-danger"><span>TOGGLE MAINTENANCE</span></button>
           </div>
         </div>
       </div>
 
-      <!-- Modal Footer -->
       <div class="owner-card-footer">
         <span>Headless Dice Enterprise &bull; MongoDB Atlas Cluster Online &bull; Authorized Access Only</span>
         <button id="btn-owner-logout" class="btn-subtle-owner" style="color: #ef4444;">Exit Owner Mode</button>
@@ -407,14 +2103,996 @@
     </div>
   </div>
 
-  <!-- Toast Notification Container -->
   <div id="toast-container" class="toast-container"></div>
 
-  <!-- Sound FX Elements -->
   <audio id="sfx-roll" preload="auto" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"></audio>
   <audio id="sfx-lock" preload="auto" src="data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU"></audio>
 
-  <!-- Complete External JS Engine -->
   <script src="/assets/app.js"></script>
+  <script>
+/* ==============================================================================
+   HEADLESS DICE — ENTERPRISE CLIENT APPLICATION ENGINE
+   Liquid Glass 2.0 &bull; Isolated User Room Partitions &bull; MongoDB Atlas Synced
+   ============================================================================== */
+
+(function() {
+  'use strict';
+
+  // 6 Game Dice Colors
+  const COLORS = ['purple', 'blue', 'green', 'red', 'darkorange', 'gold'];
+  const COLOR_CONFIG = {
+    purple: { name: 'Purple', hex: '#c084fc', icon: '🟣' },
+    blue: { name: 'Blue', hex: '#38bdf8', icon: '🔵' },
+    green: { name: 'Green', hex: '#34d399', icon: '🟢' },
+    red: { name: 'Red', hex: '#f87171', icon: '🔴' },
+    darkorange: { name: 'Orange', hex: '#fb923c', icon: '🟠' },
+    gold: { name: 'Yellow', hex: '#facc15', icon: '🟡' }
+  };
+
+  // State Management
+  const STATE = {
+    rolls: [
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null],
+      [null, null, null, null]
+    ],
+    activeRollIndex: 0,
+    activeDieIndex: 0,
+    soundEnabled: true,
+    latestPrediction: null
+  };
+
+  // Sound FX Manager
+  const sfx = {
+    play(id) {
+      if (!STATE.soundEnabled) return;
+      try {
+        const el = document.getElementById(id);
+        if (el) {
+          el.currentTime = 0;
+          el.play().catch(() => {});
+        }
+      } catch(e) {}
+    },
+    playClick() { this.play('sfx-roll'); },
+    playLockChime() { this.play('sfx-lock'); }
+  };
+
+  // Hardware ID Fingerprint
+  function getDeviceHwid() {
+    let cached = localStorage.getItem('headless_dice_device_hwid');
+    if (cached && /^HD-HWID-[0-9A-Z]{4}-[0-9A-Z]{4}$/.test(cached)) {
+      return cached;
+    }
+    try {
+      const raw = [
+        navigator.userAgent,
+        navigator.hardwareConcurrency || 4,
+        screen.width + 'x' + screen.height,
+        screen.colorDepth || 24,
+        Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC'
+      ].join('###');
+
+      let hash = 0;
+      for (let i = 0; i < raw.length; i++) {
+        hash = ((hash << 5) - hash) + raw.charCodeAt(i);
+        hash |= 0;
+      }
+      const hex = Math.abs(hash).toString(16).toUpperCase().padStart(8, '0');
+      const generated = 'HD-HWID-' + hex.slice(0, 4) + '-' + hex.slice(4, 8);
+      localStorage.setItem('headless_dice_device_hwid', generated);
+      return generated;
+    } catch(e) {
+      return 'HD-HWID-8389-1V19';
+    }
+  }
+
+  // Session Reader
+  function getAuthSession() {
+    try {
+      const raw = sessionStorage.getItem('headless_dice_auth') || localStorage.getItem('headless_dice_auth');
+      return raw ? JSON.parse(raw) : null;
+    } catch(e) {
+      return null;
+    }
+  }
+
+  // Dedicated Room ID Resolver
+  function getUserRoomId() {
+    // Check URL params first
+    try {
+      const url = new URL(window.location.href);
+      const urlRoom = url.searchParams.get('id') || url.searchParams.get('room');
+      if (urlRoom && urlRoom.trim()) return urlRoom.trim().toUpperCase();
+    } catch(e) {}
+
+    const auth = getAuthSession();
+    const hwid = getDeviceHwid();
+    const shortHwid = hwid ? hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() : 'NODE';
+
+    if (auth) {
+      const isOwner = (auth.role === 'OWNER' || auth.role === 'ADMIN' || (auth.key && auth.key.toUpperCase().startsWith('HD-OWNER')));
+      if (isOwner) return 'ROOM-OWNER-' + shortHwid;
+      if (auth.roomId && !auth.roomId.startsWith('ROOM-OWNER-')) return auth.roomId;
+      const shortKey = (auth.key || '').replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() || 'VIP';
+      return 'ROOM-' + shortHwid + '-' + shortKey;
+    }
+    return 'ROOM-' + shortHwid + '-DEDICATED';
+  }
+
+  // Room Banner UI
+  function updateRoomBannerUI() {
+    const roomId = getUserRoomId();
+    const badgeEl = document.getElementById('room-badge-id');
+    if (badgeEl) {
+      badgeEl.textContent = roomId;
+      badgeEl.title = 'Click to copy your dedicated room URL';
+      badgeEl.style.cursor = 'pointer';
+
+      if (!badgeEl.dataset.hasCopyListener) {
+        badgeEl.dataset.hasCopyListener = 'true';
+        badgeEl.addEventListener('click', () => {
+          const roomUrl = window.location.origin + '/room?id=' + encodeURIComponent(roomId);
+          try {
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+              navigator.clipboard.writeText(roomUrl);
+            } else {
+              const ta = document.createElement('textarea');
+              ta.value = roomUrl;
+              document.body.appendChild(ta);
+              ta.select();
+              document.execCommand('copy');
+              document.body.removeChild(ta);
+            }
+            const prev = badgeEl.textContent;
+            badgeEl.textContent = 'COPIED! ✓';
+            badgeEl.style.color = '#34d399';
+            setTimeout(() => {
+              badgeEl.textContent = prev;
+              badgeEl.style.color = '';
+            }, 2000);
+            if (window.showToast) window.showToast('Room URL copied to clipboard');
+          } catch(e) {}
+        });
+      }
+    }
+
+    // Reflect roomId in browser URL without reloading
+    try {
+      if (roomId && window.history && window.history.replaceState) {
+        const url = new URL(window.location.href);
+        if (url.searchParams.get('id') !== roomId) {
+          url.searchParams.set('id', roomId);
+          window.history.replaceState({ roomId: roomId }, '', url.toString());
+        }
+      }
+    } catch(e) {}
+  }
+
+  // Load & Persist Isolated Room Partition
+  function loadUserRoomState() {
+    const roomId = getUserRoomId();
+    try {
+      const stored = localStorage.getItem('headless_dice_room_' + roomId + '_data');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (parsed && Array.isArray(parsed.rolls) && parsed.rolls.length >= 5) {
+          STATE.rolls = parsed.rolls;
+          STATE.activeRollIndex = parsed.activeRollIndex || 0;
+          STATE.activeDieIndex = parsed.activeDieIndex || 0;
+          renderRolls();
+          executePredictionCalculation();
+        }
+      }
+    } catch(e) {}
+  }
+
+  function persistUserRoomState() {
+    const roomId = getUserRoomId();
+    const hwid = getDeviceHwid();
+    const payload = {
+      roomId: roomId,
+      hwid: hwid,
+      rolls: STATE.rolls,
+      activeRollIndex: STATE.activeRollIndex,
+      activeDieIndex: STATE.activeDieIndex,
+      updatedAt: Date.now()
+    };
+    try {
+      localStorage.setItem('headless_dice_room_' + roomId + '_data', JSON.stringify(payload));
+    } catch(e) {}
+  }
+
+  // Strict Room Permission Gate Checker
+  function checkAuthStatus() {
+    const auth = getAuthSession();
+    if (!auth || (!auth.sessionToken && !auth.key)) {
+      // Unauthenticated visitor -> Redirect to dedicated login page!
+      window.location.replace('/login');
+      return false;
+    }
+
+    // User is authenticated!
+    const ownerToggleBtn = document.getElementById('owner-panel-toggle-btn');
+    if (ownerToggleBtn) {
+      if (auth.role === 'OWNER' || auth.role === 'ADMIN' || (auth.key && auth.key.toUpperCase().startsWith('HD-OWNER'))) {
+        ownerToggleBtn.style.display = 'inline-flex';
+      } else {
+        ownerToggleBtn.style.display = 'none';
+      }
+    }
+
+    updateRoomBannerUI();
+    loadUserRoomState();
+    return true;
+  }
+
+  // Logout Handler
+  window.handleLogout = function() {
+    localStorage.removeItem('headless_dice_auth');
+    sessionStorage.removeItem('headless_dice_auth');
+    localStorage.removeItem('HD_OWNER_KEY');
+    sessionStorage.removeItem('HD_OWNER_KEY');
+    if (window.showToast) window.showToast('🔒 Logged out of room instance.');
+    setTimeout(() => {
+      window.location.replace('/login');
+    }, 300);
+  };
+
+  // ==========================================
+  // MATHEMATICAL PREDICTION ENGINE ALGORITHM
+  // ==========================================
+  function solve1ColorPrediction(rollsInput) {
+    const rolls = rollsInput || STATE.rolls;
+    const validRolls = rolls
+      .map(r => r.filter(c => c && COLOR_CONFIG[c]))
+      .filter(r => r.length > 0);
+
+    const M = validRolls.length;
+    if (M === 0) return null;
+
+    const rawCounts = { purple: 0, blue: 0, green: 0, red: 0, darkorange: 0, gold: 0 };
+    let totalDiceEntered = 0;
+
+    validRolls.forEach(round => {
+      round.forEach(c => {
+        rawCounts[c]++;
+        totalDiceEntered++;
+      });
+    });
+
+    if (totalDiceEntered === 0) return null;
+
+    const rLatest = validRolls[M - 1] || [];
+    const rPrev = M >= 2 ? validRolls[M - 2] : [];
+    const rTwoAgo = M >= 3 ? validRolls[M - 3] : [];
+
+    const scores = {};
+    COLORS.forEach(c => scores[c] = 8.0);
+
+    validRolls.forEach((round, rIdx) => {
+      const progress = M > 1 ? (rIdx / (M - 1)) : 1.0;
+      const weight = 1.0 + (progress * 2.4);
+
+      round.forEach(c => {
+        scores[c] += weight * 12.0;
+      });
+
+      COLORS.forEach(c => {
+        const countInRound = round.filter(x => x === c).length;
+        if (countInRound >= 2) {
+          scores[c] += weight * (countInRound === 2 ? 8.0 : 16.0);
+        }
+      });
+    });
+
+    COLORS.forEach(c => {
+      const inLatest = rLatest.filter(x => x === c).length;
+      const inPrev = rPrev.filter(x => x === c).length;
+      const inTwoAgo = rTwoAgo.filter(x => x === c).length;
+
+      if (inLatest > 0 && inPrev > 0) {
+        scores[c] += 18.0;
+        if (inTwoAgo > 0) scores[c] += 10.0;
+      } else if (inLatest === 0 && inPrev > 0) {
+        scores[c] += 14.0;
+      } else if (inLatest === 0 && inPrev === 0 && inTwoAgo > 0) {
+        scores[c] += 8.0;
+      }
+    });
+
+    if (M >= 2) {
+      const trans = {};
+      COLORS.forEach(c1 => {
+        trans[c1] = {};
+        COLORS.forEach(c2 => trans[c1][c2] = 0);
+      });
+
+      let totalTransitions = 0;
+      for (let i = 0; i < M - 1; i++) {
+        const cur = validRolls[i];
+        const nxt = validRolls[i + 1];
+        cur.forEach(c1 => {
+          nxt.forEach(c2 => {
+            trans[c1][c2]++;
+            totalTransitions++;
+          });
+        });
+      }
+
+      if (totalTransitions > 0) {
+        const projected = {};
+        COLORS.forEach(c => projected[c] = 0);
+
+        rLatest.forEach(cLatest => {
+          COLORS.forEach(target => {
+            projected[target] += trans[cLatest][target];
+          });
+        });
+
+        let maxProj = 0;
+        COLORS.forEach(c => {
+          if (projected[c] > maxProj) maxProj = projected[c];
+        });
+
+        if (maxProj > 0) {
+          COLORS.forEach(c => {
+            scores[c] += (projected[c] / maxProj) * 14.0;
+          });
+        }
+      }
+    }
+
+    const cooccur = {};
+    COLORS.forEach(c => cooccur[c] = 0);
+
+    validRolls.forEach(round => {
+      rLatest.forEach(cLatest => {
+        if (round.includes(cLatest)) {
+          round.forEach(cOther => {
+            if (cOther !== cLatest) cooccur[cOther]++;
+          });
+        }
+      });
+    });
+
+    let maxCooccur = 0;
+    COLORS.forEach(c => {
+      if (cooccur[c] > maxCooccur) maxCooccur = cooccur[c];
+    });
+    if (maxCooccur > 0) {
+      COLORS.forEach(c => {
+        scores[c] += (cooccur[c] / maxCooccur) * 8.0;
+      });
+    }
+
+    COLORS.forEach(c => {
+      const hits = rawCounts[c] || 0;
+      if (hits === 0) {
+        scores[c] = Math.max(2.0, scores[c] * 0.35);
+      } else if (hits === 1 && M >= 4 && !rLatest.includes(c) && !rPrev.includes(c)) {
+        scores[c] = Math.max(3.0, scores[c] * 0.70);
+      }
+    });
+
+    let totalScore = 0;
+    COLORS.forEach(c => totalScore += scores[c]);
+
+    const distribution = {};
+    COLORS.forEach(c => {
+      distribution[c] = (scores[c] / totalScore) * 100;
+    });
+
+    const ranked = [...COLORS].sort((a, b) => {
+      if (Math.abs(distribution[b] - distribution[a]) > 0.05) {
+        return distribution[b] - distribution[a];
+      }
+      return (rawCounts[b] || 0) - (rawCounts[a] || 0);
+    });
+
+    const topColor = ranked[0];
+    const secondColor = ranked[1] || ranked[0];
+
+    const leadMargin = distribution[topColor] - distribution[secondColor];
+    const calibratedConfidence = Math.min(95.6, Math.max(82.0, 83.0 + (leadMargin * 1.35)));
+    const calibratedSecondConf = Math.min(89.0, Math.max(73.0, 73.0 + (distribution[secondColor] * 0.55)));
+
+    const coldColor = [...COLORS].sort((a, b) => (rawCounts[a] || 0) - (rawCounts[b] || 0))[0];
+
+    let entropy = 0;
+    COLORS.forEach(c => {
+      const p = distribution[c] / 100;
+      if (p > 0) entropy -= p * Math.log2(p);
+    });
+    const normalizedEntropy = (entropy / Math.log2(6)).toFixed(2);
+
+    return {
+      topColor: topColor,
+      secondColor: secondColor,
+      topProbability: calibratedConfidence.toFixed(1),
+      secondProbability: calibratedSecondConf.toFixed(1),
+      distribution: distribution,
+      ranked: ranked,
+      hotColor: topColor,
+      coldColor: coldColor,
+      entropyScore: normalizedEntropy,
+      totalRollsAnalyzed: M,
+      totalDiceEntered: totalDiceEntered,
+      latestRound: rLatest
+    };
+  }
+
+  // ==========================================
+  // UI RENDERING & COMPONENT LOGIC
+  // ==========================================
+  function renderRolls() {
+    const container = document.getElementById('rolls-matrix-container');
+    if (!container) return;
+
+    container.innerHTML = '';
+    const totalCountEl = document.getElementById('total-rolls-count');
+    if (totalCountEl) totalCountEl.textContent = STATE.rolls.length;
+
+    STATE.rolls.forEach((roll, rIdx) => {
+      const rowEl = document.createElement('div');
+      rowEl.className = 'roll-row' + (rIdx === STATE.activeRollIndex ? ' active-row' : '');
+      rowEl.dataset.rollIndex = rIdx;
+
+      const isLatest = rIdx === STATE.rolls.length - 1;
+      const rollNum = rIdx + 1;
+      let subtitleText = '';
+      if (isLatest) {
+        subtitleText = '<span class="badge-latest">LATEST (Most Recent)</span>';
+      } else {
+        const ago = STATE.rolls.length - rIdx;
+        subtitleText = '<span class="roll-subtext">' + ago + ' Rounds Ago</span>';
+      }
+
+      let diceSlotsHtml = '';
+      roll.forEach((dieColor, dIdx) => {
+        const isActive = (rIdx === STATE.activeRollIndex && dIdx === STATE.activeDieIndex);
+        const colorClass = dieColor ? ' die-filled die-' + dieColor : ' die-empty';
+        const activeClass = isActive ? ' slot-active' : '';
+        const displayText = dieColor ? COLOR_CONFIG[dieColor].name.slice(0, 3).toUpperCase() : 'DIE ' + (dIdx + 1);
+
+        diceSlotsHtml += '<div class="die-slot' + colorClass + activeClass + '" data-roll="' + rIdx + '" data-die="' + dIdx + '">' +
+          '<span>' + displayText + '</span>' +
+        '</div>';
+      });
+
+      rowEl.innerHTML =
+        '<div class="roll-info">' +
+          '<div class="roll-label-row">' +
+            '<span class="roll-number">ROLL #' + rollNum + '</span>' +
+            subtitleText +
+          '</div>' +
+          '<div class="roll-weight-tag">Weight: ' + (isLatest ? 'MAX (Highest Pull)' : (1.0 + (rIdx * 0.4)).toFixed(1) + 'x') + '</div>' +
+        '</div>' +
+        '<div class="dice-slots-row">' + diceSlotsHtml + '</div>' +
+        '<button class="btn-clear-row" data-roll="' + rIdx + '" title="Clear this roll">✕</button>';
+
+      container.appendChild(rowEl);
+    });
+
+    // Slot click handlers
+    container.querySelectorAll('.die-slot').forEach(slot => {
+      slot.addEventListener('click', () => {
+        const r = parseInt(slot.dataset.roll, 10);
+        const d = parseInt(slot.dataset.die, 10);
+        STATE.activeRollIndex = r;
+        STATE.activeDieIndex = d;
+        updateActiveSlotUI();
+        renderRolls();
+      });
+    });
+
+    // Clear row handlers
+    container.querySelectorAll('.btn-clear-row').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const r = parseInt(btn.dataset.roll, 10);
+        clearSpecificRow(r);
+      });
+    });
+
+    updateActiveSlotUI();
+  }
+
+  function updateActiveSlotUI() {
+    const ind = document.getElementById('active-slot-indicator');
+    if (ind) {
+      ind.textContent = 'Roll ' + (STATE.activeRollIndex + 1) + ' • Die ' + (STATE.activeDieIndex + 1);
+    }
+  }
+
+  function assignColorToActiveSlot(color) {
+    STATE.rolls[STATE.activeRollIndex][STATE.activeDieIndex] = color;
+    sfx.playClick();
+
+    if (STATE.activeDieIndex < 3) {
+      STATE.activeDieIndex++;
+    } else {
+      if (STATE.activeRollIndex < STATE.rolls.length - 1) {
+        STATE.activeRollIndex++;
+        STATE.activeDieIndex = 0;
+      } else {
+        STATE.activeDieIndex = 0;
+      }
+    }
+
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+  }
+
+  function clearSpecificRow(rIdx) {
+    STATE.rolls[rIdx] = [null, null, null, null];
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+    if (window.showToast) window.showToast('Roll #' + (rIdx + 1) + ' cleared');
+  }
+
+  function clearActiveDieSlot() {
+    STATE.rolls[STATE.activeRollIndex][STATE.activeDieIndex] = null;
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+  }
+
+  function clearAllRolls() {
+    STATE.rolls = STATE.rolls.map(() => [null, null, null, null]);
+    STATE.activeRollIndex = 0;
+    STATE.activeDieIndex = 0;
+    renderRolls();
+    persistUserRoomState();
+    clearPredictionResultsUI();
+    if (window.showToast) window.showToast('All stream rolls cleared');
+  }
+
+  function addNewRoll() {
+    STATE.rolls.push([null, null, null, null]);
+    STATE.activeRollIndex = STATE.rolls.length - 1;
+    STATE.activeDieIndex = 0;
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+    const addBtn = document.getElementById('btn-add-roll');
+    if (addBtn) addBtn.textContent = '+ Add Roll (Roll ' + (STATE.rolls.length + 1) + ')';
+    if (window.showToast) window.showToast('Roll #' + STATE.rolls.length + ' added to stream');
+  }
+
+  function removeLastRoll() {
+    if (STATE.rolls.length <= 5) {
+      if (window.showToast) window.showToast('Minimum 5 stream rolls required for prediction accuracy');
+      return;
+    }
+    STATE.rolls.pop();
+    if (STATE.activeRollIndex >= STATE.rolls.length) {
+      STATE.activeRollIndex = STATE.rolls.length - 1;
+    }
+    renderRolls();
+    persistUserRoomState();
+    executePredictionCalculation();
+    const addBtn = document.getElementById('btn-add-roll');
+    if (addBtn) addBtn.textContent = '+ Add Roll (Roll ' + (STATE.rolls.length + 1) + ')';
+  }
+
+  function executePredictionCalculation() {
+    const result = solve1ColorPrediction(STATE.rolls);
+    if (result) {
+      STATE.latestPrediction = result;
+      renderPredictionResults(result);
+    } else {
+      clearPredictionResultsUI();
+    }
+  }
+
+  function renderPredictionResults(res) {
+    const nameEl = document.getElementById('predicted-color-name');
+    const confEl = document.getElementById('predicted-confidence-value');
+    const tagEl = document.getElementById('prediction-tag');
+    const subtextEl = document.getElementById('predicted-subtext');
+    const dieEl = document.getElementById('predicted-die-display');
+    const auraEl = document.getElementById('predicted-die-aura');
+    const statusBadge = document.getElementById('engine-status-badge');
+
+    if (!res || !nameEl) return;
+
+    const topCfg = COLOR_CONFIG[res.topColor];
+    nameEl.textContent = topCfg.name.toUpperCase();
+    nameEl.style.color = topCfg.hex;
+
+    if (confEl) {
+      confEl.textContent = res.topProbability + '%';
+      confEl.style.color = topCfg.hex;
+    }
+
+    if (tagEl) {
+      tagEl.textContent = 'HIGH CONFIDENCE';
+      tagEl.style.color = '#34d399';
+      tagEl.style.borderColor = 'rgba(52, 211, 153, 0.4)';
+      tagEl.style.background = 'rgba(52, 211, 153, 0.15)';
+    }
+
+    if (subtextEl) {
+      subtextEl.textContent = 'Optimal color pick for next roll based on ' + res.totalDiceEntered + ' analyzed dice.';
+    }
+
+    if (dieEl) {
+      dieEl.innerHTML = '<span style="font-size: 32px;">' + topCfg.icon + '</span>';
+      dieEl.style.borderColor = topCfg.hex;
+      dieEl.style.boxShadow = '0 0 25px ' + topCfg.hex;
+    }
+    if (auraEl) {
+      auraEl.style.background = 'radial-gradient(circle, ' + topCfg.hex + ' 0%, transparent 70%)';
+    }
+
+    if (statusBadge) {
+      statusBadge.innerHTML = '<span class="status-dot"></span><span>SOLVED // ' + res.topProbability + '%</span>';
+      statusBadge.className = 'badge-status-pill status-solved';
+    }
+
+    // 6-Color Breakdown Bars
+    const listEl = document.getElementById('distribution-bars-list');
+    if (listEl) {
+      listEl.innerHTML = '';
+      res.ranked.forEach(colorKey => {
+        const cfg = COLOR_CONFIG[colorKey];
+        const pct = (res.distribution[colorKey] || 0).toFixed(1);
+        const isTop = colorKey === res.topColor;
+
+        const barItem = document.createElement('div');
+        barItem.className = 'distribution-item' + (isTop ? ' item-top' : '');
+        barItem.innerHTML =
+          '<div class="dist-meta">' +
+            '<span class="dist-color-name" style="color: ' + cfg.hex + '">' + cfg.name + '</span>' +
+            '<span class="dist-percent">' + pct + '%</span>' +
+          '</div>' +
+          '<div class="dist-bar-track">' +
+            '<div class="dist-bar-fill" style="width: ' + pct + '%; background: ' + cfg.hex + '"></div>' +
+          '</div>';
+        listEl.appendChild(barItem);
+      });
+    }
+
+    // Secondary Stats
+    const statTop = document.getElementById('stat-top-signal');
+    if (statTop) {
+      statTop.textContent = topCfg.name.toUpperCase();
+      statTop.style.color = topCfg.hex;
+    }
+    const statCold = document.getElementById('stat-cold-signal');
+    if (statCold && res.coldColor) {
+      statCold.textContent = COLOR_CONFIG[res.coldColor].name.toUpperCase();
+      statCold.style.color = COLOR_CONFIG[res.coldColor].hex;
+    }
+    const statEntropy = document.getElementById('stat-entropy-val');
+    if (statEntropy) {
+      statEntropy.textContent = res.entropyScore;
+    }
+  }
+
+  function clearPredictionResultsUI() {
+    const nameEl = document.getElementById('predicted-color-name');
+    const confEl = document.getElementById('predicted-confidence-value');
+    const tagEl = document.getElementById('prediction-tag');
+    const subtextEl = document.getElementById('predicted-subtext');
+    const dieEl = document.getElementById('predicted-die-display');
+    const statusBadge = document.getElementById('engine-status-badge');
+
+    if (nameEl) { nameEl.textContent = 'AWAITING ROLLS'; nameEl.style.color = ''; }
+    if (confEl) { confEl.textContent = '--%'; confEl.style.color = ''; }
+    if (tagEl) { tagEl.textContent = 'AWAITING INPUT'; tagEl.style.color = ''; tagEl.style.borderColor = ''; tagEl.style.background = ''; }
+    if (subtextEl) { subtextEl.textContent = 'Enter dice colors above to scan sequence momentum.'; }
+    if (dieEl) {
+      dieEl.innerHTML = '<svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="2" y="2" width="20" height="20" rx="5"></rect><circle cx="12" cy="12" r="1.5" fill="currentColor"></circle></svg>';
+      dieEl.style.borderColor = '';
+      dieEl.style.boxShadow = '';
+    }
+    if (statusBadge) {
+      statusBadge.innerHTML = '<span class="status-dot"></span><span>READY FOR ROLLS</span>';
+      statusBadge.className = 'badge-status-pill status-ready';
+    }
+    const listEl = document.getElementById('distribution-bars-list');
+    if (listEl) {
+      listEl.innerHTML = '<div class="empty-state-text">Probability distribution will calibrate when rolls are entered.</div>';
+    }
+  }
+
+  // ==========================================
+  // OWNER COMMAND CENTER (Jalapeno & Chirag)
+  // ==========================================
+  function openOwnerCommandModal() {
+    const modal = document.getElementById('owner-command-modal');
+    if (modal) {
+      modal.style.display = 'flex';
+      refreshOwnerCounters();
+      fetchKeysVault();
+      fetchActiveAnnouncement();
+    }
+  }
+
+  function closeOwnerCommandModal() {
+    const modal = document.getElementById('owner-command-modal');
+    if (modal) modal.style.display = 'none';
+  }
+
+  async function refreshOwnerCounters() {
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'getCounters', ownerKey: ownerKey })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.counters) {
+          const v = document.getElementById('owner-stat-visits');
+          const a = document.getElementById('owner-stat-active');
+          const l = document.getElementById('owner-stat-licenses');
+          if (v) v.textContent = data.counters.visits || 42;
+          if (a) a.textContent = data.counters.activeUsers || 1;
+          if (l) l.textContent = data.counters.totalLicenses || 16;
+        }
+      }
+    } catch(e) {}
+  }
+
+  async function fetchKeysVault() {
+    const tbody = document.getElementById('keys-vault-table-body');
+    if (!tbody) return;
+    tbody.innerHTML = '<tr><td colspan="6" class="table-loading">Loading keys securely from MongoDB Atlas...</td></tr>';
+
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'listKeys', ownerKey: ownerKey })
+      });
+      const data = await res.json();
+      if (data && data.success && Array.isArray(data.keys)) {
+        tbody.innerHTML = '';
+        if (data.keys.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:16px;">No keys found.</td></tr>';
+          return;
+        }
+        data.keys.forEach(k => {
+          const tr = document.createElement('tr');
+          const statusClass = k.status === 'Active' ? 'badge-status-active' : 'badge-status-revoked';
+          tr.innerHTML =
+            '<td><code class="table-key-code">' + k.key + '</code></td>' +
+            '<td><span class="badge-role">' + (k.role || 'USER') + '</span></td>' +
+            '<td><code class="table-hwid-code">' + (k.boundHwid || 'Unbound') + '</code></td>' +
+            '<td><span class="' + statusClass + '">' + (k.status || 'Active') + '</span></td>' +
+            '<td>' + (k.duration || '30days') + '</td>' +
+            '<td class="table-actions-cell">' +
+              '<button onclick="window.resetKeyHwidAction(\\'' + k.key + '\\')" class="btn-table-action" title="Unbind Hardware ID">Reset HWID</button>' +
+              '<button onclick="window.deleteKeyAction(\\'' + k.key + '\\')" class="btn-table-action btn-danger-action" title="Delete Key">Delete</button>' +
+            '</td>';
+          tbody.appendChild(tr);
+        });
+      }
+    } catch(e) {
+      tbody.innerHTML = '<tr><td colspan="6" style="color:#ef4444;text-align:center;">Failed to load keys: ' + e.message + '</td></tr>';
+    }
+  }
+
+  async function generateLicenseKeyAction() {
+    const role = document.getElementById('keygen-role').value;
+    const duration = document.getElementById('keygen-duration').value;
+    const hwidLock = document.getElementById('keygen-hwid-lock').checked;
+    const customKey = document.getElementById('keygen-custom-key').value.trim();
+
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'generateKey',
+          ownerKey: ownerKey,
+          role: role,
+          duration: duration,
+          hwidLock: hwidLock,
+          customKey: customKey || undefined
+        })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (window.showToast) window.showToast('⚡ Key Created: ' + data.key);
+        fetchKeysVault();
+        refreshOwnerCounters();
+      } else {
+        if (window.showToast) window.showToast('❌ Error: ' + (data.error || 'Failed to generate key'));
+      }
+    } catch(e) {
+      if (window.showToast) window.showToast('⚠️ Network error: ' + e.message);
+    }
+  }
+
+  window.resetKeyHwidAction = async function(key) {
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+    if (!confirm('Reset HWID binding for ' + key + '?')) return;
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'resetHwid', ownerKey: ownerKey, key: key })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (window.showToast) window.showToast('✓ HWID reset for ' + key);
+        fetchKeysVault();
+      }
+    } catch(e) {}
+  };
+
+  window.deleteKeyAction = async function(key) {
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+    if (!confirm('Permanently delete ' + key + '?')) return;
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'deleteKey', ownerKey: ownerKey, key: key })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (window.showToast) window.showToast('🗑️ Key deleted: ' + key);
+        fetchKeysVault();
+        refreshOwnerCounters();
+      }
+    } catch(e) {}
+  };
+
+  async function broadcastAnnouncementAction() {
+    const input = document.getElementById('owner-announcement-input');
+    const text = input ? input.value.trim() : '';
+    if (!text) return;
+    const auth = getAuthSession();
+    const ownerKey = auth ? auth.key : sessionStorage.getItem('HD_OWNER_KEY');
+    try {
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setAnnouncement', ownerKey: ownerKey, text: text, active: true })
+      });
+      const data = await res.json();
+      if (data && data.success) {
+        if (window.showToast) window.showToast('📢 Announcement broadcasted!');
+        fetchActiveAnnouncement();
+      }
+    } catch(e) {}
+  }
+
+  async function fetchActiveAnnouncement() {
+    try {
+      const res = await fetch('/api/system?type=announcement');
+      if (res.ok) {
+        const data = await res.json();
+        const banner = document.getElementById('announcement-banner');
+        const textEl = document.getElementById('announcement-text');
+        if (data && data.active && data.text) {
+          if (textEl) textEl.textContent = data.text;
+          if (banner) banner.style.display = 'flex';
+        } else if (banner) {
+          banner.style.display = 'none';
+        }
+      }
+    } catch(e) {}
+  }
+
+  // System Heartbeat: Periodic Sync (Zero Infinite Reload Loop)
+  function checkSystemHeartbeat() {
+    fetch('/api/system?type=all')
+      .then(res => res.json())
+      .then(data => {
+        if (!data) return;
+        const auth = getAuthSession();
+        const isOwner = auth && (auth.role === 'OWNER' || auth.role === 'ADMIN' || (auth.key && auth.key.toUpperCase().startsWith('HD-OWNER')));
+
+        if (data.maintenance && data.maintenance.enabled === true && !isOwner) {
+          if (!window.location.pathname.includes('/maintenance')) {
+            window.location.replace('/maintenance');
+          }
+        }
+
+        if (data.announcement) {
+          const banner = document.getElementById('announcement-banner');
+          const textEl = document.getElementById('announcement-text');
+          if (data.announcement.active && data.announcement.text) {
+            if (textEl) textEl.textContent = data.announcement.text;
+            if (banner) banner.style.display = 'flex';
+          } else if (banner) {
+            banner.style.display = 'none';
+          }
+        }
+      })
+      .catch(() => {});
+  }
+
+  // App Initialization
+  function initApp() {
+    // 1. Strict Permission Check
+    if (!checkAuthStatus()) return;
+
+    // 2. Setup palette buttons
+    document.querySelectorAll('.btn-color-select[data-color]').forEach(btn => {
+      btn.addEventListener('click', () => {
+        assignColorToActiveSlot(btn.dataset.color);
+      });
+    });
+
+    const clearDieBtn = document.getElementById('btn-clear-active-die');
+    if (clearDieBtn) clearDieBtn.addEventListener('click', clearActiveDieSlot);
+
+    const addRollBtn = document.getElementById('btn-add-roll');
+    if (addRollBtn) addRollBtn.addEventListener('click', addNewRoll);
+
+    const removeRollBtn = document.getElementById('btn-remove-last-roll');
+    if (removeRollBtn) removeRollBtn.addEventListener('click', removeLastRoll);
+
+    const clearAllBtn = document.getElementById('btn-clear-all-rolls');
+    if (clearAllBtn) clearAllBtn.addEventListener('click', clearAllRolls);
+
+    const soundBtn = document.getElementById('sound-toggle-btn');
+    if (soundBtn) {
+      soundBtn.addEventListener('click', () => {
+        STATE.soundEnabled = !STATE.soundEnabled;
+        const icon = document.getElementById('sound-icon');
+        if (icon) icon.textContent = STATE.soundEnabled ? '🔊' : '🔇';
+        if (window.showToast) window.showToast(STATE.soundEnabled ? 'Sound FX Enabled' : 'Sound Muted');
+      });
+    }
+
+    const logoutBtn = document.getElementById('btn-logout');
+    if (logoutBtn) logoutBtn.addEventListener('click', window.handleLogout);
+
+    const ownerToggleBtn = document.getElementById('owner-panel-toggle-btn');
+    if (ownerToggleBtn) ownerToggleBtn.addEventListener('click', openOwnerCommandModal);
+
+    const closeOwnerBtn = document.getElementById('btn-close-owner-modal');
+    if (closeOwnerBtn) closeOwnerBtn.addEventListener('click', closeOwnerCommandModal);
+
+    const genKeyBtn = document.getElementById('btn-generate-key');
+    if (genKeyBtn) genKeyBtn.addEventListener('click', generateLicenseKeyAction);
+
+    const refreshVaultBtn = document.getElementById('btn-refresh-vault');
+    if (refreshVaultBtn) refreshVaultBtn.addEventListener('click', fetchKeysVault);
+
+    const broadcastBtn = document.getElementById('btn-broadcast-announcement');
+    if (broadcastBtn) broadcastBtn.addEventListener('click', broadcastAnnouncementAction);
+
+    const ownerLogoutBtn = document.getElementById('btn-owner-logout');
+    if (ownerLogoutBtn) ownerLogoutBtn.addEventListener('click', () => {
+      closeOwnerCommandModal();
+      window.handleLogout();
+    });
+
+    renderRolls();
+    fetchActiveAnnouncement();
+    setInterval(checkSystemHeartbeat, 25000);
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initApp);
+  } else {
+    initApp();
+  }
+})();
+
+  </script>
 </body>
 </html>

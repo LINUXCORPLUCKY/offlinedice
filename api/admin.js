@@ -88,7 +88,7 @@ module.exports = async (req, res) => {
 
     const body = (await getBody()) || {};
     const action = body.action || '';
-    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
+    const clientIp = (req.headers && (req.headers['x-forwarded-for'] || req.headers['x-real-ip'])) || (req.socket && req.socket.remoteAddress) || (req.connection && req.connection.remoteAddress) || '127.0.0.1';
 
     // 1. OWNER LOGIN (Does not require prior session)
     if (action === 'owner_login') {
