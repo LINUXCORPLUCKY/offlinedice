@@ -35,18 +35,51 @@ app.all('/api/system', (req, res) => systemHandler(req, res));
 app.all('/api/webhook', (req, res) => webhookHandler(req, res));
 app.all('/api/webhook/log', (req, res) => webhookHandler(req, res));
 
-// Page Routes (Unified Single-Page Architecture: Zero Blank Screens)
+// Maintenance Mode Checker (Guarantees zero breach during maintenance)
+function isMaintenanceActive() {
+  try {
+    const sysPath = path.join(__dirname, 'api', '_data', 'system_state.json');
+    if (fs.existsSync(sysPath)) {
+      const state = JSON.parse(fs.readFileSync(sysPath, 'utf8'));
+      if (state && state.maintenance && typeof state.maintenance.enabled === 'boolean') {
+        return state.maintenance.enabled;
+      }
+    }
+  } catch(e) {}
+  return true; // Default to active maintenance mode
+}
+
+// Page Routes (Owner & Admin portals remain accessible for system management)
 app.get('/owner', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
 app.get('/maintenance', (req, res) => res.sendFile(path.join(__dirname, 'maintenance.html')));
-app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/room', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/room/*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
-app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// Fallback: Any route serves index.html
-app.use((req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/app', (req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.get('/room', (req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.get('/room/*', (req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.get('/login', (req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+app.get('/', (req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// Fallback:
+app.use((req, res) => {
+  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  res.sendFile(path.join(__dirname, 'index.html'));
+});
 
 module.exports = app;
 

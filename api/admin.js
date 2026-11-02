@@ -324,6 +324,66 @@ module.exports = async (req, res) => {
       return sendJson(res, 200, { success: true, message: `Key ${target} updated to ${currentStatus}.` });
     }
 
+    if (action === 'get_maintenance') {
+      const sysPath = path.join(__dirname, '_data', 'system_state.json');
+      let sys = { maintenance: { enabled: true } };
+      try {
+        if (fs.existsSync(sysPath)) sys = JSON.parse(fs.readFileSync(sysPath, 'utf8'));
+      } catch(e) {}
+      return sendJson(res, 200, { success: true, maintenance: sys.maintenance || { enabled: true } });
+    }
+
+    if (action === 'toggle_maintenance') {
+      const enabled = body.enabled !== undefined ? !!body.enabled : true;
+      const sysPath = path.join(__dirname, '_data', 'system_state.json');
+      let sys = { maintenance: { enabled: true }, control: { timestamp: Date.now() } };
+      try {
+        if (fs.existsSync(sysPath)) sys = JSON.parse(fs.readFileSync(sysPath, 'utf8'));
+      } catch(e) {}
+      sys.maintenance = {
+        enabled: enabled,
+        reason: body.reason || 'Linux is working on lib for online dice - Website upgrade in progress',
+        updatedAt: Date.now(),
+        author: 'OWNER'
+      };
+      sys.control = {
+        timestamp: Date.now(),
+        reason: enabled ? 'Maintenance mode enabled' : 'Maintenance mode lifted',
+        author: 'OWNER'
+      };
+      try {
+        fs.writeFileSync(sysPath, JSON.stringify(sys, null, 2), 'utf8');
+        const altPath = path.join(__dirname, 'data', 'system_state.json');
+        if (fs.existsSync(path.dirname(altPath))) fs.writeFileSync(altPath, JSON.stringify(sys, null, 2), 'utf8');
+      } catch(e) {}
+      try {
+        await firebaseRequest('/system/maintenance', 'PUT', sys.maintenance);
+        await firebaseRequest('/system/control', 'PUT', sys.control);
+      } catch(e) {}
+      return sendJson(res, 200, { success: true, maintenance: sys.maintenance });
+    }
+
+    if (action === 'force_refresh') {
+      const now = Date.now();
+      const controlData = {
+        timestamp: now,
+        reason: body.reason || 'Remote force refresh triggered by Owner',
+        author: 'OWNER'
+      };
+      const sysPath = path.join(__dirname, '_data', 'system_state.json');
+      try {
+        if (fs.existsSync(sysPath)) {
+          const sys = JSON.parse(fs.readFileSync(sysPath, 'utf8'));
+          sys.control = controlData;
+          fs.writeFileSync(sysPath, JSON.stringify(sys, null, 2), 'utf8');
+        }
+      } catch(e) {}
+      try {
+        await firebaseRequest('/system/control', 'PUT', controlData);
+      } catch(e) {}
+      return sendJson(res, 200, { success: true, message: 'Force refresh broadcasted to all active clients', timestamp: now });
+    }
+
     if (action === 'delete_key') {
       const target = (body.key || '').trim().toUpperCase();
       if (!target) return sendJson(res, 400, { success: false, error: 'Key required' });

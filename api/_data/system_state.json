@@ -1,21 +1,20 @@
 {
   "maintenance": {
-    "enabled": false,
-    "reason": "",
-    "updatedAt": 1793560000000,
+    "enabled": true,
+    "reason": "Linux is currently working on the new library and algorithms for Online Dice. All rooms temporarily paused.",
+    "updatedAt": 1793605037245,
     "author": "OWNER"
   },
   "announcement": {
     "active": false,
     "text": "",
     "type": "info",
-    "timestamp": 1793560000000,
+    "timestamp": 1793605037245,
     "author": "OWNER"
   },
   "control": {
-    "timestamp": 1793560000000,
-    "reason": "System Initialized",
+    "timestamp": 1793605037620,
+    "reason": "Maintenance mode activated - Linux updating dice lib",
     "author": "OWNER"
   }
 }
-

@@ -3,6 +3,37 @@
 
 <head>
   <script>
+    // Immediate Maintenance & Force-Refresh Sentinel
+    (function() {
+      let initialControlTimestamp = null;
+      function checkSystemStatus() {
+        fetch('/api/system?type=all&t=' + Date.now())
+          .then(res => res.json())
+          .then(data => {
+            if (!data) return;
+            if (data.maintenance && data.maintenance.enabled === true) {
+              const authRaw = localStorage.getItem('headless_dice_auth');
+              const isOwner = authRaw && (authRaw.includes('"role":"OWNER"') || authRaw.includes('HD-OWNER'));
+              if (!isOwner) {
+                window.location.replace('/maintenance');
+                return;
+              }
+            }
+            if (data.control && data.control.timestamp) {
+              if (initialControlTimestamp === null) {
+                initialControlTimestamp = data.control.timestamp;
+              } else if (data.control.timestamp > initialControlTimestamp) {
+                window.location.reload(true);
+              }
+            }
+          })
+          .catch(() => {});
+      }
+      setInterval(checkSystemStatus, 3000);
+      checkSystemStatus();
+    })();
+  </script>
+  <script>
     // Pre-declared Universal Toast Manager (Guarantees zero ReferenceError)
     window.showToast = function(message) {
       let container = document.getElementById('toast-container');
