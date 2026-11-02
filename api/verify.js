@@ -83,9 +83,10 @@ module.exports = async (req, res) => {
       message: 'Access granted'
     });
   } catch (err) {
+    console.error('Verify error:', err);
     return sendJson(res, 500, {
       success: false,
-      error: 'Authentication service temporarily unavailable. Access denied.'
+      error: 'Authentication service temporarily unavailable: ' + (err && err.message)
     });
   }
 };
