@@ -27,13 +27,17 @@ app.get('/style.css', (req, res) => res.sendFile(path.join(__dirname, 'style.css
 const verifyHandler = require('./api/verify');
 const systemHandler = require('./api/system');
 const webhookHandler = require('./api/webhook');
+const adminHandler = require('./api/admin');
 
 app.all('/api/verify', (req, res) => verifyHandler(req, res));
+app.all('/api/admin', (req, res) => adminHandler(req, res));
 app.all('/api/system', (req, res) => systemHandler(req, res));
 app.all('/api/webhook', (req, res) => webhookHandler(req, res));
 app.all('/api/webhook/log', (req, res) => webhookHandler(req, res));
 
 // Page Routes
+app.get('/owner', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
+app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
 app.get('/maintenance', (req, res) => res.sendFile(path.join(__dirname, 'maintenance.html')));
 app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'app.html')));
 app.get('/room', (req, res) => res.sendFile(path.join(__dirname, 'app.html')));

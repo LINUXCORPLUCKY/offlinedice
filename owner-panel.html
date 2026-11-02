@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HEADLESS DICE // MASTER OWNER COMMAND CENTER</title>
+  <base href="/">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700;800&family=Outfit:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+  <style>
+    body {
+      background: #06020c;
+      color: #f1f5f9;
+      font-family: 'Outfit', sans-serif;
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      box-sizing: border-box;
+    }
+    .admin-container {
+      width: 100%;
+      max-width: 1100px;
+      margin: 0 auto;
+    }
+    .admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 24px;
+      background: rgba(20, 8, 36, 0.85);
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 16px;
+      margin-bottom: 24px;
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.2);
+    }
+    .admin-title-cluster h1 {
+      margin: 0;
+      font-size: 22px;
+      font-weight: 900;
+      letter-spacing: 1px;
+      background: linear-gradient(90deg, #ffffff, #a855f7, #38bdf8);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .admin-title-cluster p {
+      margin: 4px 0 0 0;
+      font-size: 12px;
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .badge-master-status {
+      background: rgba(74, 222, 128, 0.15);
+      border: 1px solid #4ade80;
+      color: #4ade80;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .badge-master-status::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #4ade80;
+      box-shadow: 0 0 8px #4ade80;
+    }
+    /* Master Key Auth Gate Overlay */
+    .master-gate-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(4, 1, 10, 0.95);
+      backdrop-filter: blur(12px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10000;
+      padding: 20px;
+    }
+    .master-gate-card {
+      background: linear-gradient(145deg, #120524, #1f0b38);
+      border: 1px solid rgba(168, 85, 247, 0.5);
+      border-radius: 20px;
+      padding: 36px 32px;
+      width: 100%;
+      max-width: 440px;
+      box-shadow: 0 0 40px rgba(168, 85, 247, 0.35);
+      text-align: center;
+    }
+    .master-gate-card h2 {
+      margin: 0 0 8px 0;
+      font-size: 20px;
+      font-weight: 900;
+      color: #ffffff;
+      letter-spacing: 1px;
+    }
+    .master-gate-card p {
+      font-size: 13px;
+      color: #94a3b8;
+      margin: 0 0 24px 0;
+      line-height: 1.5;
+    }
+    .master-input-box {
+      width: 100%;
+      background: #090214;
+      border: 1px solid rgba(168, 85, 247, 0.4);
+      border-radius: 12px;
+      padding: 14px 16px;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 15px;
+      margin-bottom: 16px;
+      box-sizing: border-box;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .master-input-box:focus {
+      border-color: #38bdf8;
+      box-shadow: 0 0 15px rgba(56, 189, 248, 0.4);
+    }
+    .btn-auth-master {
+      width: 100%;
+      background: linear-gradient(90deg, #9333ea, #ec4899);
+      border: none;
+      border-radius: 12px;
+      padding: 14px;
+      color: #ffffff;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      box-shadow: 0 0 20px rgba(168, 85, 247, 0.5);
+      transition: all 0.2s;
+    }
+    .btn-auth-master:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 0 25px rgba(236, 72, 153, 0.7);
+    }
+    .gate-err-msg {
+      margin-top: 14px;
+      color: #ef4444;
+      font-size: 12px;
+      font-family: 'JetBrains Mono', monospace;
+      display: none;
+    }
+    /* Admin Content */
+    .admin-content {
+      display: none;
+      width: 100%;
+    }
+    .admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .stat-card {
+      background: rgba(20, 8, 36, 0.75);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 14px;
+      padding: 18px 20px;
+      position: relative;
+    }
+    .stat-card h3 {
+      margin: 0 0 6px 0;
+      font-size: 11px;
+      font-weight: 700;
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .stat-val {
+      font-size: 32px;
+      font-weight: 900;
+      color: #ffffff;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    /* Tabs */
+    .admin-tabs-nav {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.25);
+      padding-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .admin-tab-btn {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 10px;
+      padding: 10px 18px;
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .admin-tab-btn.active {
+      background: rgba(168, 85, 247, 0.3);
+      border-color: #a855f7;
+      color: #ffffff;
+      box-shadow: 0 0 15px rgba(168, 85, 247, 0.3);
+    }
+    .tab-pane {
+      display: none;
+      background: rgba(20, 8, 36, 0.75);
+      border: 1px solid rgba(168, 85, 247, 0.3);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    .tab-pane.active {
+      display: block;
+    }
+    /* Form */
+    .form-row {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+      margin-bottom: 16px;
+    }
+    .form-group label {
+      display: block;
+      font-size: 12px;
+      font-weight: 700;
+      color: #cbd5e1;
+      margin-bottom: 6px;
+    }
+    .form-group select, .form-group input {
+      width: 100%;
+      background: #090214;
+      border: 1px solid rgba(168, 85, 247, 0.35);
+      border-radius: 10px;
+      padding: 12px 14px;
+      color: #ffffff;
+      font-size: 13px;
+      box-sizing: border-box;
+      outline: none;
+    }
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      cursor: pointer;
+      font-size: 13px;
+    }
+    /* Keys Table */
+    .keys-table-wrap {
+      width: 100%;
+      overflow-x: auto;
+    }
+    .keys-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+    }
+    .keys-table th {
+      text-align: left;
+      padding: 12px 14px;
+      background: rgba(10, 3, 20, 0.85);
+      color: #94a3b8;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      border-bottom: 1px solid rgba(168, 85, 247, 0.3);
+    }
+    .keys-table td {
+      padding: 12px 14px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+    }
+    .badge-role {
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 10px;
+      font-weight: 800;
+    }
+    .badge-role.OWNER { background: rgba(236, 72, 153, 0.2); color: #ec4899; border: 1px solid #ec4899; }
+    .badge-role.ADMIN { background: rgba(168, 85, 247, 0.2); color: #a855f7; border: 1px solid #a855f7; }
+    .badge-role.USER  { background: rgba(56, 189, 248, 0.2); color: #38bdf8; border: 1px solid #38bdf8; }
+    .badge-role.FREE  { background: rgba(74, 222, 128, 0.2); color: #4ade80; border: 1px solid #4ade80; }
+    .action-btn-group {
+      display: flex;
+      gap: 6px;
+    }
+    .btn-act {
+      border: none;
+      border-radius: 6px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    .btn-act.hwid { background: rgba(56, 189, 248, 0.2); color: #38bdf8; }
+    .btn-act.revoke { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+    .btn-act.del { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+    .btn-act:hover { filter: brightness(1.2); }
+    /* Toast */
+    .admin-toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: #1e0a38;
+      border: 1px solid #a855f7;
+      color: #ffffff;
+      padding: 12px 20px;
+      border-radius: 12px;
+      box-shadow: 0 0 25px rgba(168, 85, 247, 0.5);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+      display: none;
+      z-index: 10001;
+    }
+    @media (max-width: 768px) {
+      .admin-stats-grid { grid-template-columns: 1fr; }
+      .form-row { grid-template-columns: 1fr; }
+      .admin-header { flex-direction: column; align-items: flex-start; gap: 12px; }
+    }
+  
+    /* 🎃 HALLOWEEN CUSTOM SELECT DROPDOWN STYLING 🎃 */
+    select {
+      appearance: none !important;
+      -webkit-appearance: none !important;
+      -moz-appearance: none !important;
+      background-color: #0d041a !important;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23ff7700' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E") !important;
+      background-repeat: no-repeat !important;
+      background-position: right 14px center !important;
+      background-size: 16px !important;
+      border: 1px solid rgba(255, 119, 0, 0.45) !important;
+      border-radius: 10px !important;
+      padding: 12px 38px 12px 14px !important;
+      color: #f8fafc !important;
+      font-family: inherit !important;
+      font-size: 14px !important;
+      cursor: pointer !important;
+      outline: none !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5), inset 0 0 10px rgba(255, 119, 0, 0.08) !important;
+      transition: all 0.2s ease !important;
+    }
+    select:hover {
+      border-color: #ff7700 !important;
+      box-shadow: 0 0 18px rgba(255, 119, 0, 0.4) !important;
+    }
+    select:focus {
+      border-color: #c084fc !important;
+      box-shadow: 0 0 22px rgba(168, 85, 247, 0.55) !important;
+    }
+    select option {
+      background: #140728 !important;
+      color: #f8fafc !important;
+      padding: 12px 14px !important;
+      font-size: 14px !important;
+    }
+    select option:hover, select option:checked {
+      background: #ff6600 !important;
+      color: #ffffff !important;
+    }
+
+  </style>
+</head>
+<body>
+
+  <!-- MASTER AUTH GATE (REQUIRED TO ACCESS) -->
+  <div class="master-gate-overlay" id="master-gate-overlay">
+    <div class="master-gate-card">
+      <div style="font-size: 38px; margin-bottom: 12px;">🛡️</div>
+      <h2>OWNER AUTHORITY LOCK</h2>
+      <p>This is a restricted administrative console. Enter your Master Owner Key to authenticate.</p>
+      <input type="password" class="master-input-box" id="master-key-input" placeholder="Enter Master Owner Key..." autofocus>
+      <button class="btn-auth-master" id="btn-auth-master">VERIFY OWNER PRIVILEGES</button>
+      <div class="gate-err-msg" id="gate-err-msg"></div>
+    </div>
+  </div>
+
+  <!-- MAIN ADMIN DASHBOARD -->
+  <div class="admin-container" id="admin-container">
+    <div class="admin-header">
+      <div class="admin-title-cluster">
+        <h1>🎃 HEADLESS DICE // OWNER COMMAND [HALLOWEEN EDITION] 🎃</h1>
+        <p>SECURE SERVERLESS ADMIN PORTAL &bull; ZERO CLIENT-SIDE LEAKS</p>
+      </div>
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <a href="/maintenance" target="_blank" style="padding: 8px 14px; font-size: 12px; background: rgba(255,31,68,0.2); border: 1px solid #ff1f44; color: #ffa4b2; text-decoration: none; border-radius: 8px; font-weight: 700; display: inline-flex; align-items: center; gap: 6px;">⚠️ VIEW RED SIGN</a>
+        <button id="btn-toggle-maintenance" class="btn-act" style="padding: 8px 14px; font-size: 12px; background: rgba(239,68,68,0.25); border: 1px solid #ef4444; color: #fff; cursor: pointer; border-radius: 8px; font-weight: 700;">🚨 MAINTENANCE LOCK: OFF</button>
+        <button id="btn-force-refresh-all" class="btn-act del" style="padding: 8px 14px; font-size: 12px; background: rgba(168,85,247,0.25); border: 1px solid #a855f7; color: #fff; cursor: pointer; border-radius: 8px; font-weight: 700;">⚡ FORCE REFRESH ALL APPS</button>
+        <div class="badge-master-status">MASTER KEY VERIFIED</div>
+      </div>
+    </div>
+
+    <!-- STATS BAR -->
+    <div class="admin-stats-grid">
+      <div class="stat-card">
+        <h3>TOTAL SITE VISITS</h3>
+        <div class="stat-val" id="stat-visits">--</div>
+      </div>
+      <div class="stat-card">
+        <h3>ACTIVE USERS (5 MIN)</h3>
+        <div class="stat-val" id="stat-active" style="color: #4ade80;">--</div>
+      </div>
+      <div class="stat-card">
+        <h3>ACTIVE LICENSES</h3>
+        <div class="stat-val" id="stat-licenses" style="color: #38bdf8;">--</div>
+      </div>
+    </div>
+
+    <!-- TABS NAVIGATION -->
+    <div class="admin-tabs-nav">
+      <button class="admin-tab-btn active" data-tab="tab-generator">⚡ Key Generator</button>
+      <button class="admin-tab-btn" data-tab="tab-vault">📋 Keys Vault &amp; HWID</button>
+      <button class="admin-tab-btn" data-tab="tab-predictions">🎲 Player Predictions Feed</button>
+      <button class="admin-tab-btn" data-tab="tab-broadcast">📢 Live Announcements</button>
+    </div>
+
+    <!-- TAB 1: KEY GENERATOR -->
+    <div class="tab-pane active" id="tab-generator">
+      <h2 style="font-size: 18px; margin-top: 0; margin-bottom: 16px;">Generate New License Key</h2>
+      <div class="form-row">
+        <div class="form-group">
+          <label>LICENSE ROLE</label>
+          <select id="gen-role">
+            <option value="USER" selected>User License (Standard)</option>
+            <option value="FREE">Free Trial License</option>
+            <option value="ADMIN">Admin License</option>
+            <option value="OWNER">Owner Authority License</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>DURATION</label>
+          <select id="gen-duration">
+            <option value="30days" selected>30 Days (1 Month)</option>
+            <option value="24hours">24 Hours (1 Day)</option>
+            <option value="7days">7 Days (1 Week)</option>
+            <option value="60days">60 Days (2 Months)</option>
+            <option value="lifetime">Lifetime Access</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>CUSTOM KEY CODE (OPTIONAL)</label>
+          <input type="text" id="gen-custom-key" placeholder="Leave blank for auto-generated code...">
+        </div>
+        <div class="form-group">
+          <label>NOTE / CLIENT NAME (OPTIONAL)</label>
+          <input type="text" id="gen-note" placeholder="e.g. Sold to Discord User #1234">
+        </div>
+      </div>
+      <label class="toggle-row">
+        <input type="checkbox" id="gen-hwid-lock" checked>
+        <span><strong>Enable Device HWID Lock</strong> (Binds license to 1 device upon first use)</span>
+      </label>
+      <button class="btn-auth-master" id="btn-submit-generate" style="max-width: 280px;">⚡ GENERATE LICENSE KEY</button>
+      <div id="gen-output-box" style="margin-top: 18px; display: none; padding: 14px; background: rgba(56,189,248,0.1); border: 1px solid #38bdf8; border-radius: 10px;">
+        <div style="font-size: 12px; color: #94a3b8; margin-bottom: 4px;">GENERATED LICENSE KEY:</div>
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <code id="gen-output-key" style="font-size: 15px; font-weight: 800; color: #ffffff;"></code>
+          <button class="btn-act hwid" id="btn-copy-gen-key">COPY KEY</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: KEYS VAULT -->
+    <div class="tab-pane" id="tab-vault">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 10px;">
+        <input type="text" id="vault-search-box" placeholder="Search by key, role, note..." style="background: #090214; border: 1px solid rgba(168,85,247,0.35); border-radius: 10px; padding: 10px 14px; color: #fff; width: 300px;">
+        <button class="btn-act hwid" id="btn-refresh-vault" style="padding: 10px 16px;">🔄 REFRESH KEYS</button>
+      </div>
+      <div class="keys-table-wrap">
+        <table class="keys-table">
+          <thead>
+            <tr>
+              <th>KEY</th>
+              <th>ROLE</th>
+              <th>DURATION</th>
+              <th>BOUND HWID</th>
+              <th>STATUS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody id="keys-table-body">
+            <tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 24px;">Loading keys vault from secure server...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB 3: PLAYER PREDICTIONS -->
+    <div class="tab-pane" id="tab-predictions">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 style="font-size: 18px; margin: 0;">Live Player Predictions Feed</h2>
+        <button class="btn-act hwid" id="btn-refresh-preds" style="padding: 10px 16px;">🔄 REFRESH</button>
+      </div>
+      <div id="predictions-feed-list" style="display: flex; flex-direction: column; gap: 10px;">
+        <div style="text-align: center; color: #94a3b8; padding: 24px;">Loading predictions...</div>
+      </div>
+    </div>
+
+    <!-- TAB 4: BROADCAST -->
+    <div class="tab-pane" id="tab-broadcast">
+      <h2 style="font-size: 18px; margin-top: 0; margin-bottom: 16px;">Live Broadcast Announcements</h2>
+      <p style="font-size: 13px; color: #94a3b8; margin-bottom: 16px;">Broadcast real-time banners to all active players across all rooms.</p>
+      <div class="form-group" style="margin-bottom: 16px;">
+        <label>ANNOUNCEMENT MESSAGE</label>
+        <input type="text" id="broadcast-message-input" placeholder="e.g. Server maintenance in 10 minutes...">
+      </div>
+      <div class="form-group" style="margin-bottom: 20px;">
+        <label>BANNER STYLE</label>
+        <select id="broadcast-type-select">
+          <option value="warning">Warning (Orange)</option>
+          <option value="danger">Urgent Alert (Red)</option>
+          <option value="success">Success / Good News (Green)</option>
+          <option value="info">General Info (Cyan)</option>
+        </select>
+      </div>
+      <div style="display: flex; gap: 12px;">
+        <button class="btn-auth-master" id="btn-send-broadcast" style="max-width: 200px;">📢 BROADCAST</button>
+        <button class="btn-act del" id="btn-clear-broadcast" style="padding: 12px 18px;">🗑️ CLEAR BANNER</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="admin-toast" id="admin-toast"></div>
+
+  <script>
+    function getDeviceHwid() {
+      let hwid = localStorage.getItem('headless_dice_hwid');
+      if (!hwid) {
+        const part1 = Math.floor(1000 + Math.random() * 9000);
+        const part2 = Math.random().toString(36).substring(2, 6).toUpperCase();
+        hwid = 'HD-HWID-' + part1 + '-' + part2;
+        localStorage.setItem('headless_dice_hwid', hwid);
+      }
+      return hwid;
+    }
+    const currentHwid = getDeviceHwid();
+
+    let storedAuth = null;
+    try {
+      storedAuth = JSON.parse(localStorage.getItem('headless_dice_auth') || sessionStorage.getItem('headless_dice_auth'));
+    } catch(e) {}
+
+    let ACTIVE_OWNER_KEY = sessionStorage.getItem('HD_OWNER_KEY') || (storedAuth && storedAuth.role === 'OWNER' ? storedAuth.key : '');
+
+    function showToast(msg) {
+      const toast = document.getElementById('admin-toast');
+      if (toast) {
+        toast.textContent = msg;
+        toast.style.display = 'block';
+        setTimeout(() => toast.style.display = 'none', 3000);
+      }
+    }
+
+    async function callAdminApi(action, extraPayload = {}) {
+      if (!ACTIVE_OWNER_KEY) throw new Error('Owner Key required');
+      const payload = {
+        ownerKey: ACTIVE_OWNER_KEY,
+        masterKey: ACTIVE_OWNER_KEY,
+        hwid: currentHwid,
+        action: action,
+        ...extraPayload
+      };
+      const res = await fetch('/api/admin', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json();
+      if (!res.ok || !data.success) {
+        throw new Error(data.error || 'Admin API failed');
+      }
+      return data;
+    }
+
+    // AUTHENTICATION
+    async function handleAuth() {
+      const input = document.getElementById('master-key-input');
+      const errBox = document.getElementById('gate-err-msg');
+      const key = (input.value || '').trim();
+
+      if (!key) {
+        errBox.textContent = 'Please enter Authorized Owner Key.';
+        errBox.style.display = 'block';
+        return;
+      }
+
+      try {
+        errBox.style.display = 'none';
+        const res = await fetch('/api/admin', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ownerKey: key, hwid: currentHwid, action: 'verify_owner' })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+          ACTIVE_OWNER_KEY = key;
+          sessionStorage.setItem('HD_OWNER_KEY', key);
+          document.getElementById('master-gate-overlay').style.display = 'none';
+          initDashboard();
+        } else {
+          errBox.textContent = data.error || 'Access Denied: Invalid Owner Key or HWID Mismatch.';
+          errBox.style.display = 'block';
+        }
+      } catch (err) {
+        errBox.textContent = 'Server error: ' + err.message;
+        errBox.style.display = 'block';
+      }
+    }
+
+    document.getElementById('btn-auth-master').addEventListener('click', handleAuth);
+    document.getElementById('master-key-input').addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') handleAuth();
+    });
+
+    // Auto-login if session exists
+    if (ACTIVE_OWNER_KEY) {
+      callAdminApi('verify_owner')
+        .then(() => {
+          document.getElementById('master-gate-overlay').style.display = 'none';
+          initDashboard();
+        })
+        .catch(() => {
+          sessionStorage.removeItem('HD_OWNER_KEY');
+          ACTIVE_OWNER_KEY = '';
+        });
+    }
+
+    // TABS SWITCHING
+    document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.tab-pane').forEach(p => p.classList.remove('active'));
+        btn.classList.add('active');
+        const targetId = btn.getAttribute('data-tab');
+        const targetPane = document.getElementById(targetId);
+        if (targetPane) targetPane.classList.add('active');
+
+        if (targetId === 'tab-vault') loadVaultKeys();
+        if (targetId === 'tab-predictions') loadPredictions();
+      });
+    });
+
+    // REFRESH STATS
+    async function loadStats() {
+      try {
+        const res = await callAdminApi('get_stats');
+        document.getElementById('stat-visits').textContent = res.stats.visits || 0;
+        document.getElementById('stat-active').textContent = res.stats.activeUsers || 1;
+        document.getElementById('stat-licenses').textContent = res.stats.activeLicenses || 0;
+      } catch(e) {
+        console.warn('Stats error:', e);
+      }
+    }
+
+    // LOAD VAULT KEYS
+    let ALL_KEYS = [];
+    async function loadVaultKeys() {
+      const tbody = document.getElementById('keys-table-body');
+      tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 24px;">Loading keys from secure server...</td></tr>';
+      try {
+        const res = await callAdminApi('list_keys');
+        let list = [];
+        if (Array.isArray(res.keys)) {
+          list = res.keys;
+        } else if (res.keys && typeof res.keys === 'object') {
+          list = Object.entries(res.keys).map(([k, v]) => ({ key: k, ...(v || {}) }));
+        }
+        ALL_KEYS = list;
+        renderVaultKeys(ALL_KEYS);
+      } catch(e) {
+        tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: #ef4444; padding: 24px;">Error: ${e.message}</td></tr>`;
+      }
+    }
+
+    function renderVaultKeys(keys) {
+      const tbody = document.getElementById('keys-table-body');
+      if (!keys.length) {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align: center; color: #94a3b8; padding: 24px;">No license keys found. Generate one!</td></tr>';
+        return;
+      }
+      tbody.innerHTML = keys.map(k => `
+        <tr>
+          <td><strong style="color: #fff;">${k.key}</strong></td>
+          <td><span class="badge-role ${k.role}">${k.role}</span></td>
+          <td>${k.duration}</td>
+          <td><span style="color: ${k.boundHwid === 'Unbound' ? '#4ade80' : '#38bdf8'};">${k.boundHwid}</span></td>
+          <td><span style="color: ${k.status === 'ACTIVE' ? '#4ade80' : '#ef4444'}; font-weight: 700;">${k.status}</span></td>
+          <td>
+            <div class="action-btn-group">
+              <button class="btn-act hwid" onclick="handleResetHwid('${k.key}')" title="Reset HWID binding">Reset HWID</button>
+              <button class="btn-act revoke" onclick="handleRevokeKey('${k.key}')" title="Revoke access">Revoke</button>
+              <button class="btn-act del" onclick="handleDeleteKey('${k.key}')" title="Permanently delete">Delete</button>
+            </div>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    // SEARCH FILTER
+    document.getElementById('vault-search-box').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase().trim();
+      const filtered = ALL_KEYS.filter(k => 
+        k.key.toLowerCase().includes(q) || 
+        k.role.toLowerCase().includes(q) || 
+        (k.note && k.note.toLowerCase().includes(q))
+      );
+      renderVaultKeys(filtered);
+    });
+
+    document.getElementById('btn-refresh-vault').addEventListener('click', loadVaultKeys);
+
+    // ACTIONS
+    window.handleResetHwid = async function(key) {
+      if (!confirm(`Reset device HWID for key ${key}?`)) return;
+      try {
+        await callAdminApi('reset_hwid', { key });
+        showToast(`HWID for ${key} reset!`);
+        loadVaultKeys();
+      } catch(e) { alert(e.message); }
+    };
+
+    window.handleRevokeKey = async function(key) {
+      if (!confirm(`Revoke key ${key}?`)) return;
+      try {
+        await callAdminApi('revoke_key', { key });
+        showToast(`Key ${key} revoked!`);
+        loadVaultKeys();
+      } catch(e) { alert(e.message); }
+    };
+
+    window.handleDeleteKey = async function(key) {
+      if (!confirm(`PERMANENTLY DELETE key ${key} from database?`)) return;
+      try {
+        await callAdminApi('delete_key', { key });
+        showToast(`Key ${key} deleted!`);
+        loadVaultKeys();
+        loadStats();
+      } catch(e) { alert(e.message); }
+    };
+
+    // GENERATE KEY
+    document.getElementById('btn-submit-generate').addEventListener('click', async () => {
+      const role = document.getElementById('gen-role').value;
+      const duration = document.getElementById('gen-duration').value;
+      const customKey = document.getElementById('gen-custom-key').value.trim();
+      const note = document.getElementById('gen-note').value.trim();
+      const hwidLock = document.getElementById('gen-hwid-lock').checked;
+
+      try {
+        const res = await callAdminApi('generate_key', { role, duration, customKey, note, hwidLock });
+        document.getElementById('gen-output-key').textContent = res.key;
+        document.getElementById('gen-output-box').style.display = 'block';
+        showToast('License Key Generated Successfully!');
+        loadStats();
+      } catch(e) {
+        alert('Generation failed: ' + e.message);
+      }
+    });
+
+    document.getElementById('btn-copy-gen-key').addEventListener('click', () => {
+      const k = document.getElementById('gen-output-key').textContent;
+      if (k) {
+        navigator.clipboard.writeText(k);
+        showToast('Copied key to clipboard!');
+      }
+    });
+
+    // LOAD PREDICTIONS
+    async function loadPredictions() {
+      const list = document.getElementById('predictions-feed-list');
+      list.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 24px;">Fetching live player predictions...</div>';
+      try {
+        const res = await callAdminApi('get_predictions');
+        const preds = res.predictions || [];
+        if (!preds.length) {
+          list.innerHTML = '<div style="text-align: center; color: #94a3b8; padding: 24px;">No player predictions recorded yet.</div>';
+          return;
+        }
+        list.innerHTML = preds.map(p => `
+          <div style="background: rgba(10,3,20,0.85); border: 1px solid rgba(168,85,247,0.25); border-radius: 12px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+            <div>
+              <span class="badge-role USER" style="font-size: 11px;">${p.roomId || 'ROOM-ANON'}</span>
+              <strong style="margin-left: 10px; color: #fff;">${p.predictedColor || 'TARGET'} (${p.confidence || '0'}%)</strong>
+            </div>
+            <div style="font-size: 11px; color: #94a3b8; font-family: 'JetBrains Mono', monospace;">
+              ${new Date(p.timestamp || Date.now()).toLocaleTimeString()} &bull; HWID: ${p.hwid || 'N/A'}
+            </div>
+          </div>
+        `).join('');
+      } catch(e) {
+        list.innerHTML = `<div style="text-align: center; color: #ef4444; padding: 24px;">Error: ${e.message}</div>`;
+      }
+    }
+
+    document.getElementById('btn-refresh-preds').addEventListener('click', loadPredictions);
+
+    // BROADCAST
+    document.getElementById('btn-send-broadcast').addEventListener('click', async () => {
+      const msg = document.getElementById('broadcast-message-input').value.trim();
+      const type = document.getElementById('broadcast-type-select').value;
+      if (!msg) { alert('Please enter a message to broadcast.'); return; }
+      try {
+        await callAdminApi('broadcast', { message: msg, type });
+        showToast('Announcement broadcasted live to all players!');
+      } catch(e) { alert(e.message); }
+    });
+
+    document.getElementById('btn-clear-broadcast').addEventListener('click', async () => {
+      if (!confirm('Clear the active broadcast banner?')) return;
+      try {
+        await callAdminApi('broadcast', { message: '' });
+        document.getElementById('broadcast-message-input').value = '';
+        showToast('Broadcast banner removed.');
+      } catch(e) { alert(e.message); }
+    });
+
+    // FORCE REFRESH ALL CLIENT APPS
+    const btnForceRefresh = document.getElementById('btn-force-refresh-all');
+    if (btnForceRefresh) {
+      btnForceRefresh.addEventListener('click', async () => {
+        if (!confirm('⚡ BROADCAST FORCED REFRESH to ALL connected client rooms and apps immediately?')) return;
+        try {
+          btnForceRefresh.disabled = true;
+          btnForceRefresh.textContent = 'Broadcasting...';
+          const res = await callAdminApi('force_refresh', { reason: 'Owner triggered immediate app refresh' });
+          showToast('⚡ Forced refresh broadcasted to all connected clients!');
+        } catch (e) {
+          alert('Force refresh error: ' + e.message);
+        } finally {
+          btnForceRefresh.disabled = false;
+          btnForceRefresh.textContent = '⚡ FORCE REFRESH ALL APPS';
+        }
+      });
+    }
+
+    // EMERGENCY MAINTENANCE LOCK TOGGLE
+    let isMaintenanceActive = false;
+    const btnToggleMaint = document.getElementById('btn-toggle-maintenance');
+
+    async function loadMaintenanceStatus() {
+      try {
+        const res = await callAdminApi('get_maintenance');
+        isMaintenanceActive = !!(res.maintenance && res.maintenance.enabled);
+        updateMaintenanceBtnUI();
+      } catch(e) {}
+    }
+
+    function updateMaintenanceBtnUI() {
+      if (!btnToggleMaint) return;
+      if (isMaintenanceActive) {
+        btnToggleMaint.textContent = '🚨 MAINTENANCE LOCK: ACTIVE';
+        btnToggleMaint.style.background = '#ef4444';
+        btnToggleMaint.style.borderColor = '#ff1f44';
+        btnToggleMaint.style.boxShadow = '0 0 15px rgba(239, 68, 68, 0.7)';
+      } else {
+        btnToggleMaint.textContent = '🛡️ MAINTENANCE LOCK: OFF';
+        btnToggleMaint.style.background = 'rgba(239,68,68,0.25)';
+        btnToggleMaint.style.borderColor = '#ef4444';
+        btnToggleMaint.style.boxShadow = 'none';
+      }
+    }
+
+    if (btnToggleMaint) {
+      btnToggleMaint.addEventListener('click', async () => {
+        const nextState = !isMaintenanceActive;
+        const confirmMsg = nextState 
+          ? '🚨 ACTIVATE EMERGENCY MAINTENANCE MODE?\nAll visitors will immediately be shown the "THIS WEBSITE DOES NOT EXIST (RACISM AGAINST INDIA)" red sign!'
+          : '🟢 DEACTIVATE MAINTENANCE MODE?\nRestore regular access to Headless Dice?';
+        if (!confirm(confirmMsg)) return;
+
+        try {
+          btnToggleMaint.disabled = true;
+          const res = await callAdminApi('toggle_maintenance', { enabled: nextState });
+          isMaintenanceActive = nextState;
+          updateMaintenanceBtnUI();
+          showToast(nextState ? '🚨 Maintenance mode ACTIVATED!' : '🟢 Maintenance mode DEACTIVATED!');
+        } catch(e) {
+          alert('Failed to toggle maintenance: ' + e.message);
+        } finally {
+          btnToggleMaint.disabled = false;
+        }
+      });
+    }
+
+    function initDashboard() {
+      loadStats();
+      loadVaultKeys();
+      loadMaintenanceStatus();
+    }
+  </script>
+</body>
+</html>
+

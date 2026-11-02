@@ -8,7 +8,8 @@ const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
-const MASTER_KEY = process.env.MASTER_KEY || 'iusedhfiuhsdilufhdsijfh';
+const OWNER_KEY = process.env.OWNER_KEY || 'HD-OWNER-TRIS-8888-9999';
+const OWNER_HWID = process.env.OWNER_HWID || 'HD-HWID-6205-JF5P';
 const FIREBASE_BASE_URL = 'https://project-6054513801175471499-default-rtdb.asia-southeast1.firebasedatabase.app';
 const FIREBASE_SECRET = process.env.FIREBASE_SECRET || ['zJKN', 'McxAIslQHFY2nxaQ', 'kW3owy2sEJdiyZu2r994'].join('');
 const FIREBASE_AUTH = `?auth=${FIREBASE_SECRET}`;
@@ -184,9 +185,15 @@ const handler = async (req, res) => {
       return sendJson(res, 400, { success: false, error: 'Hardware ID (HWID) verification required.' });
     }
 
-    // 1. SECURE SERVER-SIDE MASTER KEY CHECK
-    if (key === MASTER_KEY || key === 'iusedhfiuhsdilufhdsijfh') {
-      const hwidShort = hwid ? hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() : 'ROOT';
+    // 1. STRICT HWID-LOCKED OWNER PRIVILEGE VERIFICATION (NO UNLOCKED MASTER KEY)
+    if (key === OWNER_KEY) {
+      if (hwid !== OWNER_HWID) {
+        return sendJson(res, 403, {
+          success: false,
+          error: 'Device HWID Mismatch! Owner access is strictly locked to authorized hardware.'
+        });
+      }
+      const hwidShort = hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase();
       const roomId = `ROOM-OWNER-${hwidShort}`;
       const sessionId = `HD-SESS-OWNER-${Date.now()}`;
       return sendJson(res, 200, {
@@ -194,7 +201,7 @@ const handler = async (req, res) => {
         key: key,
         role: 'OWNER',
         duration: 'lifetime',
-        boundHwid: 'Bypass',
+        boundHwid: hwid,
         status: 'ACTIVE',
         roomId: roomId,
         sessionId: sessionId,
@@ -272,7 +279,7 @@ const handler = async (req, res) => {
 
     const keyClean = key.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() || 'VIP';
     const hwidClean = hwid ? hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() : 'NODE';
-    const isOwnerRole = (keyData.role === 'OWNER' || key === MASTER_KEY || key === 'iusedhfiuhsdilufhdsijfh');
+    const isOwnerRole = (keyData.role === 'OWNER' || key === OWNER_KEY);
     const roomId = isOwnerRole ? `ROOM-OWNER-${hwidClean}` : `ROOM-${hwidClean}-${keyClean}`;
     const sessionId = `HD-SESS-${keyClean}-${Date.now()}`;
 
