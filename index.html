@@ -439,10 +439,6 @@
       <div class="gateway-footer" style="justify-content: center; margin-top: 24px;">
         <span>Dedicated Room Predictor v1.0 • Encrypted Multi-User Protocol</span>
       </div>
-
-      <div class="gateway-footer" style="justify-content: center;">
-        <span>Dedicated Room Predictor v1.0 • Encrypted Multi-User Protocol</span>
-      </div>
     </div>
   </div>
 
@@ -486,7 +482,9 @@
       const statusEl = document.getElementById('gateway-status-msg');
       const submitBtn = document.getElementById('btn-unlock');
 
-      const key = (inputEl.value || '').trim();
+      const rawKey = (inputEl.value || '').trim().toUpperCase();
+      const key = rawKey.replace(/\s+/g, '-').replace(/-+/g, '-');
+      inputEl.value = key;
       if (!key) {
         if (statusEl) {
           statusEl.style.color = '#ef4444';
