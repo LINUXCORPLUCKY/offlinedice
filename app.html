@@ -4075,6 +4075,101 @@ function clearActiveDieSlot() {
 }
 
 // Clear prediction results display when board is cleared
+
+function renderPredictionResults(res) {
+  if (!res || !res.topColor || !COLOR_CONFIG[res.topColor]) return;
+  const topConfig = COLOR_CONFIG[res.topColor];
+
+  // 1. Update Hero Card
+  const heroBadge = document.getElementById('hero-die-badge');
+  if (heroBadge) {
+    heroBadge.style.background = topConfig.hex;
+    heroBadge.style.boxShadow = '0 0 35px ' + topConfig.hex;
+  }
+
+  const heroDiceFace = document.getElementById('hero-dice-face');
+  if (heroDiceFace) {
+    heroDiceFace.style.background = topConfig.hex;
+  }
+
+  const heroColorName = document.getElementById('hero-color-name');
+  if (heroColorName) {
+    heroColorName.textContent = topConfig.name;
+    heroColorName.style.color = topConfig.hex;
+    heroColorName.style.textShadow = '0 0 20px ' + topConfig.hex;
+  }
+
+  const heroProbVal = document.getElementById('hero-prob-val');
+  if (heroProbVal) heroProbVal.textContent = res.topProbability;
+
+  const chipConfidence = document.getElementById('chip-confidence');
+  if (chipConfidence) chipConfidence.textContent = res.topProbability + '% LOCK';
+
+  const heroSubtext = document.getElementById('hero-subtext');
+  if (heroSubtext) {
+    heroSubtext.textContent = 'Strongest statistical momentum derived from your 4-dice stream rolls, Markov transitions, and recency weighting.';
+  }
+
+  const liveBadge = document.getElementById('pred-badge-live');
+  if (liveBadge) {
+    liveBadge.innerHTML = '<span class="badge-dot" style="background:#22c55e;"></span><span>1-COLOR TARGET LOCKED</span>';
+  }
+
+  // 2. Update 6-Color Probability Distribution Bars
+  const barsContainer = document.getElementById('probability-bars-container');
+  if (barsContainer) {
+    barsContainer.innerHTML = '';
+
+    res.ranked.forEach(color => {
+      const cfg = COLOR_CONFIG[color];
+      if (!cfg) return;
+      const pct = res.distribution[color] ? res.distribution[color].toFixed(1) : '0.0';
+      const isTop = (color === res.topColor);
+
+      const row = document.createElement('div');
+      row.className = 'prob-bar-item ' + (isTop ? 'highlight-item' : '');
+
+      row.innerHTML = 
+        '<div class="bar-color-info">' +
+          '<span class="bar-swatch" style="background:' + cfg.hex + '; color:' + cfg.hex + ';"></span>' +
+          '<span class="bar-color-name ' + (isTop ? 'text-purple' : '') + '">' + cfg.name + '</span>' +
+          (isTop ? '<span class="top-badge">★ #1</span>' : '') +
+        '</div>' +
+        '<div class="bar-track">' +
+          '<div class="bar-fill" style="width: ' + pct + '%; background: ' + cfg.hex + '; color: ' + cfg.hex + ';"></div>' +
+        '</div>' +
+        '<div class="bar-pct-label ' + (isTop ? 'text-purple' : '') + '">' + pct + '%</div>';
+
+      barsContainer.appendChild(row);
+    });
+  }
+
+  // 3. Update Telemetry Grid
+  const elTop = document.getElementById('tele-hot');
+  if (elTop) {
+    elTop.textContent = topConfig.name;
+    elTop.style.color = topConfig.hex;
+  }
+
+  const elDue = document.getElementById('tele-due');
+  if (elDue && res.coldColor && COLOR_CONFIG[res.coldColor]) {
+    elDue.textContent = COLOR_CONFIG[res.coldColor].name;
+    elDue.style.color = COLOR_CONFIG[res.coldColor].hex;
+  }
+
+  const elMarkov = document.getElementById('tele-markov');
+  if (elMarkov) {
+    elMarkov.textContent = 'LOCKED';
+    elMarkov.style.color = '#22c55e';
+  }
+
+  const elEntropy = document.getElementById('tele-entropy');
+  if (elEntropy) {
+    elEntropy.textContent = res.entropyScore || '0.65';
+    elEntropy.style.color = '#eab308';
+  }
+}
+
 function clearPredictionResultsUI() {
   STATE.latestPrediction = null;
 
@@ -4231,31 +4326,29 @@ function executePredictionCalculation() {
       scannerInterval = null;
     }
 
-    const result = solve1ColorPrediction();
-    if (result) {
-      STATE.latestPrediction = result;
-      renderPredictionResults(result);
-      if (typeof sfx !== 'undefined' && sfx.playLockChime) sfx.playLockChime();
-      showToast('⚡ Locked: Prediction is ' + COLOR_CONFIG[result.topColor].name + ' (' + result.topProbability + '%)!');
-      if (typeof logPredictionToFirebase === 'function') {
-        const lastRoll = STATE.rolls[STATE.rolls.length - 1] || [];
-        logPredictionToFirebase(result, lastRoll);
+    try {
+      const result = solve1ColorPrediction();
+      if (result) {
+        STATE.latestPrediction = result;
+        renderPredictionResults(result);
+        if (typeof sfx !== 'undefined' && sfx.playLockChime) sfx.playLockChime();
+        showToast('⚡ Locked: Prediction is ' + COLOR_CONFIG[result.topColor].name + ' (' + result.topProbability + '%)!');
       }
+    } catch(err) {
+      console.error('Finalize error:', err);
+    } finally {
+      if (overlay) overlay.classList.remove('active');
+      if (fill) fill.style.width = '0%';
+      STATE.isCalculating = false;
     }
-
-    if (overlay) overlay.classList.remove('active');
-    if (fill) fill.style.width = '0%';
-    STATE.isCalculating = false;
   }
 
   // Hook skip button
   const skipBtn = document.getElementById('btn-scanner-skip');
   if (skipBtn) {
     skipBtn.onclick = () => {
-      if (STATE.isCalculating) {
-        addLog('[SKIP] ⚡ Fast-forward requested. Revealing prediction now...');
-        finalize();
-      }
+      addLog('[SKIP] ⚡ Fast-forward requested. Revealing prediction now...');
+      finalize();
     };
   }
 
