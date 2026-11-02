@@ -11,9 +11,16 @@
     }
   ],
   "rewrites": [
-    {
-      "source": "/(.*)",
-      "destination": "/index.js"
-    }
+    { "source": "/assets/(.*)", "destination": "/assets/$1" },
+    { "source": "/style.css", "destination": "/style.css" },
+    { "source": "/login", "destination": "/login.html" },
+    { "source": "/room", "destination": "/app.html" },
+    { "source": "/room/(.*)", "destination": "/app.html" },
+    { "source": "/app", "destination": "/app.html" },
+    { "source": "/owner", "destination": "/owner-panel.html" },
+    { "source": "/admin", "destination": "/owner-panel.html" },
+    { "source": "/maintenance", "destination": "/maintenance.html" },
+    { "source": "/api/(.*)", "destination": "/index.js" },
+    { "source": "/(.*)", "destination": "/index.js" }
   ]
 }

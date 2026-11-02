@@ -49,39 +49,35 @@ function isMaintenanceActive() {
   return false;
 }
 
-// Page Routes
-app.get('/login', (req, res) => {
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'login.html'));
-});
+// Universal Path Handler (Works regardless of Vercel rewrite headers)
+app.use((req, res, next) => {
+  const reqUrl = (req.originalUrl || req.url || '').split('?')[0];
 
-app.get('/room', (req, res) => {
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'app.html'));
-});
-app.get('/room/*', (req, res) => {
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'app.html'));
-});
+  if (reqUrl === '/login') {
+    if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+    return res.sendFile(path.join(__dirname, 'login.html'));
+  }
 
-app.get('/app', (req, res) => {
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'app.html'));
-});
+  if (reqUrl.startsWith('/room') || reqUrl === '/app') {
+    if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
+    return res.sendFile(path.join(__dirname, 'app.html'));
+  }
 
-app.get('/owner', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
-app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
-app.get('/maintenance', (req, res) => res.sendFile(path.join(__dirname, 'maintenance.html')));
+  if (reqUrl === '/owner' || reqUrl === '/admin') {
+    return res.sendFile(path.join(__dirname, 'owner-panel.html'));
+  }
 
-app.get('/', (req, res) => {
-  if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'index.html'));
-});
+  if (reqUrl === '/maintenance') {
+    return res.sendFile(path.join(__dirname, 'maintenance.html'));
+  }
 
-// Fallback:
-app.use((req, res) => {
+  if (reqUrl.startsWith('/api/')) {
+    return next();
+  }
+
+  // Root or other pages
   if (isMaintenanceActive()) return res.sendFile(path.join(__dirname, 'maintenance.html'));
-  res.sendFile(path.join(__dirname, 'index.html'));
+  return res.sendFile(path.join(__dirname, 'index.html'));
 });
 
 module.exports = app;
