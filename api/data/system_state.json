@@ -1,0 +1,20 @@
+{
+  "maintenance": {
+    "enabled": false,
+    "reason": "System online and operational.",
+    "updatedAt": 1793610500000,
+    "author": "OWNER"
+  },
+  "announcement": {
+    "active": false,
+    "text": "",
+    "type": "info",
+    "timestamp": 1793605037245,
+    "author": "OWNER"
+  },
+  "control": {
+    "timestamp": 1793605037620,
+    "reason": "Maintenance mode activated - Linux updating dice lib",
+    "author": "OWNER"
+  }
+}
