@@ -15,7 +15,7 @@ const FIREBASE_AUTH = `?auth=${FIREBASE_SECRET}`;
 // In-Memory Bulletproof Embedded Key Vault (Guarantees instant authorization)
 const EMBEDDED_KEYS = {
   "HD-OWNER-TRIS-8888-9999": {
-    "boundHwid": "Unbound",
+    "boundHwid": "HD-HWID-5660-KYT0",
     "createdTimestamp": 1793580000000,
     "duration": "lifetime",
     "notes": "Tris Master Owner Key (Single-Device HWID Lock)",
