@@ -327,34 +327,6 @@
       padding: 0 12px;
     }
 
-    /* Discord Button */
-    .btn-discord-join {
-      width: 100%;
-      background: rgba(88, 101, 242, 0.15);
-      border: 1px solid rgba(88, 101, 242, 0.45);
-      color: #c7d2fe;
-      border-radius: 12px;
-      padding: 12px 18px;
-      font-size: 0.85rem;
-      font-weight: 700;
-      letter-spacing: 0.8px;
-      text-decoration: none;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-      box-sizing: border-box;
-      transition: all 0.25s ease;
-    }
-
-    .btn-discord-join:hover {
-      background: rgba(88, 101, 242, 0.3);
-      color: #ffffff;
-      border-color: #818cf8;
-      box-shadow: 0 4px 16px rgba(88, 101, 242, 0.3);
-      transform: translateY(-1px);
-    }
-
     /* Footer Meta */
     .gateway-footer {
       margin-top: 24px;
@@ -532,18 +504,14 @@
         if (statusEl) {
           statusEl.style.color = '#4ade80';
           if (isOwnerRole) {
-            statusEl.textContent = '⚡ Owner Privileges Verified! Opening Owner Command Center...';
+            statusEl.textContent = '⚡ Owner Privileges Verified! Entering Predictor Room...';
           } else {
             statusEl.textContent = '⚡ Access Granted (' + (data.role || 'VIP') + ')! Redirecting to room ' + targetRoom + '...';
           }
         }
 
         setTimeout(() => {
-          if (isOwnerRole) {
-            window.location.replace('/owner');
-          } else {
-            window.location.replace('/app?room=' + encodeURIComponent(targetRoom));
-          }
+          window.location.replace('/app?room=' + encodeURIComponent(targetRoom));
         }, 300);
       } catch (err) {
         if (statusEl) {

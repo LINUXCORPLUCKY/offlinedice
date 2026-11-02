@@ -12,8 +12,6 @@ const OWNER_KEY = process.env.OWNER_KEY || 'HD-OWNER-TRIS-8888-9999';
 const FIREBASE_BASE_URL = 'https://project-6054513801175471499-default-rtdb.asia-southeast1.firebasedatabase.app';
 const FIREBASE_SECRET = process.env.FIREBASE_SECRET || ['zJKN', 'McxAIslQHFY2nxaQ', 'kW3owy2sEJdiyZu2r994'].join('');
 const FIREBASE_AUTH = `?auth=${FIREBASE_SECRET}`;
-const DISCORD_VPS_URL = process.env.DISCORD_VPS_URL || 'http://78.154.103.29:9570';
-const DISCORD_VPS_FALLBACK = 'http://linuxlucky.fun:9570';
 
 // In-Memory Bulletproof Embedded Key Vault (Guarantees instant authorization)
 const EMBEDDED_KEYS = {
@@ -129,44 +127,6 @@ function firebasePatch(subpath, data) {
   });
 }
 
-function vpsFetch(vpsUrl, postData) {
-  return new Promise((resolve, reject) => {
-    try {
-      const parsed = new URL(vpsUrl + '/api/verify');
-      const isHttps = parsed.protocol === 'https:';
-      const client = isHttps ? https : http;
-      const bodyStr = JSON.stringify(postData);
-      const req = client.request({
-        hostname: parsed.hostname,
-        port: parsed.port || (isHttps ? 443 : 80),
-        path: parsed.pathname + (parsed.search || ''),
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Content-Length': Buffer.byteLength(bodyStr)
-        },
-        timeout: 3000
-      }, res => {
-        let b = '';
-        res.on('data', c => b += c);
-        res.on('end', () => {
-          try {
-            resolve({ status: res.statusCode, data: JSON.parse(b) });
-          } catch(e) {
-            resolve({ status: res.statusCode, data: b });
-          }
-        });
-      });
-      req.on('timeout', () => { req.destroy(); reject(new Error('VPS connection timed out')); });
-      req.on('error', reject);
-      req.write(bodyStr);
-      req.end();
-    } catch(err) {
-      reject(err);
-    }
-  });
-}
-
 const handler = async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -238,17 +198,6 @@ const handler = async (req, res) => {
           duration: 'lifetime',
           hwidLock: true
         };
-      } else {
-        // 3. TERTIARY: CHECK DISCORD VPS MICROSERVICE (78.154.103.29:9570)
-        const vpsTargets = [DISCORD_VPS_URL, DISCORD_VPS_FALLBACK].filter(Boolean);
-        for (const targetUrl of vpsTargets) {
-          try {
-            const vpsRes = await vpsFetch(targetUrl, { key, hwid });
-            if (vpsRes && vpsRes.status === 200 && vpsRes.data && vpsRes.data.success) {
-              return sendJson(res, 200, vpsRes.data);
-            }
-          } catch(vpsErr) {}
-        }
       }
     }
 

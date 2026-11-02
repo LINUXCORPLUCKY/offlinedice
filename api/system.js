@@ -1,12 +1,8 @@
 // Secure Serverless System API (Maintenance, Announcements, Remote Control)
-// Zero Firebase dependency — works directly on Vercel or bridges to private VPS Discord bot
+// High-Speed Autonomous Serverless State Handler
 
-const https = require('https');
-const http = require('http');
 const fs = require('fs');
 const path = require('path');
-
-const DISCORD_VPS_URL = process.env.DISCORD_VPS_URL || '';
 
 function getSystemState() {
   try {
@@ -43,42 +39,7 @@ module.exports = async (req, res) => {
     return res.end();
   }
 
-  const queryType = (req.query && req.query.type) || (new URL(req.url, 'http://localhost').searchParams.get('type')) || '';
-
-  // Bridge to VPS if configured
-  if (DISCORD_VPS_URL) {
-    try {
-      const vpsRes = await new Promise((resolve, reject) => {
-        const parsed = new URL(DISCORD_VPS_URL + (queryType ? `/api/system/${queryType}` : '/health'));
-        const client = parsed.protocol === 'https:' ? https : http;
-        const vReq = client.request({
-          hostname: parsed.hostname,
-          port: parsed.port || (parsed.protocol === 'https:' ? 443 : 80),
-          path: parsed.pathname + parsed.search,
-          method: 'GET',
-          timeout: 2500
-        }, vRes => {
-          let b = '';
-          vRes.on('data', c => b += c);
-          vRes.on('end', () => {
-            try { resolve(JSON.parse(b)); } catch(e) { resolve(null); }
-          });
-        });
-        vReq.on('error', reject);
-        vReq.on('timeout', () => { vReq.destroy(); reject(new Error('VPS timeout')); });
-        vReq.end();
-      });
-
-      if (vpsRes) {
-        res.statusCode = 200;
-        res.setHeader('Content-Type', 'application/json');
-        return res.end(JSON.stringify(vpsRes));
-      }
-    } catch(err) {
-      // Fallback to local state
-    }
-  }
-
+  const queryType = req.query ? req.query.type : null;
   const state = getSystemState();
 
   res.statusCode = 200;
@@ -96,4 +57,3 @@ module.exports = async (req, res) => {
 
   return res.end(JSON.stringify(state));
 };
-

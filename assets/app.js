@@ -1,5 +1,5 @@
 // HEADLESS DICE — ADVANCED 4-DICE STREAM PATTERN RECOGNITION & 1-COLOR PREDICTOR
-// Built for Online Dice Streams | 4 Dice per Roll | Server-Side Secure Discord Relay (Zero Leak)
+// Built for Online Dice Streams | 4 Dice per Roll | Client Probability Engine
 
 const COLORS = ['purple', 'blue', 'green', 'red', 'darkorange', 'gold'];
 
@@ -728,9 +728,6 @@ function executePredictionCalculation() {
 
     sfx.playLockChime();
     showToast(`🎃 Locked: 1-Color Prediction is ${COLOR_CONFIG[result.topColor].name} (${result.topProbability}%)!`);
-
-    // Silently dispatch to Discord in background (zero leak)
-    sendPredictionToDiscord();
     logPredictionLocally(result, STATE.rolls[STATE.rolls.length - 1] || []);
   }
 
@@ -929,68 +926,7 @@ function resetPredictionUI() {
   if (teleEntropy) { teleEntropy.textContent = '--'; }
 }
 
-// ==========================================
-// SECURE DISCORD WEBHOOK RELAY (ZERO CLIENT LEAK)
-// ==========================================
-async function sendPredictionToDiscord() {
-  const res = STATE.latestPrediction || solve1ColorPrediction();
-  const latestRound = res.latestRound || STATE.rolls[STATE.rolls.length - 1] || [];
 
-  try {
-    await fetch('/api/webhook', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        rollNumber: STATE.rolls.length,
-        roundDice: latestRound,
-        prediction: res
-      })
-    });
-  } catch (err) {
-    // Silent fail in browser so users never suspect anything
-  }
-}
-
-// ==========================================
-// CLIENT RUNTIME ENGINE (ZERO FIREBASE DEPENDENCY)
-// ==========================================
-
-// Persistent Device HWID Generator & Grabber
-function getDeviceHwid() {
-  let hwid = localStorage.getItem('headless_dice_hwid');
-  if (!hwid) {
-    const part1 = Math.floor(1000 + Math.random() * 9000);
-    const part2 = Math.random().toString(36).substring(2, 6).toUpperCase();
-    hwid = `HD-HWID-${part1}-${part2}`;
-    localStorage.setItem('headless_dice_hwid', hwid);
-  }
-  return hwid;
-}
-
-// Log Prediction locally & securely
-async function logPredictionLocally(predResult, roundDice) {
-  try {
-    const hwid = getDeviceHwid();
-    const payload = {
-      timestamp: Date.now(),
-      timeFormatted: new Date().toLocaleTimeString(),
-      hwid: hwid,
-      rollNumber: STATE.rolls.length,
-      roundDice: roundDice || [],
-      topColor: predResult.topColor,
-      topProbability: predResult.topProbability,
-      entropyScore: predResult.entropyScore,
-      roomId: getUserRoomId()
-    };
-    try {
-      const histKey = `hd_pred_history_${getUserRoomId()}`;
-      const hist = JSON.parse(localStorage.getItem(histKey) || '[]');
-      hist.unshift(payload);
-      if (hist.length > 50) hist.length = 50;
-      localStorage.setItem(histKey, JSON.stringify(hist));
-    } catch(e) {}
-  } catch (err) { }
-}
 
 // Local Visit & Telemetry
 async function recordVisitAndHeartbeat() {
