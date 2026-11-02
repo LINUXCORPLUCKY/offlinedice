@@ -1,0 +1,1487 @@
+{
+  "users": [
+    {
+      "_id": "6ae84342713a6fd3427eda7a",
+      "username": "user_s859",
+      "role": "USER",
+      "licenseKey": "HD-USER-28D2-JLSK-S859",
+      "boundHwid": "HD-HWID-8389-1V19",
+      "roomId": "ROOM-1V19-S859",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T02:53:11.758Z",
+      "lastLoginAt": "2026-11-02T08:01:06.681Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda7d",
+      "username": "user_hg7v",
+      "role": "USER",
+      "licenseKey": "HD-USER-4CFN-4NBP-HG7V",
+      "boundHwid": "HD-HWID-9205-JVAK",
+      "roomId": "ROOM-JVAK-HG7V",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T02:52:57.123Z",
+      "lastLoginAt": "2026-11-02T08:01:06.683Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda80",
+      "username": "user_e4bu",
+      "role": "USER",
+      "licenseKey": "HD-USER-GLPW-LDLC-E4BU",
+      "boundHwid": "HD-HWID-5859-P5B6",
+      "roomId": "ROOM-P5B6-E4BU",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T02:49:51.831Z",
+      "lastLoginAt": "2026-11-02T08:01:06.685Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda83",
+      "username": "user_q9yt",
+      "role": "USER",
+      "licenseKey": "HD-USER-HUPQ-F8SC-Q9YT",
+      "boundHwid": "HD-HWID-4178-TIVH",
+      "roomId": "ROOM-TIVH-Q9YT",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T03:09:22.171Z",
+      "lastLoginAt": "2026-11-02T08:01:06.687Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda86",
+      "username": "user_ep79",
+      "role": "USER",
+      "licenseKey": "HD-USER-JE6R-5EB5-EP79",
+      "boundHwid": "HD-HWID-8332-EQ2C",
+      "roomId": "ROOM-EQ2C-EP79",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T02:50:14.369Z",
+      "lastLoginAt": "2026-11-02T08:01:06.688Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda89",
+      "username": "user_hxfq",
+      "role": "USER",
+      "licenseKey": "HD-USER-LUQQ-ZC7D-HXFQ",
+      "boundHwid": "HD-HWID-2873-XTZM",
+      "roomId": "ROOM-XTZM-HXFQ",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T02:53:52.690Z",
+      "lastLoginAt": "2026-11-02T08:01:06.689Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda8c",
+      "username": "user_nmtb",
+      "role": "USER",
+      "licenseKey": "HD-USER-WKDH-J9RW-NMTB",
+      "boundHwid": "HD-HWID-3686-T9XA",
+      "roomId": "ROOM-T9XA-NMTB",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T02:58:41.544Z",
+      "lastLoginAt": "2026-11-02T08:01:06.691Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda8f",
+      "username": "user_sexl",
+      "role": "USER",
+      "licenseKey": "HD-USER-WXEL-XMUP-SEXL",
+      "boundHwid": "HD-HWID-5157-60L2",
+      "roomId": "ROOM-60L2-SEXL",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T02:53:28.849Z",
+      "lastLoginAt": "2026-11-02T08:01:06.693Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda92",
+      "username": "user_gwt4",
+      "role": "USER",
+      "licenseKey": "HD-USER-XABJ-PMD8-GWT4",
+      "boundHwid": "HD-HWID-2124-OK3U",
+      "roomId": "ROOM-OK3U-GWT4",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T03:01:36.861Z",
+      "lastLoginAt": "2026-11-02T08:01:06.694Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda95",
+      "username": "user_7wya",
+      "role": "USER",
+      "licenseKey": "HD-USER-Y3PJ-2MRH-7WYA",
+      "boundHwid": "HD-HWID-2704-0V6L",
+      "roomId": "ROOM-0V6L-7WYA",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T02:54:30.747Z",
+      "lastLoginAt": "2026-11-02T08:01:06.696Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda98",
+      "username": "user_a3fr",
+      "role": "USER",
+      "licenseKey": "HD-USER-ZTTC-PEWK-A3FR",
+      "boundHwid": "HD-HWID-2606-ZOXE",
+      "roomId": "ROOM-ZOXE-A3FR",
+      "status": "ACTIVE",
+      "createdAt": "2026-11-02T02:51:02.887Z",
+      "lastLoginAt": "2026-11-02T08:01:06.698Z"
+    }
+  ],
+  "licenses": [
+    {
+      "_id": "6ae84342713a6fd3427eda79",
+      "key": "HD-USER-28D2-JLSK-S859",
+      "role": "USER",
+      "boundHwid": "HD-HWID-8389-1V19",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793587991758,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: 1V19)",
+      "createdAt": "2026-11-02T02:53:11.758Z",
+      "updatedAt": "2026-11-02T08:01:06.677Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda7c",
+      "key": "HD-USER-4CFN-4NBP-HG7V",
+      "role": "USER",
+      "boundHwid": "HD-HWID-9205-JVAK",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793587977123,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: JVAK)",
+      "createdAt": "2026-11-02T02:52:57.123Z",
+      "updatedAt": "2026-11-02T08:01:06.683Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda7f",
+      "key": "HD-USER-GLPW-LDLC-E4BU",
+      "role": "USER",
+      "boundHwid": "HD-HWID-5859-P5B6",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793587791831,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: P5B6)",
+      "createdAt": "2026-11-02T02:49:51.831Z",
+      "updatedAt": "2026-11-02T08:01:06.684Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda82",
+      "key": "HD-USER-HUPQ-F8SC-Q9YT",
+      "role": "USER",
+      "boundHwid": "HD-HWID-4178-TIVH",
+      "status": "ACTIVE",
+      "duration": "30days",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793588962171,
+      "expireTimestamp": 1796180962171,
+      "notes": "Migrated from Firebase RTDB (HWID: TIVH)",
+      "createdAt": "2026-11-02T03:09:22.171Z",
+      "updatedAt": "2026-11-02T08:01:06.686Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda85",
+      "key": "HD-USER-JE6R-5EB5-EP79",
+      "role": "USER",
+      "boundHwid": "HD-HWID-8332-EQ2C",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793587814369,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: EQ2C)",
+      "createdAt": "2026-11-02T02:50:14.369Z",
+      "updatedAt": "2026-11-02T08:01:06.688Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda88",
+      "key": "HD-USER-LUQQ-ZC7D-HXFQ",
+      "role": "USER",
+      "boundHwid": "HD-HWID-2873-XTZM",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793588032690,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: XTZM)",
+      "createdAt": "2026-11-02T02:53:52.690Z",
+      "updatedAt": "2026-11-02T08:01:06.689Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda8b",
+      "key": "HD-USER-WKDH-J9RW-NMTB",
+      "role": "USER",
+      "boundHwid": "HD-HWID-3686-T9XA",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793588321544,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: T9XA)",
+      "createdAt": "2026-11-02T02:58:41.544Z",
+      "updatedAt": "2026-11-02T08:01:06.690Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda8e",
+      "key": "HD-USER-WXEL-XMUP-SEXL",
+      "role": "USER",
+      "boundHwid": "HD-HWID-5157-60L2",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793588008849,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: 60L2)",
+      "createdAt": "2026-11-02T02:53:28.849Z",
+      "updatedAt": "2026-11-02T08:01:06.692Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda91",
+      "key": "HD-USER-XABJ-PMD8-GWT4",
+      "role": "USER",
+      "boundHwid": "HD-HWID-2124-OK3U",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793588496861,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: OK3U)",
+      "createdAt": "2026-11-02T03:01:36.861Z",
+      "updatedAt": "2026-11-02T08:01:06.694Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda94",
+      "key": "HD-USER-Y3PJ-2MRH-7WYA",
+      "role": "USER",
+      "boundHwid": "HD-HWID-2704-0V6L",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793588070747,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: 0V6L)",
+      "createdAt": "2026-11-02T02:54:30.747Z",
+      "updatedAt": "2026-11-02T08:01:06.696Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda97",
+      "key": "HD-USER-ZTTC-PEWK-A3FR",
+      "role": "USER",
+      "boundHwid": "HD-HWID-2606-ZOXE",
+      "status": "ACTIVE",
+      "duration": "lifetime",
+      "hwidLock": true,
+      "isRedeemed": true,
+      "createdTimestamp": 1793587862887,
+      "expireTimestamp": null,
+      "notes": "Migrated from Firebase RTDB (HWID: ZOXE)",
+      "createdAt": "2026-11-02T02:51:02.887Z",
+      "updatedAt": "2026-11-02T08:01:06.698Z"
+    },
+    {
+      "_id": "6ae8496f9a66d33151479b89",
+      "key": "HD-TEST-BOUND-KEY",
+      "boundHwid": "HWID-LEGIT-1111",
+      "status": "Active",
+      "role": "USER",
+      "expiresAt": 1793694447296,
+      "createdAt": "2026-11-02T08:27:27.296Z"
+    },
+    {
+      "_id": "6ae849913c666cfb8ac850fa",
+      "key": "HD-TEST-BOUND-KEY",
+      "boundHwid": "HWID-LEGIT-1111",
+      "status": "Active",
+      "role": "USER",
+      "expiresAt": 1793694481353,
+      "createdAt": "2026-11-02T08:28:01.353Z"
+    },
+    {
+      "_id": "6ae849a12d53970a6085dd29",
+      "key": "HD-TEST-BOUND-KEY",
+      "boundHwid": "HWID-LEGIT-1111",
+      "status": "Active",
+      "role": "USER",
+      "expiresAt": 1793694497047,
+      "createdAt": "2026-11-02T08:28:17.047Z"
+    }
+  ],
+  "owner_accounts": [
+    {
+      "_id": "6ae84342713a6fd3427eda9a",
+      "ownerId": "OWNER_PRIMARY",
+      "username": "tris_master",
+      "displayName": "Tris (Primary Owner)",
+      "passwordHash": "$2b$12$jEdrUGaTIJNFhqFDp0xiXuoGJ/v9RxeRpp40oXZnjMLUvY2bEi2ay",
+      "boundHwid": "HD-HWID-5660-KYT0",
+      "role": "OWNER",
+      "status": "ACTIVE",
+      "failedLoginAttempts": 0,
+      "lockUntil": null,
+      "createdAt": "2026-11-02T08:01:06.926Z"
+    },
+    {
+      "_id": "6ae84343713a6fd3427eda9b",
+      "ownerId": "OWNER_SECONDARY",
+      "username": "co_owner_auth",
+      "displayName": "Co-Owner Authority",
+      "passwordHash": "$2b$12$jEdrUGaTIJNFhqFDp0xiXuPX.TOJNI27FyU60nwAK7yQCWV08jaW2",
+      "boundHwid": "HD-HWID-COWN-0001",
+      "role": "OWNER",
+      "status": "ACTIVE",
+      "failedLoginAttempts": 0,
+      "lockUntil": null,
+      "createdAt": "2026-11-02T08:01:07.141Z"
+    }
+  ],
+  "user_rooms": [
+    {
+      "_id": "6ae84342713a6fd3427eda7b",
+      "roomId": "ROOM-1V19-S859",
+      "userId": "6ae84342713a6fd3427eda7a",
+      "licenseKey": "HD-USER-28D2-JLSK-S859",
+      "ownerHwid": "HD-HWID-8389-1V19",
+      "roomName": "Personal Sanctuary [S859]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.682Z",
+      "updatedAt": "2026-11-02T08:01:06.682Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda7e",
+      "roomId": "ROOM-JVAK-HG7V",
+      "userId": "6ae84342713a6fd3427eda7d",
+      "licenseKey": "HD-USER-4CFN-4NBP-HG7V",
+      "ownerHwid": "HD-HWID-9205-JVAK",
+      "roomName": "Personal Sanctuary [HG7V]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.684Z",
+      "updatedAt": "2026-11-02T08:01:06.684Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda81",
+      "roomId": "ROOM-P5B6-E4BU",
+      "userId": "6ae84342713a6fd3427eda80",
+      "licenseKey": "HD-USER-GLPW-LDLC-E4BU",
+      "ownerHwid": "HD-HWID-5859-P5B6",
+      "roomName": "Personal Sanctuary [E4BU]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.686Z",
+      "updatedAt": "2026-11-02T08:01:06.686Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda84",
+      "roomId": "ROOM-TIVH-Q9YT",
+      "userId": "6ae84342713a6fd3427eda83",
+      "licenseKey": "HD-USER-HUPQ-F8SC-Q9YT",
+      "ownerHwid": "HD-HWID-4178-TIVH",
+      "roomName": "Personal Sanctuary [Q9YT]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.687Z",
+      "updatedAt": "2026-11-02T08:01:06.687Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda87",
+      "roomId": "ROOM-EQ2C-EP79",
+      "userId": "6ae84342713a6fd3427eda86",
+      "licenseKey": "HD-USER-JE6R-5EB5-EP79",
+      "ownerHwid": "HD-HWID-8332-EQ2C",
+      "roomName": "Personal Sanctuary [EP79]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.688Z",
+      "updatedAt": "2026-11-02T08:01:06.688Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda8a",
+      "roomId": "ROOM-XTZM-HXFQ",
+      "userId": "6ae84342713a6fd3427eda89",
+      "licenseKey": "HD-USER-LUQQ-ZC7D-HXFQ",
+      "ownerHwid": "HD-HWID-2873-XTZM",
+      "roomName": "Personal Sanctuary [HXFQ]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.690Z",
+      "updatedAt": "2026-11-02T08:01:06.690Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda8d",
+      "roomId": "ROOM-T9XA-NMTB",
+      "userId": "6ae84342713a6fd3427eda8c",
+      "licenseKey": "HD-USER-WKDH-J9RW-NMTB",
+      "ownerHwid": "HD-HWID-3686-T9XA",
+      "roomName": "Personal Sanctuary [NMTB]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.691Z",
+      "updatedAt": "2026-11-02T08:01:06.691Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda90",
+      "roomId": "ROOM-60L2-SEXL",
+      "userId": "6ae84342713a6fd3427eda8f",
+      "licenseKey": "HD-USER-WXEL-XMUP-SEXL",
+      "ownerHwid": "HD-HWID-5157-60L2",
+      "roomName": "Personal Sanctuary [SEXL]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.693Z",
+      "updatedAt": "2026-11-02T08:01:06.693Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda93",
+      "roomId": "ROOM-OK3U-GWT4",
+      "userId": "6ae84342713a6fd3427eda92",
+      "licenseKey": "HD-USER-XABJ-PMD8-GWT4",
+      "ownerHwid": "HD-HWID-2124-OK3U",
+      "roomName": "Personal Sanctuary [GWT4]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.695Z",
+      "updatedAt": "2026-11-02T08:01:06.695Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda96",
+      "roomId": "ROOM-0V6L-7WYA",
+      "userId": "6ae84342713a6fd3427eda95",
+      "licenseKey": "HD-USER-Y3PJ-2MRH-7WYA",
+      "ownerHwid": "HD-HWID-2704-0V6L",
+      "roomName": "Personal Sanctuary [7WYA]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.697Z",
+      "updatedAt": "2026-11-02T08:01:06.697Z"
+    },
+    {
+      "_id": "6ae84342713a6fd3427eda99",
+      "roomId": "ROOM-ZOXE-A3FR",
+      "userId": "6ae84342713a6fd3427eda98",
+      "licenseKey": "HD-USER-ZTTC-PEWK-A3FR",
+      "ownerHwid": "HD-HWID-2606-ZOXE",
+      "roomName": "Personal Sanctuary [A3FR]",
+      "rollsState": [
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ],
+        [
+          null,
+          null,
+          null,
+          null
+        ]
+      ],
+      "predictionHistory": [],
+      "settings": {
+        "soundEnabled": true,
+        "theme": "cyber_purple",
+        "autoCalculate": true
+      },
+      "createdAt": "2026-11-02T08:01:06.699Z",
+      "updatedAt": "2026-11-02T08:01:06.699Z"
+    },
+    {
+      "_id": "6ae8496f9a66d33151479b8a",
+      "roomId": "room_USER_AAA",
+      "userId": "USER_AAA",
+      "licenseKey": "HD-USER-AAA",
+      "rolls": [
+        [
+          "purple",
+          "blue",
+          "green",
+          "red"
+        ],
+        [
+          "purple",
+          "blue",
+          "green",
+          "gold"
+        ]
+      ],
+      "predictionHistory": [],
+      "createdAt": "2026-11-02T08:27:27.296Z"
+    },
+    {
+      "_id": "6ae849913c666cfb8ac850fc",
+      "roomId": "room_USER_AAA",
+      "userId": "USER_AAA",
+      "licenseKey": "HD-USER-AAA",
+      "rolls": [
+        [
+          "purple",
+          "blue",
+          "green",
+          "red"
+        ],
+        [
+          "purple",
+          "blue",
+          "green",
+          "gold"
+        ]
+      ],
+      "predictionHistory": [],
+      "createdAt": "2026-11-02T08:28:01.354Z"
+    },
+    {
+      "_id": "6ae849a12d53970a6085dd2b",
+      "roomId": "room_USER_AAA",
+      "userId": "USER_AAA",
+      "licenseKey": "HD-USER-AAA",
+      "rolls": [
+        [
+          "purple",
+          "blue",
+          "green",
+          "red"
+        ],
+        [
+          "purple",
+          "blue",
+          "green",
+          "gold"
+        ]
+      ],
+      "predictionHistory": [],
+      "createdAt": "2026-11-02T08:28:17.048Z"
+    }
+  ],
+  "sessions": [
+    {
+      "_id": "6ae8496f9a66d33151479b85",
+      "sessionToken": "fb4cbaf9bfb3bc178006d72f928959da76d577e9935f022d6c5b993e2ba441b9",
+      "userId": "6ae84342713a6fd3427eda9a",
+      "ownerId": "OWNER_PRIMARY",
+      "username": "tris_master",
+      "role": "OWNER",
+      "hwid": "HD-HWID-5660-KYT0",
+      "ip": "192.168.1.101",
+      "isValid": true,
+      "expiresAt": "2026-11-03T08:27:27.071Z",
+      "createdAt": "2026-11-02T08:27:27.071Z"
+    },
+    {
+      "_id": "6ae8496f9a66d33151479b87",
+      "sessionToken": "91fc34667cede97062ad2a31fa1762ec6471bf553c1801632b20abacbdbd99f9",
+      "userId": "6ae84343713a6fd3427eda9b",
+      "ownerId": "OWNER_SECONDARY",
+      "username": "co_owner_auth",
+      "role": "OWNER",
+      "hwid": "HD-HWID-COWN-0001",
+      "ip": "192.168.1.102",
+      "isValid": true,
+      "expiresAt": "2026-11-03T08:27:27.294Z",
+      "createdAt": "2026-11-02T08:27:27.294Z"
+    },
+    {
+      "_id": "6ae849913c666cfb8ac850f6",
+      "sessionToken": "f4891850e390d943c32d26078299446feef5e6c533d26848ffc9808d7bb01c7b",
+      "userId": "6ae84342713a6fd3427eda9a",
+      "ownerId": "OWNER_PRIMARY",
+      "username": "tris_master",
+      "role": "OWNER",
+      "hwid": "HD-HWID-5660-KYT0",
+      "ip": "192.168.1.101",
+      "isValid": true,
+      "expiresAt": "2026-11-03T08:28:01.112Z",
+      "createdAt": "2026-11-02T08:28:01.112Z"
+    },
+    {
+      "_id": "6ae849913c666cfb8ac850f8",
+      "sessionToken": "c1bd6c2e06d868b67cc18faf12a0b99c1c088844edafa9bbf3a327057ed9a927",
+      "userId": "6ae84343713a6fd3427eda9b",
+      "ownerId": "OWNER_SECONDARY",
+      "username": "co_owner_auth",
+      "role": "OWNER",
+      "hwid": "HD-HWID-COWN-0001",
+      "ip": "192.168.1.102",
+      "isValid": true,
+      "expiresAt": "2026-11-03T08:28:01.351Z",
+      "createdAt": "2026-11-02T08:28:01.351Z"
+    },
+    {
+      "_id": "6ae849a02d53970a6085dd25",
+      "sessionToken": "ebd5278c4368ea42b5f3a8425f25e416ad1944562c7e51fd30b33fe2ff6b93dc",
+      "userId": "6ae84342713a6fd3427eda9a",
+      "ownerId": "OWNER_PRIMARY",
+      "username": "tris_master",
+      "role": "OWNER",
+      "hwid": "HD-HWID-5660-KYT0",
+      "ip": "192.168.1.101",
+      "isValid": true,
+      "expiresAt": "2026-11-03T08:28:16.824Z",
+      "createdAt": "2026-11-02T08:28:16.824Z"
+    },
+    {
+      "_id": "6ae849a12d53970a6085dd27",
+      "sessionToken": "3b2e981c6116bbe375d222fcc6039495f9b8ba2165a68a6db581dad29d6d7063",
+      "userId": "6ae84343713a6fd3427eda9b",
+      "ownerId": "OWNER_SECONDARY",
+      "username": "co_owner_auth",
+      "role": "OWNER",
+      "hwid": "HD-HWID-COWN-0001",
+      "ip": "192.168.1.102",
+      "isValid": true,
+      "expiresAt": "2026-11-03T08:28:17.046Z",
+      "createdAt": "2026-11-02T08:28:17.046Z"
+    }
+  ],
+  "system_settings": [
+    {
+      "key": "maintenance",
+      "value": {
+        "enabled": false,
+        "reason": "System maintenance in progress",
+        "updatedAt": 1793608098154,
+        "author": "OWNER"
+      },
+      "updatedBy": "OWNER",
+      "updatedAt": "2026-11-02T08:28:18.154Z"
+    },
+    {
+      "key": "control",
+      "value": {
+        "timestamp": 1793608098154,
+        "reason": "Maintenance mode state toggled",
+        "author": "OWNER"
+      },
+      "updatedBy": "OWNER",
+      "updatedAt": "2026-11-02T08:28:18.154Z"
+    }
+  ],
+  "announcements": [],
+  "audit_logs": [
+    {
+      "_id": "6ae848f329c6bd1738fb212f",
+      "action": "MAINTENANCE_ACTIVATED",
+      "actor": "OWNER",
+      "ip": "127.0.0.1",
+      "details": {
+        "enabled": true,
+        "reason": "Emergency Core Hardening",
+        "updatedAt": 1793607923557,
+        "author": "OWNER"
+      },
+      "timestamp": "2026-11-02T08:25:23.561Z",
+      "createdAt": "2026-11-02T08:25:23.562Z"
+    },
+    {
+      "_id": "6ae848f329c6bd1738fb2130",
+      "action": "MAINTENANCE_DEACTIVATED",
+      "actor": "OWNER",
+      "ip": "127.0.0.1",
+      "details": {
+        "enabled": false,
+        "reason": "System maintenance in progress",
+        "updatedAt": 1793607923563,
+        "author": "OWNER"
+      },
+      "timestamp": "2026-11-02T08:25:23.564Z",
+      "createdAt": "2026-11-02T08:25:23.564Z"
+    },
+    {
+      "_id": "6ae8496e9a66d33151479b84",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "192.168.1.101",
+      "hwid": "HD-HWID-5660-KYT0",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:27:26.851Z",
+      "createdAt": "2026-11-02T08:27:26.852Z"
+    },
+    {
+      "_id": "6ae8496f9a66d33151479b86",
+      "action": "OWNER_LOGIN_SUCCESS",
+      "actor": "tris_master",
+      "ip": "192.168.1.101",
+      "hwid": "HD-HWID-5660-KYT0",
+      "details": {
+        "ownerId": "OWNER_PRIMARY"
+      },
+      "timestamp": "2026-11-02T08:27:27.072Z",
+      "createdAt": "2026-11-02T08:27:27.072Z"
+    },
+    {
+      "_id": "6ae8496f9a66d33151479b88",
+      "action": "OWNER_LOGIN_SUCCESS",
+      "actor": "co_owner_auth",
+      "ip": "192.168.1.102",
+      "hwid": "HD-HWID-COWN-0001",
+      "details": {
+        "ownerId": "OWNER_SECONDARY"
+      },
+      "timestamp": "2026-11-02T08:27:27.295Z",
+      "createdAt": "2026-11-02T08:27:27.295Z"
+    },
+    {
+      "_id": "6ae8496f9a66d33151479b8b",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:27:27.515Z",
+      "createdAt": "2026-11-02T08:27:27.515Z"
+    },
+    {
+      "_id": "6ae8496f9a66d33151479b8c",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:27:27.731Z",
+      "createdAt": "2026-11-02T08:27:27.731Z"
+    },
+    {
+      "_id": "6ae8496f9a66d33151479b8d",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:27:27.948Z",
+      "createdAt": "2026-11-02T08:27:27.948Z"
+    },
+    {
+      "_id": "6ae849709a66d33151479b8e",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:27:28.164Z",
+      "createdAt": "2026-11-02T08:27:28.164Z"
+    },
+    {
+      "_id": "6ae849709a66d33151479b8f",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:27:28.391Z",
+      "createdAt": "2026-11-02T08:27:28.391Z"
+    },
+    {
+      "_id": "6ae849709a66d33151479b90",
+      "action": "MAINTENANCE_ACTIVATED",
+      "actor": "OWNER",
+      "ip": "127.0.0.1",
+      "details": {
+        "enabled": true,
+        "reason": "Emergency Core Hardening",
+        "updatedAt": 1793608048393,
+        "author": "OWNER"
+      },
+      "timestamp": "2026-11-02T08:27:28.394Z",
+      "createdAt": "2026-11-02T08:27:28.394Z"
+    },
+    {
+      "_id": "6ae849709a66d33151479b91",
+      "action": "MAINTENANCE_DEACTIVATED",
+      "actor": "OWNER",
+      "ip": "127.0.0.1",
+      "details": {
+        "enabled": false,
+        "reason": "System maintenance in progress",
+        "updatedAt": 1793608048394,
+        "author": "OWNER"
+      },
+      "timestamp": "2026-11-02T08:27:28.395Z",
+      "createdAt": "2026-11-02T08:27:28.395Z"
+    },
+    {
+      "_id": "6ae849903c666cfb8ac850f5",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "192.168.1.101",
+      "hwid": "HD-HWID-5660-KYT0",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:00.846Z",
+      "createdAt": "2026-11-02T08:28:00.846Z"
+    },
+    {
+      "_id": "6ae849913c666cfb8ac850f7",
+      "action": "OWNER_LOGIN_SUCCESS",
+      "actor": "tris_master",
+      "ip": "192.168.1.101",
+      "hwid": "HD-HWID-5660-KYT0",
+      "details": {
+        "ownerId": "OWNER_PRIMARY"
+      },
+      "timestamp": "2026-11-02T08:28:01.113Z",
+      "createdAt": "2026-11-02T08:28:01.113Z"
+    },
+    {
+      "_id": "6ae849913c666cfb8ac850f9",
+      "action": "OWNER_LOGIN_SUCCESS",
+      "actor": "co_owner_auth",
+      "ip": "192.168.1.102",
+      "hwid": "HD-HWID-COWN-0001",
+      "details": {
+        "ownerId": "OWNER_SECONDARY"
+      },
+      "timestamp": "2026-11-02T08:28:01.352Z",
+      "createdAt": "2026-11-02T08:28:01.352Z"
+    },
+    {
+      "_id": "6ae849913c666cfb8ac850fb",
+      "action": "LICENSE_HWID_MISMATCH",
+      "actor": "HD-TEST-BOUND-KEY",
+      "ip": "10.0.0.99",
+      "hwid": "HWID-SPOOFED-ATTACKER",
+      "details": {
+        "expectedHwid": "HWID-LEGIT-1111"
+      },
+      "timestamp": "2026-11-02T08:28:01.353Z",
+      "createdAt": "2026-11-02T08:28:01.353Z"
+    },
+    {
+      "_id": "6ae849913c666cfb8ac850fd",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:01.578Z",
+      "createdAt": "2026-11-02T08:28:01.578Z"
+    },
+    {
+      "_id": "6ae849913c666cfb8ac850fe",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:01.799Z",
+      "createdAt": "2026-11-02T08:28:01.799Z"
+    },
+    {
+      "_id": "6ae849923c666cfb8ac850ff",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:02.065Z",
+      "createdAt": "2026-11-02T08:28:02.065Z"
+    },
+    {
+      "_id": "6ae849923c666cfb8ac85100",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:02.352Z",
+      "createdAt": "2026-11-02T08:28:02.352Z"
+    },
+    {
+      "_id": "6ae849923c666cfb8ac85101",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:02.593Z",
+      "createdAt": "2026-11-02T08:28:02.593Z"
+    },
+    {
+      "_id": "6ae849923c666cfb8ac85102",
+      "action": "MAINTENANCE_ACTIVATED",
+      "actor": "OWNER",
+      "ip": "127.0.0.1",
+      "details": {
+        "enabled": true,
+        "reason": "Emergency Core Hardening",
+        "updatedAt": 1793608082596,
+        "author": "OWNER"
+      },
+      "timestamp": "2026-11-02T08:28:02.597Z",
+      "createdAt": "2026-11-02T08:28:02.597Z"
+    },
+    {
+      "_id": "6ae849923c666cfb8ac85103",
+      "action": "MAINTENANCE_DEACTIVATED",
+      "actor": "OWNER",
+      "ip": "127.0.0.1",
+      "details": {
+        "enabled": false,
+        "reason": "System maintenance in progress",
+        "updatedAt": 1793608082598,
+        "author": "OWNER"
+      },
+      "timestamp": "2026-11-02T08:28:02.599Z",
+      "createdAt": "2026-11-02T08:28:02.599Z"
+    },
+    {
+      "_id": "6ae849a02d53970a6085dd24",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "192.168.1.101",
+      "hwid": "HD-HWID-5660-KYT0",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:16.596Z",
+      "createdAt": "2026-11-02T08:28:16.597Z"
+    },
+    {
+      "_id": "6ae849a02d53970a6085dd26",
+      "action": "OWNER_LOGIN_SUCCESS",
+      "actor": "tris_master",
+      "ip": "192.168.1.101",
+      "hwid": "HD-HWID-5660-KYT0",
+      "details": {
+        "ownerId": "OWNER_PRIMARY"
+      },
+      "timestamp": "2026-11-02T08:28:16.825Z",
+      "createdAt": "2026-11-02T08:28:16.825Z"
+    },
+    {
+      "_id": "6ae849a12d53970a6085dd28",
+      "action": "OWNER_LOGIN_SUCCESS",
+      "actor": "co_owner_auth",
+      "ip": "192.168.1.102",
+      "hwid": "HD-HWID-COWN-0001",
+      "details": {
+        "ownerId": "OWNER_SECONDARY"
+      },
+      "timestamp": "2026-11-02T08:28:17.047Z",
+      "createdAt": "2026-11-02T08:28:17.047Z"
+    },
+    {
+      "_id": "6ae849a12d53970a6085dd2a",
+      "action": "LICENSE_HWID_MISMATCH",
+      "actor": "HD-TEST-BOUND-KEY",
+      "ip": "10.0.0.99",
+      "hwid": "HWID-SPOOFED-ATTACKER",
+      "details": {
+        "expectedHwid": "HWID-LEGIT-1111"
+      },
+      "timestamp": "2026-11-02T08:28:17.048Z",
+      "createdAt": "2026-11-02T08:28:17.048Z"
+    },
+    {
+      "_id": "6ae849a12d53970a6085dd2c",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:17.266Z",
+      "createdAt": "2026-11-02T08:28:17.266Z"
+    },
+    {
+      "_id": "6ae849a12d53970a6085dd2d",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:17.491Z",
+      "createdAt": "2026-11-02T08:28:17.491Z"
+    },
+    {
+      "_id": "6ae849a12d53970a6085dd2e",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:17.712Z",
+      "createdAt": "2026-11-02T08:28:17.712Z"
+    },
+    {
+      "_id": "6ae849a12d53970a6085dd2f",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:17.933Z",
+      "createdAt": "2026-11-02T08:28:17.933Z"
+    },
+    {
+      "_id": "6ae849a22d53970a6085dd30",
+      "action": "OWNER_LOGIN_FAILED",
+      "actor": "tris_master",
+      "ip": "203.0.113.99",
+      "hwid": "DUMMY_HWID",
+      "details": {
+        "reason": "Incorrect password"
+      },
+      "timestamp": "2026-11-02T08:28:18.150Z",
+      "createdAt": "2026-11-02T08:28:18.150Z"
+    },
+    {
+      "_id": "6ae849a22d53970a6085dd31",
+      "action": "MAINTENANCE_ACTIVATED",
+      "actor": "OWNER",
+      "ip": "127.0.0.1",
+      "details": {
+        "enabled": true,
+        "reason": "Emergency Core Hardening",
+        "updatedAt": 1793608098152,
+        "author": "OWNER"
+      },
+      "timestamp": "2026-11-02T08:28:18.153Z",
+      "createdAt": "2026-11-02T08:28:18.153Z"
+    },
+    {
+      "_id": "6ae849a22d53970a6085dd32",
+      "action": "MAINTENANCE_DEACTIVATED",
+      "actor": "OWNER",
+      "ip": "127.0.0.1",
+      "details": {
+        "enabled": false,
+        "reason": "System maintenance in progress",
+        "updatedAt": 1793608098154,
+        "author": "OWNER"
+      },
+      "timestamp": "2026-11-02T08:28:18.155Z",
+      "createdAt": "2026-11-02T08:28:18.155Z"
+    }
+  ],
+  "migration_records": [
+    {
+      "_id": "6ae84343713a6fd3427eda9c",
+      "source": "Firebase Realtime Database",
+      "batchId": "BATCH-1793606467142",
+      "totalSourceRecords": 22,
+      "eligibleCount": 11,
+      "excludedCount": 11,
+      "importedCount": 11,
+      "status": "COMPLETED",
+      "importedAt": "2026-11-02T08:01:07.142Z",
+      "createdAt": "2026-11-02T08:01:07.142Z"
+    }
+  ]
+}
