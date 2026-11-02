@@ -1,10 +1,9 @@
 // Secure Serverless License & Master Key Verification API
 // Dedicated Firebase Realtime Database Bridge (ZERO CLIENT EXPOSURE)
 // Database: https://project-6054513801175471499-default-rtdb.asia-southeast1.firebasedatabase.app
-// Master key is kept completely on the server
+// Master/Owner keys and database secrets are kept strictly server-side
 
 const https = require('https');
-const http = require('http');
 const fs = require('fs');
 const path = require('path');
 
@@ -19,23 +18,37 @@ const EMBEDDED_KEYS = {
     "boundHwid": "Unbound",
     "createdTimestamp": 1793580000000,
     "duration": "lifetime",
-    "notes": "Tris Authorized Owner Key (Binds on 1st Use)",
+    "notes": "Tris Master Owner Key (Single-Device HWID Lock)",
     "role": "OWNER",
     "status": "ACTIVE",
     "hwidLock": true
   },
+  "HD-USER-7WAK-47UZ-DRVB": {
+    "boundHwid": "Unbound",
+    "createdTimestamp": 1793574540000,
+    "duration": "lifetime",
+    "notes": "Default User Key",
+    "role": "USER",
+    "status": "ACTIVE",
+    "hwidLock": true
+  },
+  "HD-USER-KZ7E-5SHA-RP3N": {
+    "boundHwid": "Unbound",
+    "createdTimestamp": 1793575000000,
+    "duration": "lifetime",
+    "notes": "Default VIP Key",
+    "role": "VIP",
+    "status": "ACTIVE",
+    "hwidLock": true
+  }
 };
 
 function loadLocalKeys() {
   try {
-    return require('./_data/keys_vault.json');
-  } catch(e) {}
-  try {
-    return require('./data/keys_vault.json');
-  } catch(e) {}
-  try {
     const p1 = path.join(__dirname, '_data', 'keys_vault.json');
     if (fs.existsSync(p1)) return JSON.parse(fs.readFileSync(p1, 'utf8'));
+  } catch(e) {}
+  try {
     const p2 = path.join(__dirname, 'data', 'keys_vault.json');
     if (fs.existsSync(p2)) return JSON.parse(fs.readFileSync(p2, 'utf8'));
   } catch(e) {}
@@ -63,7 +76,7 @@ function firebaseGet(subpath) {
   return new Promise((resolve) => {
     try {
       const url = `${FIREBASE_BASE_URL}${subpath}.json${FIREBASE_AUTH}`;
-      const req = https.get(url, { timeout: 3500 }, res => {
+      const req = https.get(url, { timeout: 4000 }, res => {
         let b = '';
         res.on('data', c => b += c);
         res.on('end', () => {
@@ -97,7 +110,7 @@ function firebasePatch(subpath, data) {
           'Content-Type': 'application/json',
           'Content-Length': Buffer.byteLength(bodyStr)
         },
-        timeout: 3500
+        timeout: 4000
       }, res => {
         resolve(res.statusCode >= 200 && res.statusCode < 300);
       });
@@ -144,7 +157,6 @@ const handler = async (req, res) => {
     });
 
     const body = (await getBody()) || {};
-    // Normalize key: uppercase, replace spaces and consecutive hyphens
     const rawKey = (body.key || '').trim().toUpperCase();
     const key = rawKey.replace(/\s+/g, '-').replace(/-+/g, '-');
     const hwid = (body.hwid || '').trim();
@@ -169,10 +181,8 @@ const handler = async (req, res) => {
       if (localKeys && localKeys[key]) {
         keyData = localKeys[key];
       } else if (EMBEDDED_KEYS[key]) {
-        // Embedded vault fallback
         keyData = { ...EMBEDDED_KEYS[key] };
       } else if (key === OWNER_KEY || key === 'HD-OWNER-TRIS-8888-9999') {
-        // Default Owner Key Guarantee
         keyData = {
           role: 'OWNER',
           boundHwid: 'Unbound',
@@ -205,13 +215,11 @@ const handler = async (req, res) => {
 
     const isOwnerMaster = (key === OWNER_KEY || key === 'HD-OWNER-TRIS-8888-9999');
     const isOwnerRole = (keyData.role === 'OWNER' || keyData.role === 'ADMIN' || isOwnerMaster);
-    // Tris is authorized on both of his test machines
-    const isTrisMachine = isOwnerRole && (hwid === 'HD-HWID-6205-JF5P' || hwid === 'HD-HWID-5520-R8GR');
 
-    // HWID Lock Verification & Automatic First-Login Binding
+    // Single-Device 1-Time HWID Binding (Strictly locks on first login)
     if (keyData.hwidLock !== false && keyData.boundHwid !== 'Disabled' && keyData.boundHwid !== 'Bypass') {
-      if (isTrisMachine) {
-        // Tris is always authorized on his verified hardware
+      if (keyData.boundHwid === 'Unbound' || !keyData.boundHwid) {
+        // BIND HWID ON FIRST USE (Single-device lock)
         keyData.boundHwid = hwid;
         try {
           if (isFromFirebase) {
@@ -223,24 +231,11 @@ const handler = async (req, res) => {
             saveLocalKeys(lk);
           }
         } catch(e) {}
-      } else if (keyData.boundHwid === 'Unbound' || !keyData.boundHwid) {
-        if (hwid) {
-          keyData.boundHwid = hwid;
-          try {
-            if (isFromFirebase) {
-              await firebasePatch(`/keys/${encodeURIComponent(key)}`, { boundHwid: hwid });
-            }
-            const lk = loadLocalKeys();
-            if (lk[key]) {
-              lk[key].boundHwid = hwid;
-              saveLocalKeys(lk);
-            }
-          } catch(e) {}
-        }
       } else if (keyData.boundHwid !== hwid) {
+        // Strict HWID mismatch rejection
         return sendJson(res, 403, {
           success: false,
-          error: `Device HWID Mismatch! Key locked to another machine (${keyData.boundHwid.slice(-4)}).`
+          error: `Device HWID Mismatch! Key is strictly locked to another machine (${keyData.boundHwid.slice(-4)}).`
         });
       }
     }

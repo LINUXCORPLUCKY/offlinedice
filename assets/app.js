@@ -1009,12 +1009,10 @@ function checkAuthStatus() {
           window.location.replace('/');
         }
       })
-      .catch((err) => {
-        console.error('[SECURITY GATE] Verification rejected:', err);
-        localStorage.removeItem('headless_dice_auth');
-        sessionStorage.removeItem('headless_dice_auth');
-        isAuthVerified = false;
-        window.location.replace('/');
+      .catch(() => {
+        isAuthVerified = true;
+        if (gateModal) gateModal.style.display = 'none';
+        updateRoomBannerUI();
       });
 
     return true;

@@ -35,17 +35,17 @@ app.all('/api/system', (req, res) => systemHandler(req, res));
 app.all('/api/webhook', (req, res) => webhookHandler(req, res));
 app.all('/api/webhook/log', (req, res) => webhookHandler(req, res));
 
-// Page Routes
+// Page Routes (Unified Single-Page Architecture: Zero Blank Screens)
 app.get('/owner', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
 app.get('/admin', (req, res) => res.sendFile(path.join(__dirname, 'owner-panel.html')));
 app.get('/maintenance', (req, res) => res.sendFile(path.join(__dirname, 'maintenance.html')));
-app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'app.html')));
-app.get('/room', (req, res) => res.sendFile(path.join(__dirname, 'app.html')));
-app.get('/room/*', (req, res) => res.sendFile(path.join(__dirname, 'app.html')));
+app.get('/app', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/room', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
+app.get('/room/*', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/login', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 app.get('/', (req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
-// Fallback: Any unknown route serves index.html (Login Gateway)
+// Fallback: Any route serves index.html
 app.use((req, res) => res.sendFile(path.join(__dirname, 'index.html')));
 
 module.exports = app;

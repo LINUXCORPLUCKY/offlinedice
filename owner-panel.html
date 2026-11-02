@@ -385,6 +385,7 @@
       <p>This is a restricted administrative console. Enter your Master Owner Key to authenticate.</p>
       <input type="password" class="master-input-box" id="master-key-input" placeholder="Enter Master Owner Key..." autofocus>
       <button class="btn-auth-master" id="btn-auth-master">VERIFY OWNER PRIVILEGES</button>
+      <button class="btn-auth-master" id="btn-reset-owner-hwid" style="margin-top: 8px; background: rgba(6, 182, 212, 0.2); border: 1px solid #06b6d4; color: #67e8f9;">🔄 RESET OWNER HWID (SWITCH MACHINE)</button>
       <div class="gate-err-msg" id="gate-err-msg"></div>
     </div>
   </div>
@@ -626,6 +627,41 @@
     }
 
     document.getElementById('btn-auth-master').addEventListener('click', handleAuth);
+    const btnResetHwidOverlay = document.getElementById('btn-reset-owner-hwid');
+    if (btnResetHwidOverlay) {
+      btnResetHwidOverlay.addEventListener('click', async () => {
+        const input = document.getElementById('master-key-input');
+        const errBox = document.getElementById('gate-err-msg');
+        const key = (input.value || '').trim();
+        if (!key) {
+          errBox.textContent = 'Please enter your Master Owner Key above first.';
+          errBox.style.display = 'block';
+          return;
+        }
+        try {
+          errBox.style.color = '#38bdf8';
+          errBox.textContent = 'Resetting Owner HWID in Firebase...';
+          errBox.style.display = 'block';
+          const res = await fetch('/api/admin', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ ownerKey: key, key: key, action: 'reset_hwid', hwid: currentHwid })
+          });
+          const data = await res.json();
+          if (res.ok && data.success) {
+            errBox.style.color = '#4ade80';
+            errBox.textContent = '✅ Owner HWID reset! Click VERIFY OWNER PRIVILEGES to bind this device.';
+            showToast('HWID Reset Successful!');
+          } else {
+            errBox.style.color = '#ef4444';
+            errBox.textContent = data.error || 'Failed to reset HWID.';
+          }
+        } catch(err) {
+          errBox.style.color = '#ef4444';
+          errBox.textContent = 'Network error: ' + err.message;
+        }
+      });
+    }
     document.getElementById('master-key-input').addEventListener('keydown', (e) => {
       if (e.key === 'Enter') handleAuth();
     });
