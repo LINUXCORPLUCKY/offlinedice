@@ -1,10 +1,18 @@
 // Secure Serverless System API (Maintenance, Announcements, Remote Control)
-// High-Speed Autonomous Serverless State Handler
+// High-Speed Autonomous Serverless State Handler with MongoDB Atlas Cloud Sync
 
 const fs = require('fs');
 const path = require('path');
+const { getSystemState: getAtlasSystemState } = require('../lib/system_manager');
 
-function getSystemState() {
+async function getSystemState() {
+  try {
+    const atlasState = await getAtlasSystemState();
+    if (atlasState && atlasState.maintenance) {
+      return atlasState;
+    }
+  } catch(e) {}
+
   try {
     const sysPath = path.join(__dirname, '_data', 'system_state.json');
     if (fs.existsSync(sysPath)) {
@@ -15,11 +23,12 @@ function getSystemState() {
       return JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
     }
   } catch(e) {}
+
   return {
     maintenance: { enabled: false },
     announcement: {
       active: true,
-      text: "🎃 HEADLESS DICE // 10s RAPID SCANNER ONLINE",
+      text: "⚡ HEADLESS DICE // 5s RAPID PATTERN SCANNER ONLINE",
       timestamp: Date.now()
     },
     control: {
@@ -40,7 +49,7 @@ module.exports = async (req, res) => {
   }
 
   const queryType = req.query ? req.query.type : null;
-  const state = getSystemState();
+  const state = await getSystemState();
 
   res.statusCode = 200;
   res.setHeader('Content-Type', 'application/json');
