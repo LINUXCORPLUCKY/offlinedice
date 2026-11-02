@@ -209,23 +209,21 @@ const handler = async (req, res) => {
     if (keyData && typeof keyData === 'object') {
       isFromFirebase = true;
     } else {
-      // 3. SECONDARY: CHECK DISCORD VPS MICROSERVICE (78.154.103.29:9570)
-      const vpsTargets = [DISCORD_VPS_URL, DISCORD_VPS_FALLBACK].filter(Boolean);
-      for (const targetUrl of vpsTargets) {
-        try {
-          const vpsRes = await vpsFetch(targetUrl, { key, hwid });
-          if (vpsRes && vpsRes.status === 200 && vpsRes.data && vpsRes.data.success) {
-            return sendJson(res, 200, vpsRes.data);
-          } else if (vpsRes && vpsRes.status !== 500 && vpsRes.data && vpsRes.data.error) {
-            return sendJson(res, vpsRes.status, vpsRes.data);
-          }
-        } catch(vpsErr) {}
-      }
-
-      // 4. TERTIARY: SECURE LOCAL DATABASE VAULT FALLBACK
+      // 3. SECONDARY: SECURE LOCAL DATABASE VAULT FALLBACK (Instant in-memory validation)
       const localKeys = loadLocalKeys();
       if (localKeys && localKeys[key]) {
         keyData = localKeys[key];
+      } else {
+        // 4. TERTIARY: CHECK DISCORD VPS MICROSERVICE (78.154.103.29:9570)
+        const vpsTargets = [DISCORD_VPS_URL, DISCORD_VPS_FALLBACK].filter(Boolean);
+        for (const targetUrl of vpsTargets) {
+          try {
+            const vpsRes = await vpsFetch(targetUrl, { key, hwid });
+            if (vpsRes && vpsRes.status === 200 && vpsRes.data && vpsRes.data.success) {
+              return sendJson(res, 200, vpsRes.data);
+            }
+          } catch(vpsErr) {}
+        }
       }
     }
 
