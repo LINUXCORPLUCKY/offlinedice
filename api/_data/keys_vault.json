@@ -1,9 +1,9 @@
 {
   "HD-OWNER-TRIS-8888-9999": {
-    "boundHwid": "HD-HWID-6205-JF5P",
-    "createdTimestamp": 1793579000000,
+    "boundHwid": "Unbound",
+    "createdTimestamp": 1793580000000,
     "duration": "lifetime",
-    "notes": "Tris Authorized Owner Key (Locked to HWID)",
+    "notes": "Tris Authorized Owner Key (Binds on 1st Use)",
     "role": "OWNER",
     "status": "ACTIVE",
     "hwidLock": true

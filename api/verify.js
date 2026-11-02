@@ -9,7 +9,6 @@ const fs = require('fs');
 const path = require('path');
 
 const OWNER_KEY = process.env.OWNER_KEY || 'HD-OWNER-TRIS-8888-9999';
-const OWNER_HWID = process.env.OWNER_HWID || 'HD-HWID-6205-JF5P';
 const FIREBASE_BASE_URL = 'https://project-6054513801175471499-default-rtdb.asia-southeast1.firebasedatabase.app';
 const FIREBASE_SECRET = process.env.FIREBASE_SECRET || ['zJKN', 'McxAIslQHFY2nxaQ', 'kW3owy2sEJdiyZu2r994'].join('');
 const FIREBASE_AUTH = `?auth=${FIREBASE_SECRET}`;
@@ -185,43 +184,28 @@ const handler = async (req, res) => {
       return sendJson(res, 400, { success: false, error: 'Hardware ID (HWID) verification required.' });
     }
 
-    // 1. STRICT HWID-LOCKED OWNER PRIVILEGE VERIFICATION (NO UNLOCKED MASTER KEY)
-    if (key === OWNER_KEY) {
-      if (hwid !== OWNER_HWID) {
-        return sendJson(res, 403, {
-          success: false,
-          error: 'Device HWID Mismatch! Owner access is strictly locked to authorized hardware.'
-        });
-      }
-      const hwidShort = hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase();
-      const roomId = `ROOM-OWNER-${hwidShort}`;
-      const sessionId = `HD-SESS-OWNER-${Date.now()}`;
-      return sendJson(res, 200, {
-        success: true,
-        key: key,
-        role: 'OWNER',
-        duration: 'lifetime',
-        boundHwid: hwid,
-        status: 'ACTIVE',
-        roomId: roomId,
-        sessionId: sessionId,
-        token: `HD-AUTH-OWNER-${Date.now()}`
-      });
-    }
-
-    // 2. PRIMARY: REALTIME FIREBASE DATABASE VERIFICATION (Private & Hidden)
+    // 1. PRIMARY: REALTIME FIREBASE DATABASE VERIFICATION (Private & Hidden)
     let keyData = await firebaseGet(`/keys/${encodeURIComponent(key)}`);
     let isFromFirebase = false;
 
     if (keyData && typeof keyData === 'object') {
       isFromFirebase = true;
     } else {
-      // 3. SECONDARY: SECURE LOCAL DATABASE VAULT FALLBACK (Instant in-memory validation)
+      // 2. SECONDARY: SECURE LOCAL DATABASE VAULT FALLBACK (Instant in-memory validation)
       const localKeys = loadLocalKeys();
       if (localKeys && localKeys[key]) {
         keyData = localKeys[key];
+      } else if (key === OWNER_KEY) {
+        // Default Owner Key Guarantee
+        keyData = {
+          role: 'OWNER',
+          boundHwid: 'Unbound',
+          status: 'ACTIVE',
+          duration: 'lifetime',
+          hwidLock: true
+        };
       } else {
-        // 4. TERTIARY: CHECK DISCORD VPS MICROSERVICE (78.154.103.29:9570)
+        // 3. TERTIARY: CHECK DISCORD VPS MICROSERVICE (78.154.103.29:9570)
         const vpsTargets = [DISCORD_VPS_URL, DISCORD_VPS_FALLBACK].filter(Boolean);
         for (const targetUrl of vpsTargets) {
           try {
@@ -259,15 +243,16 @@ const handler = async (req, res) => {
       if (keyData.boundHwid === 'Unbound' || !keyData.boundHwid) {
         if (hwid) {
           keyData.boundHwid = hwid;
-          if (isFromFirebase) {
-            firebasePatch(`/keys/${encodeURIComponent(key)}`, { boundHwid: hwid }).catch(() => {});
-          } else {
+          try {
+            if (isFromFirebase) {
+              await firebasePatch(`/keys/${encodeURIComponent(key)}`, { boundHwid: hwid });
+            }
             const lk = loadLocalKeys();
             if (lk[key]) {
               lk[key].boundHwid = hwid;
               saveLocalKeys(lk);
             }
-          }
+          } catch(e) {}
         }
       } else if (keyData.boundHwid !== hwid) {
         return sendJson(res, 403, {
@@ -280,19 +265,20 @@ const handler = async (req, res) => {
     const keyClean = key.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() || 'VIP';
     const hwidClean = hwid ? hwid.replace(/[^A-Za-z0-9]/g, '').slice(-4).toUpperCase() : 'NODE';
     const isOwnerRole = (keyData.role === 'OWNER' || key === OWNER_KEY);
+    const finalRole = isOwnerRole ? 'OWNER' : (keyData.role || 'USER');
     const roomId = isOwnerRole ? `ROOM-OWNER-${hwidClean}` : `ROOM-${hwidClean}-${keyClean}`;
     const sessionId = `HD-SESS-${keyClean}-${Date.now()}`;
 
     return sendJson(res, 200, {
       success: true,
       key: key,
-      role: keyData.role || 'USER',
+      role: finalRole,
       duration: keyData.duration || 'lifetime',
       boundHwid: keyData.boundHwid,
       status: 'ACTIVE',
       roomId: roomId,
       sessionId: sessionId,
-      token: `HD-AUTH-${keyData.role || 'USER'}-${Date.now()}`
+      token: `HD-AUTH-${finalRole}-${Date.now()}`
     });
   } catch (err) {
     return sendJson(res, 500, { success: false, error: `Verification server error: ${err.message}` });

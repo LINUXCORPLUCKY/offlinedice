@@ -7,7 +7,6 @@ const fs = require('fs');
 const path = require('path');
 
 const OWNER_KEY = process.env.OWNER_KEY || 'HD-OWNER-TRIS-8888-9999';
-const OWNER_HWID = process.env.OWNER_HWID || 'HD-HWID-6205-JF5P';
 
 const FIREBASE_BASE_URL = 'https://project-6054513801175471499-default-rtdb.asia-southeast1.firebasedatabase.app';
 const FIREBASE_SECRET = process.env.FIREBASE_SECRET || ['zJKN', 'McxAIslQHFY2nxaQ', 'kW3owy2sEJdiyZu2r994'].join('');
@@ -133,16 +132,66 @@ module.exports = async (req, res) => {
     const ownerKey = (body.ownerKey || body.masterKey || req.headers['x-owner-key'] || '').trim();
     const hwid = (body.hwid || req.headers['x-owner-hwid'] || '').trim();
 
-    // STRICT OWNER & HWID VERIFICATION
-    if (ownerKey !== OWNER_KEY) {
+    // DYNAMIC OWNER AUTHORITY & HWID BINDING (SUPPORTS ANY OWNER KEY)
+    if (!ownerKey) {
+      return sendJson(res, 401, { success: false, error: 'Unauthorized: Owner Key is required.' });
+    }
+
+    let ownerKeyData = null;
+    let isOwnerFb = false;
+
+    // Check Firebase first
+    ownerKeyData = await firebaseRequest(`/keys/${encodeURIComponent(ownerKey)}`);
+    if (ownerKeyData && typeof ownerKeyData === 'object' && Object.keys(ownerKeyData).length > 0) {
+      isOwnerFb = true;
+    } else {
+      const lk = loadLocalKeys();
+      if (lk && lk[ownerKey]) {
+        ownerKeyData = lk[ownerKey];
+      }
+    }
+
+    // Default fallback for master OWNER_KEY if not in DB
+    if (!ownerKeyData && ownerKey === OWNER_KEY) {
+      ownerKeyData = {
+        role: 'OWNER',
+        boundHwid: 'Unbound',
+        status: 'ACTIVE',
+        duration: 'lifetime',
+        hwidLock: true
+      };
+    }
+
+    const isAuthorizedOwner = ownerKey === OWNER_KEY || (ownerKeyData && (ownerKeyData.role === 'OWNER' || ownerKeyData.role === 'ADMIN'));
+
+    if (!isAuthorizedOwner) {
       return sendJson(res, 401, { success: false, error: 'Unauthorized: Invalid Owner Key.' });
     }
 
-    if (hwid && hwid !== OWNER_HWID) {
-      return sendJson(res, 403, {
-        success: false,
-        error: 'Hardware ID Mismatch: Owner command center is locked strictly to your authorized machine.'
-      });
+    if (ownerKeyData && ownerKeyData.status && ownerKeyData.status !== 'ACTIVE') {
+      return sendJson(res, 403, { success: false, error: `Owner access denied: key is ${ownerKeyData.status}.` });
+    }
+
+    // Dynamic HWID Binding on First Login (1-time binding to Owner device)
+    if (ownerKeyData && ownerKeyData.hwidLock !== false) {
+      if (ownerKeyData.boundHwid === 'Unbound' || !ownerKeyData.boundHwid) {
+        if (hwid) {
+          ownerKeyData.boundHwid = hwid;
+          try {
+            await firebaseRequest(`/keys/${encodeURIComponent(ownerKey)}`, 'PUT', ownerKeyData);
+            const lk = loadLocalKeys();
+            lk[ownerKey] = ownerKeyData;
+            saveLocalKeys(lk);
+          } catch(e) {}
+        }
+      } else if (ownerKeyData.boundHwid !== 'Disabled' && ownerKeyData.boundHwid !== 'Bypass') {
+        if (hwid && ownerKeyData.boundHwid !== hwid) {
+          return sendJson(res, 403, {
+            success: false,
+            error: `Hardware ID Mismatch: Owner command center is locked to machine (${ownerKeyData.boundHwid.slice(-4)}).`
+          });
+        }
+      }
     }
 
     const action = body.action || '';
@@ -277,3 +326,4 @@ module.exports = async (req, res) => {
     return sendJson(res, 500, { success: false, error: `Admin API error: ${err.message}` });
   }
 };
+
