@@ -4,10 +4,25 @@
   "description": "Headless Dice — 5-Roll Probability Engine & 1-Color Predictor for Online Dice",
   "main": "index.js",
   "scripts": {
-    "start": "node index.js"
+    "start": "node index.js",
+    "build": "tsc",
+    "test": "node tests/test_dice_engine.js && node tests/run_security_tests.js",
+    "security-test": "node tests/run_security_tests.js"
   },
   "dependencies": {
-    "express": "^4.22.3"
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.6",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "bcryptjs": "^3.0.3",
+    "cookie-parser": "^1.4.7",
+    "express": "^4.22.3",
+    "mongodb": "^7.8.0",
+    "react": "^19.3.1",
+    "react-dom": "^19.3.1",
+    "typescript": "^7.0.2"
   },
   "keywords": [
     "headless-dice",

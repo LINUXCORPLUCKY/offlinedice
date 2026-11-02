@@ -1,119 +1,44 @@
-// Secure Serverless Admin & Owner API for Headless Dice
-// Strictly locked to Tris's HWID and Private Owner Key (ZERO DATA LEAKS)
-// Synchronized with Firebase Realtime Database & Local Encrypted Vault
+// ==============================================================================
+// HEADLESS DICE — ENTERPRISE OWNER AUTHORITY & ADMINISTRATION API
+// Strictly Locked to Provisioned Owner Accounts & MongoDB Atlas
+// ==============================================================================
 
-const https = require('https');
-const fs = require('fs');
-const path = require('path');
-
-const OWNER_KEY = process.env.OWNER_KEY || 'HD-OWNER-TRIS-8888-9999';
-const FIREBASE_BASE_URL = 'https://project-6054513801175471499-default-rtdb.asia-southeast1.firebasedatabase.app';
-const FIREBASE_SECRET = process.env.FIREBASE_SECRET || ['zJKN', 'McxAIslQHFY2nxaQ', 'kW3owy2sEJdiyZu2r994'].join('');
-const FIREBASE_AUTH = `?auth=${FIREBASE_SECRET}`;
-
-// In-Memory Bulletproof Embedded Key Vault
-const EMBEDDED_KEYS = {
-  "HD-OWNER-TRIS-8888-9999": {
-    "boundHwid": "HD-HWID-5660-KYT0",
-    "createdTimestamp": 1793580000000,
-    "duration": "lifetime",
-    "notes": "Tris Primary Master Owner Key (Locked to HD-HWID-5660-KYT0)",
-    "role": "OWNER",
-    "status": "ACTIVE",
-    "hwidLock": true
-  },
-  "HD-OWNER-COWN-7777-8888": {
-    "boundHwid": "Unbound",
-    "createdTimestamp": 1793580000000,
-    "duration": "lifetime",
-    "notes": "Secondary Co-Owner Key (Binds on 1st Login)",
-    "role": "OWNER",
-    "status": "ACTIVE",
-    "hwidLock": true
-  },
-  "HD-USER-7WAK-47UZ-DRVB": {
-    "boundHwid": "Unbound",
-    "createdTimestamp": 1793574540000,
-    "duration": "lifetime",
-    "notes": "Default User Key",
-    "role": "USER",
-    "status": "ACTIVE",
-    "hwidLock": true
-  },
-  "HD-USER-KZ7E-5SHA-RP3N": {
-    "boundHwid": "Unbound",
-    "createdTimestamp": 1793575000000,
-    "duration": "lifetime",
-    "notes": "Default VIP Key",
-    "role": "VIP",
-    "status": "ACTIVE",
-    "hwidLock": true
-  }
-};
+const { authenticateOwner, validateSession, SESSION_COOKIE_NAME } = require('../lib/auth');
+const { getDb } = require('../lib/db');
+const {
+  getSystemState,
+  setMaintenanceState,
+  triggerForceRefresh,
+  setAnnouncement
+} = require('../lib/system_manager');
 
 function sendJson(res, statusCode, data) {
   res.statusCode = statusCode;
   res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = reqOrigin(res.req);
+  if (origin) res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Owner-Key, X-Owner-Hwid');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
   res.end(JSON.stringify(data));
 }
 
-function loadLocalKeys() {
-  try {
-    const p1 = path.join(__dirname, '_data', 'keys_vault.json');
-    if (fs.existsSync(p1)) return JSON.parse(fs.readFileSync(p1, 'utf8'));
-  } catch(e) {}
-  try {
-    const p2 = path.join(__dirname, 'data', 'keys_vault.json');
-    if (fs.existsSync(p2)) return JSON.parse(fs.readFileSync(p2, 'utf8'));
-  } catch(e) {}
-  return {};
+function reqOrigin(req) {
+  const allowed = (process.env.ALLOWED_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+  const clientOrigin = req && req.headers ? req.headers.origin : null;
+  if (!clientOrigin) return '*';
+  if (allowed.length === 0 || allowed.includes(clientOrigin)) return clientOrigin;
+  return allowed[0] || '*';
 }
 
-function saveLocalKeys(keys) {
-  try {
-    const p1 = path.join(__dirname, '_data', 'keys_vault.json');
-    fs.writeFileSync(p1, JSON.stringify(keys, null, 2));
-  } catch(e) {}
-}
-
-function firebaseRequest(subpath, method = 'GET', data = null) {
-  return new Promise((resolve) => {
-    try {
-      const url = `${FIREBASE_BASE_URL}${subpath}.json${FIREBASE_AUTH}`;
-      const parsed = new URL(url);
-      const postBody = data ? JSON.stringify(data) : null;
-      const req = https.request({
-        hostname: parsed.hostname,
-        port: 443,
-        path: parsed.pathname + (parsed.search || ''),
-        method: method,
-        headers: {
-          'Content-Type': 'application/json',
-          ...(postBody ? { 'Content-Length': Buffer.byteLength(postBody) } : {})
-        },
-        timeout: 4500
-      }, res => {
-        let b = '';
-        res.on('data', c => b += c);
-        res.on('end', () => {
-          try {
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              resolve(JSON.parse(b || '{}'));
-            } else {
-              resolve(null);
-            }
-          } catch(e) { resolve(null); }
-        });
-      });
-      req.on('error', () => resolve(null));
-      req.on('timeout', () => { req.destroy(); resolve(null); });
-      if (postBody) req.write(postBody);
-      req.end();
-    } catch(e) { resolve(null); }
-  });
+function generateRandomKey(prefix = 'HD-USER') {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  const seg = (len) => {
+    let s = '';
+    for (let i = 0; i < len; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
+    return s;
+  };
+  return `${prefix}-${seg(4)}-${seg(4)}-${seg(4)}`;
 }
 
 function durationToTimestamp(dur) {
@@ -128,20 +53,13 @@ function durationToTimestamp(dur) {
   }
 }
 
-function generateRandomKey(prefix = 'HD-USER') {
-  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-  const seg = (len) => {
-    let s = '';
-    for (let i = 0; i < len; i++) s += chars.charAt(Math.floor(Math.random() * chars.length));
-    return s;
-  };
-  return `${prefix}-${seg(4)}-${seg(4)}-${seg(4)}`;
-}
-
 module.exports = async (req, res) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.req = req;
+  const origin = reqOrigin(req);
+  res.setHeader('Access-Control-Allow-Origin', origin);
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Owner-Key, X-Owner-Hwid');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
 
   if (req.method === 'OPTIONS') {
     res.statusCode = 204;
@@ -169,233 +87,233 @@ module.exports = async (req, res) => {
     });
 
     const body = (await getBody()) || {};
-    const rawOwnerKey = (body.ownerKey || body.masterKey || req.headers['x-owner-key'] || '').trim().toUpperCase();
-    const ownerKey = rawOwnerKey.replace(/\s+/g, '-').replace(/-+/g, '-');
-    const hwid = (body.hwid || req.headers['x-owner-hwid'] || '').trim();
     const action = body.action || '';
+    const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || '127.0.0.1';
 
-    if (!ownerKey) {
-      return sendJson(res, 401, { success: false, error: 'Unauthorized: Owner Key is required.' });
-    }
+    // 1. OWNER LOGIN (Does not require prior session)
+    if (action === 'owner_login') {
+      const username = body.username;
+      const password = body.password;
+      const hwid = body.hwid;
 
-    let ownerKeyData = null;
-
-    // Check Firebase first
-    ownerKeyData = await firebaseRequest(`/keys/${encodeURIComponent(ownerKey)}`);
-    if (!ownerKeyData || typeof ownerKeyData !== 'object' || Object.keys(ownerKeyData).length === 0) {
-      const lk = loadLocalKeys();
-      if (lk && lk[ownerKey]) {
-        ownerKeyData = lk[ownerKey];
-      } else if (EMBEDDED_KEYS[ownerKey]) {
-        ownerKeyData = { ...EMBEDDED_KEYS[ownerKey] };
+      const authRes = await authenticateOwner({ username, password, hwid, ip: clientIp });
+      if (!authRes.success) {
+        return sendJson(res, authRes.status || 401, { success: false, error: authRes.error });
       }
-    }
 
-    // Default fallback for master OWNER_KEY if not in DB
-    if (!ownerKeyData && (ownerKey === OWNER_KEY || ownerKey === 'HD-OWNER-TRIS-8888-9999')) {
-      ownerKeyData = {
+      // Issue HttpOnly Owner Cookie
+      const isProd = process.env.NODE_ENV === 'production';
+      const cookieHeader = `${SESSION_COOKIE_NAME}=${authRes.sessionToken}; Path=/; HttpOnly; SameSite=Lax; Max-Age=${86400}${isProd ? '; Secure' : ''}`;
+      res.setHeader('Set-Cookie', cookieHeader);
+
+      return sendJson(res, 200, {
+        success: true,
         role: 'OWNER',
-        boundHwid: 'Unbound',
-        status: 'ACTIVE',
-        duration: 'lifetime',
-        hwidLock: true
-      };
+        displayName: authRes.displayName,
+        username: authRes.username,
+        ownerId: authRes.ownerId,
+        sessionToken: authRes.sessionToken,
+        message: 'Owner privileges unlocked'
+      });
     }
 
-    const isAuthorizedOwner = ownerKey === OWNER_KEY || ownerKey === 'HD-OWNER-TRIS-8888-9999' || ownerKey === 'HD-OWNER-COWN-7777-8888' || ownerKey.startsWith('HD-OWNER') || (ownerKeyData && (ownerKeyData.role === 'OWNER' || ownerKeyData.role === 'ADMIN'));
-
-    if (!isAuthorizedOwner) {
-      return sendJson(res, 401, { success: false, error: 'Unauthorized: Invalid Owner Key.' });
+    // 2. ALL OTHER ACTIONS REQUIRE VALID OWNER SESSION
+    const session = await validateSession(req);
+    if (!session || session.role !== 'OWNER') {
+      return sendJson(res, 401, {
+        success: false,
+        error: 'Unauthorized: Valid Owner Authority Session Required.'
+      });
     }
 
-    if (ownerKeyData && ownerKeyData.status && ownerKeyData.status !== 'ACTIVE') {
-      return sendJson(res, 403, { success: false, error: `Owner access denied: key is ${ownerKeyData.status}.` });
+    const { db } = await getDb();
+    const licensesCol = db.collection('licenses');
+    const usersCol = db.collection('users');
+    const roomsCol = db.collection('user_rooms');
+    const auditCol = db.collection('audit_logs');
+
+    // VERIFY OWNER SESSION
+    if (action === 'verify_owner') {
+      return sendJson(res, 200, {
+        success: true,
+        role: 'OWNER',
+        username: session.username || 'Owner'
+      });
     }
 
-    // Dynamic HWID Binding on First Login (1-time binding to Owner device)
-    // Note: If action is reset_hwid for the owner key itself, allow it so the owner can switch devices
-    if (ownerKeyData && ownerKeyData.hwidLock !== false && action !== 'reset_hwid') {
-      if (ownerKeyData.boundHwid === 'Unbound' || !ownerKeyData.boundHwid) {
-        if (hwid) {
-          ownerKeyData.boundHwid = hwid;
-          try {
-            await firebaseRequest(`/keys/${encodeURIComponent(ownerKey)}`, 'PATCH', { boundHwid: hwid });
-            const lk = loadLocalKeys();
-            if (lk[ownerKey]) {
-              lk[ownerKey].boundHwid = hwid;
-              saveLocalKeys(lk);
-            }
-          } catch(e) {}
-        }
-      } else if (ownerKeyData.boundHwid !== 'Disabled' && ownerKeyData.boundHwid !== 'Bypass') {
-        if (hwid && ownerKeyData.boundHwid !== hwid) {
-          return sendJson(res, 403, {
-            success: false,
-            error: `Hardware ID Mismatch: Owner command center is locked to machine (${ownerKeyData.boundHwid.slice(-4)}).`
-          });
-        }
-      }
-    }
-
-    if (action === 'verify_owner' || action === 'verify_master') {
-      return sendJson(res, 200, { success: true, role: 'OWNER', message: 'Owner privileges unlocked.' });
-    }
-
+    // OWNER DASHBOARD METRICS
     if (action === 'get_stats') {
-      const fbKeys = (await firebaseRequest('/keys')) || loadLocalKeys();
-      const all = Object.values(fbKeys || {});
-      const activeCount = all.filter(k => k && k.status === 'ACTIVE').length;
+      const totalLicenses = await licensesCol.countDocuments({});
+      const activeLicenses = await licensesCol.countDocuments({ status: 'ACTIVE' });
+      const boundLicenses = await licensesCol.countDocuments({ boundHwid: { $nin: ['Unbound', null, ''] } });
+      const revokedLicenses = await licensesCol.countDocuments({ status: 'REVOKED' });
+      const totalUsers = await usersCol.countDocuments({});
+      const activeRooms = await roomsCol.countDocuments({});
+
+      const sysState = await getSystemState();
+
       return sendJson(res, 200, {
         success: true,
         stats: {
-          visits: 215,
-          activeUsers: Math.max(1, activeCount),
-          activeLicenses: activeCount
+          totalUsers: Math.max(totalUsers, activeLicenses),
+          activeUsers: Math.max(1, activeLicenses),
+          totalLicenses: totalLicenses,
+          activeLicenses: activeLicenses,
+          boundLicenses: boundLicenses,
+          revokedLicenses: revokedLicenses,
+          activeRooms: activeRooms,
+          maintenance: sysState.maintenance.enabled
         }
       });
     }
 
+    // LIST / SEARCH LICENSES
     if (action === 'list_keys') {
-      let keysObj = await firebaseRequest('/keys');
-      if (!keysObj || typeof keysObj !== 'object') {
-        keysObj = loadLocalKeys();
+      const search = (body.search || '').trim();
+      const query = {};
+      if (search) {
+        query.key = { $regex: search, $options: 'i' };
       }
-      const list = Object.entries(keysObj).map(([k, v]) => ({
-        key: k,
-        role: v.role || 'USER',
-        duration: v.duration || 'lifetime',
-        boundHwid: v.boundHwid || 'Unbound',
-        status: v.status || 'ACTIVE',
-        note: v.notes || v.note || '',
-        createdTimestamp: v.createdTimestamp || 0,
-        expireTimestamp: v.expireTimestamp || null
-      }));
-      return sendJson(res, 200, { success: true, keys: list, count: list.length });
+      const keys = await licensesCol.find(query).sort({ createdAt: -1 }).limit(100).toArray();
+
+      const mapped = {};
+      keys.forEach(k => {
+        mapped[k.key] = {
+          role: k.role,
+          boundHwid: k.boundHwid,
+          status: k.status,
+          duration: k.duration,
+          createdTimestamp: k.createdTimestamp,
+          expireTimestamp: k.expireTimestamp,
+          notes: k.notes
+        };
+      });
+
+      return sendJson(res, 200, { success: true, keys: mapped });
     }
 
+    // GENERATE NEW LICENSE KEY
     if (action === 'generate_key') {
-      const role = body.role || 'VIP';
+      const role = (body.role || 'USER').toUpperCase();
       const duration = body.duration || 'lifetime';
-      const hwidLock = body.hwidLock !== false;
-      const note = (body.note || body.notes || '').trim();
-      const customKey = (body.customKey || body.key || '').trim().toUpperCase();
+      const notes = body.notes || 'Admin Generated';
+      const keyPrefix = role === 'VIP' ? 'HD-VIP' : 'HD-USER';
+      const newKey = generateRandomKey(keyPrefix);
+      const expireTs = durationToTimestamp(duration);
 
-      const prefix = role === 'OWNER' ? 'HD-OWNER' : role === 'ADMIN' ? 'HD-ADMIN' : role === 'VIP' ? 'HD-VIP' : 'HD-USER';
-      const newKey = customKey || generateRandomKey(prefix);
-
-      const payload = {
+      await licensesCol.insertOne({
+        key: newKey,
         role: role,
-        duration: duration,
-        boundHwid: hwidLock ? 'Unbound' : 'Disabled',
-        createdTimestamp: Date.now(),
-        expireTimestamp: durationToTimestamp(duration),
+        boundHwid: 'Unbound',
         status: 'ACTIVE',
-        hwidLock: hwidLock,
-        notes: note || undefined
-      };
+        duration: duration,
+        hwidLock: true,
+        isRedeemed: false,
+        createdTimestamp: Date.now(),
+        expireTimestamp: expireTs,
+        notes: notes,
+        createdAt: new Date(),
+        updatedAt: new Date()
+      });
 
-      await firebaseRequest(`/keys/${encodeURIComponent(newKey)}`, 'PUT', payload);
-      const lk = loadLocalKeys();
-      lk[newKey] = payload;
-      saveLocalKeys(lk);
+      await auditCol.insertOne({
+        action: 'LICENSE_GENERATED',
+        actor: session.username || 'OWNER',
+        details: { key: newKey, role, duration },
+        timestamp: new Date()
+      });
 
-      return sendJson(res, 200, { success: true, key: newKey, keyData: payload });
+      return sendJson(res, 200, {
+        success: true,
+        key: newKey,
+        message: 'License key created'
+      });
     }
 
+    // RESET HWID TO UNBOUND
     if (action === 'reset_hwid') {
-      const target = (body.key || '').trim().toUpperCase();
-      if (!target) return sendJson(res, 400, { success: false, error: 'Key required' });
-      if (target.startsWith('HD-OWNER') || target === 'HD-OWNER-TRIS-8888-9999' || target === 'HD-OWNER-COWN-7777-8888') {
-        return sendJson(res, 403, { success: false, error: 'Owner Keys are permanently locked for lifetime and cannot be reset.' });
+      const targetKey = (body.key || '').trim().toUpperCase();
+      if (!targetKey) {
+        return sendJson(res, 400, { success: false, error: 'Target key required' });
       }
-      await firebaseRequest(`/keys/${encodeURIComponent(target)}`, 'PATCH', { boundHwid: 'Unbound' });
-      const lk = loadLocalKeys();
-      if (lk[target]) { lk[target].boundHwid = 'Unbound'; saveLocalKeys(lk); }
-      return sendJson(res, 200, { success: true, message: `HWID for ${target} reset to Unbound.` });
+
+      await licensesCol.updateOne(
+        { key: targetKey },
+        { $set: { boundHwid: 'Unbound', isRedeemed: false, updatedAt: new Date() } }
+      );
+
+      await auditCol.insertOne({
+        action: 'HWID_RESET',
+        actor: session.username || 'OWNER',
+        details: { targetKey },
+        timestamp: new Date()
+      });
+
+      return sendJson(res, 200, { success: true, message: `HWID unbound for ${targetKey}` });
     }
 
-    if (action === 'revoke_key') {
-      const target = (body.key || '').trim().toUpperCase();
-      if (!target) return sendJson(res, 400, { success: false, error: 'Key required' });
-      const currentStatus = body.status || 'REVOKED';
-      await firebaseRequest(`/keys/${encodeURIComponent(target)}`, 'PATCH', { status: currentStatus });
-      const lk = loadLocalKeys();
-      if (lk[target]) { lk[target].status = currentStatus; saveLocalKeys(lk); }
-      return sendJson(res, 200, { success: true, message: `Key ${target} updated to ${currentStatus}.` });
+    // UPDATE STATUS (REVOKE / ACTIVATE)
+    if (action === 'update_status') {
+      const targetKey = (body.key || '').trim().toUpperCase();
+      const nextStatus = (body.status || 'ACTIVE').toUpperCase();
+
+      await licensesCol.updateOne(
+        { key: targetKey },
+        { $set: { status: nextStatus, updatedAt: new Date() } }
+      );
+
+      return sendJson(res, 200, { success: true, message: `Key status set to ${nextStatus}` });
     }
 
-    if (action === 'get_maintenance') {
-      const sysPath = path.join(__dirname, '_data', 'system_state.json');
-      let sys = { maintenance: { enabled: true } };
-      try {
-        if (fs.existsSync(sysPath)) sys = JSON.parse(fs.readFileSync(sysPath, 'utf8'));
-      } catch(e) {}
-      return sendJson(res, 200, { success: true, maintenance: sys.maintenance || { enabled: true } });
-    }
-
-    if (action === 'toggle_maintenance') {
-      const enabled = body.enabled !== undefined ? !!body.enabled : true;
-      const sysPath = path.join(__dirname, '_data', 'system_state.json');
-      let sys = { maintenance: { enabled: true }, control: { timestamp: Date.now() } };
-      try {
-        if (fs.existsSync(sysPath)) sys = JSON.parse(fs.readFileSync(sysPath, 'utf8'));
-      } catch(e) {}
-      sys.maintenance = {
-        enabled: enabled,
-        reason: body.reason || 'Linux is working on lib for online dice - Website upgrade in progress',
-        updatedAt: Date.now(),
-        author: 'OWNER'
-      };
-      sys.control = {
-        timestamp: Date.now(),
-        reason: enabled ? 'Maintenance mode enabled' : 'Maintenance mode lifted',
-        author: 'OWNER'
-      };
-      try {
-        fs.writeFileSync(sysPath, JSON.stringify(sys, null, 2), 'utf8');
-        const altPath = path.join(__dirname, 'data', 'system_state.json');
-        if (fs.existsSync(path.dirname(altPath))) fs.writeFileSync(altPath, JSON.stringify(sys, null, 2), 'utf8');
-      } catch(e) {}
-      try {
-        await firebaseRequest('/system/maintenance', 'PUT', sys.maintenance);
-        await firebaseRequest('/system/control', 'PUT', sys.control);
-      } catch(e) {}
-      return sendJson(res, 200, { success: true, maintenance: sys.maintenance });
-    }
-
-    if (action === 'force_refresh') {
-      const now = Date.now();
-      const controlData = {
-        timestamp: now,
-        reason: body.reason || 'Remote force refresh triggered by Owner',
-        author: 'OWNER'
-      };
-      const sysPath = path.join(__dirname, '_data', 'system_state.json');
-      try {
-        if (fs.existsSync(sysPath)) {
-          const sys = JSON.parse(fs.readFileSync(sysPath, 'utf8'));
-          sys.control = controlData;
-          fs.writeFileSync(sysPath, JSON.stringify(sys, null, 2), 'utf8');
-        }
-      } catch(e) {}
-      try {
-        await firebaseRequest('/system/control', 'PUT', controlData);
-      } catch(e) {}
-      return sendJson(res, 200, { success: true, message: 'Force refresh broadcasted to all active clients', timestamp: now });
-    }
-
+    // DELETE LICENSE
     if (action === 'delete_key') {
-      const target = (body.key || '').trim().toUpperCase();
-      if (!target) return sendJson(res, 400, { success: false, error: 'Key required' });
-      await firebaseRequest(`/keys/${encodeURIComponent(target)}`, 'DELETE');
-      const lk = loadLocalKeys();
-      delete lk[target];
-      saveLocalKeys(lk);
-      return sendJson(res, 200, { success: true, message: `Key ${target} deleted.` });
+      const targetKey = (body.key || '').trim().toUpperCase();
+      await licensesCol.deleteOne({ key: targetKey });
+      return sendJson(res, 200, { success: true, message: `Key ${targetKey} deleted` });
+    }
+
+    // PURGE EXPIRED LICENSES
+    if (action === 'purge_expired') {
+      const now = Date.now();
+      const resPurge = await licensesCol.deleteMany({
+        expireTimestamp: { $ne: null, $lt: now }
+      });
+      return sendJson(res, 200, {
+        success: true,
+        purgedCount: resPurge.deletedCount || 0
+      });
+    }
+
+    // SYSTEM MAINTENANCE TOGGLE
+    if (action === 'toggle_maintenance') {
+      const nextState = Boolean(body.enabled);
+      const reason = body.reason || 'Upgrading prediction models and algorithms';
+      const mState = await setMaintenanceState(nextState, reason, session.username || 'OWNER');
+      return sendJson(res, 200, { success: true, maintenance: mState });
+    }
+
+    // BROADCAST FORCE REFRESH
+    if (action === 'force_refresh') {
+      const cState = await triggerForceRefresh(body.reason || 'Admin force refresh', session.username || 'OWNER');
+      return sendJson(res, 200, { success: true, control: cState });
+    }
+
+    // BROADCAST ANNOUNCEMENT
+    if (action === 'set_announcement') {
+      const text = body.text || '';
+      const type = body.type || 'info';
+      const ann = await setAnnouncement(text, type, session.username || 'OWNER');
+      return sendJson(res, 200, { success: true, announcement: ann });
+    }
+
+    // SECURITY AUDIT LOGS
+    if (action === 'get_audit_logs') {
+      const logs = await auditCol.find({}).sort({ timestamp: -1 }).limit(50).toArray();
+      return sendJson(res, 200, { success: true, logs });
     }
 
     return sendJson(res, 400, { success: false, error: `Unknown action: ${action}` });
   } catch (err) {
-    return sendJson(res, 500, { success: false, error: `Admin server error: ${err.message}` });
+    return sendJson(res, 500, { success: false, error: 'Admin server error' });
   }
 };

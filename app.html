@@ -33,28 +33,32 @@
       checkSystemStatus();
     })();
   </script>
-  <script>
-    // Pre-declared Universal Toast Manager (Guarantees zero ReferenceError)
+    <script>
+    // Bulletproof Universal Toast Manager (Global Fallback, Zero ReferenceError)
     window.showToast = function(message) {
-      let container = document.getElementById('toast-container');
-      if (!container) {
-        container = document.createElement('div');
-        container.id = 'toast-container';
-        container.className = 'toast-container';
-        (document.body || document.documentElement).appendChild(container);
-      }
-      const toast = document.createElement('div');
-      toast.className = 'toast';
-      toast.innerHTML = '<span>' + message + '</span>';
-      container.appendChild(toast);
-      setTimeout(() => {
-        toast.style.animation = 'toastOut 0.3s forwards';
+      try {
+        let container = document.getElementById('toast-container');
+        if (!container) {
+          container = document.createElement('div');
+          container.id = 'toast-container';
+          container.className = 'toast-container';
+          (document.body || document.documentElement).appendChild(container);
+        }
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.innerHTML = '<span>' + message + '</span>';
+        container.appendChild(toast);
         setTimeout(() => {
-          if (toast.parentNode) toast.parentNode.removeChild(toast);
-        }, 300);
-      }, 3200);
+          toast.style.animation = 'toastOut 0.3s forwards';
+          setTimeout(() => {
+            if (toast.parentNode) toast.parentNode.removeChild(toast);
+          }, 300);
+        }, 3200);
+      } catch(e) {
+        console.log('[TOAST]', message);
+      }
     };
-    function showToast(m) { window.showToast(m); }
+    function showToast(m) { (window.showToast || console.log)(m); }
   </script>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -4375,13 +4379,15 @@ function removeLastRoll() {
 // 50-SECOND DEEP PATTERN RECOGNITION SCANNER
 // ==========================================
 let scannerInterval = null;
+let scannerSafetyTimeout = null;
 
-function executePredictionCalculation() {
+function executePredictionCalculation(e) {
+  if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
   if (STATE.isCalculating) return;
 
   const hasAnyDice = STATE.rolls.some(r => r.some(d => d !== null));
   if (!hasAnyDice) {
-    showToast('⚠️ Please enter dice colors first before calculating prediction!');
+    (window.showToast || showToast)('⚠️ Please enter dice colors first before calculating prediction!');
     return;
   }
 
@@ -4393,7 +4399,10 @@ function executePredictionCalculation() {
   const logs = document.getElementById('scanner-logs');
   const countdownEl = document.getElementById('scanner-countdown');
 
-  if (overlay) overlay.classList.add('active');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    overlay.classList.add('active');
+  }
   if (logs) logs.innerHTML = '';
   if (fill) fill.style.width = '0%';
 
@@ -4427,19 +4436,30 @@ function executePredictionCalculation() {
       clearInterval(scannerInterval);
       scannerInterval = null;
     }
+    if (scannerSafetyTimeout) {
+      clearTimeout(scannerSafetyTimeout);
+      scannerSafetyTimeout = null;
+    }
 
     try {
       const result = solve1ColorPrediction();
       if (result) {
         STATE.latestPrediction = result;
         renderPredictionResults(result);
-        if (typeof sfx !== 'undefined' && sfx.playLockChime) sfx.playLockChime();
-        showToast('⚡ Locked: Prediction is ' + COLOR_CONFIG[result.topColor].name + ' (' + result.topProbability + '%)!');
+        if (typeof sfx !== 'undefined' && sfx.playLockChime) {
+          try { sfx.playLockChime(); } catch(e) {}
+        }
+        try {
+          (window.showToast || showToast)('⚡ Locked: Prediction is ' + COLOR_CONFIG[result.topColor].name + ' (' + result.topProbability + '%)!');
+        } catch(e) {}
       }
     } catch(err) {
       console.error('Finalize error:', err);
     } finally {
-      if (overlay) overlay.classList.remove('active');
+      if (overlay) {
+        overlay.classList.remove('active');
+        overlay.style.display = 'none'; // GUARANTEED IMMEDIATE TEARDOWN
+      }
       if (fill) fill.style.width = '0%';
       STATE.isCalculating = false;
     }
@@ -4448,19 +4468,28 @@ function executePredictionCalculation() {
   // Hook skip button
   const skipBtn = document.getElementById('btn-scanner-skip');
   if (skipBtn) {
-    skipBtn.onclick = () => {
+    skipBtn.onclick = (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
       addLog('[SKIP] ⚡ Fast-forward requested. Revealing prediction now...');
       finalize();
     };
   }
 
+  // Fallback safety timeout guarantees scanner NEVER freezes at 0s
+  scannerSafetyTimeout = setTimeout(() => {
+    if (STATE.isCalculating) {
+      console.warn('Safety timeout finalized scanner');
+      finalize();
+    }
+  }, (TOTAL_SECONDS + 0.6) * 1000);
+
   scannerInterval = setInterval(() => {
     remaining--;
 
-    if (countdownEl) countdownEl.textContent = remaining + 's';
+    if (countdownEl) countdownEl.textContent = Math.max(0, remaining) + 's';
 
     const elapsed = TOTAL_SECONDS - remaining;
-    const pct = Math.min(100, (elapsed / TOTAL_SECONDS) * 100);
+    const pct = Math.min(100, Math.max(0, (elapsed / TOTAL_SECONDS) * 100));
     if (fill) fill.style.width = pct + '%';
 
     const currentPhase = phaseMessages.find(p => p.atSec === (remaining + 1));
@@ -4543,7 +4572,8 @@ async function handleUnlockGate() {
   } catch (err) {
     if (statusEl) {
       statusEl.style.color = '#ef4444';
-      statusEl.textContent = `⚠️ Connection error: ${err.message}. Please retry.`;
+      const cleanErrMsg = (err && err.message && !err.message.includes('showToast')) ? err.message : 'Authentication service temporarily busy';
+      statusEl.textContent = `⚠️ Connection error: ${cleanErrMsg}. Please retry.`;
     }
   }
 }
@@ -4857,13 +4887,13 @@ addEventListener('DOMContentLoaded', () => {
   // Add Roll Button
   const btnAdd = document.getElementById('btn-add-roll-bottom');
   if (btnAdd) {
-    btnAdd.addEventListener('click', addNewRoll);
+    btnAdd.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); addNewRoll(); });
   }
 
   // Remove Last Roll Button
   const btnRemove = document.getElementById('btn-remove-roll-bottom');
   if (btnRemove) {
-    btnRemove.addEventListener('click', removeLastRoll);
+    btnRemove.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); removeLastRoll(); });
   }
 
   // Clear All Rolls Button
@@ -4875,7 +4905,7 @@ addEventListener('DOMContentLoaded', () => {
   // Calculate Prediction Button
   const btnCalculate = document.getElementById('btn-calculate');
   if (btnCalculate) {
-    btnCalculate.addEventListener('click', executePredictionCalculation);
+    btnCalculate.addEventListener('click', (e) => { e.preventDefault(); e.stopPropagation(); executePredictionCalculation(e); });
   }
 
   // Sound Toggle Button
