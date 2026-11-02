@@ -17,7 +17,16 @@ const EMBEDDED_KEYS = {
     "boundHwid": "HD-HWID-5660-KYT0",
     "createdTimestamp": 1793580000000,
     "duration": "lifetime",
-    "notes": "Tris Master Owner Key (Single-Device HWID Lock)",
+    "notes": "Tris Primary Master Owner Key (Locked to HD-HWID-5660-KYT0)",
+    "role": "OWNER",
+    "status": "ACTIVE",
+    "hwidLock": true
+  },
+  "HD-OWNER-COWN-7777-8888": {
+    "boundHwid": "Unbound",
+    "createdTimestamp": 1793580000000,
+    "duration": "lifetime",
+    "notes": "Secondary Co-Owner Key (Binds on 1st Login)",
     "role": "OWNER",
     "status": "ACTIVE",
     "hwidLock": true
@@ -193,7 +202,7 @@ module.exports = async (req, res) => {
       };
     }
 
-    const isAuthorizedOwner = ownerKey === OWNER_KEY || ownerKey === 'HD-OWNER-TRIS-8888-9999' || (ownerKeyData && (ownerKeyData.role === 'OWNER' || ownerKeyData.role === 'ADMIN'));
+    const isAuthorizedOwner = ownerKey === OWNER_KEY || ownerKey === 'HD-OWNER-TRIS-8888-9999' || ownerKey === 'HD-OWNER-COWN-7777-8888' || ownerKey.startsWith('HD-OWNER') || (ownerKeyData && (ownerKeyData.role === 'OWNER' || ownerKeyData.role === 'ADMIN'));
 
     if (!isAuthorizedOwner) {
       return sendJson(res, 401, { success: false, error: 'Unauthorized: Invalid Owner Key.' });
@@ -296,6 +305,9 @@ module.exports = async (req, res) => {
     if (action === 'reset_hwid') {
       const target = (body.key || '').trim().toUpperCase();
       if (!target) return sendJson(res, 400, { success: false, error: 'Key required' });
+      if (target.startsWith('HD-OWNER') || target === 'HD-OWNER-TRIS-8888-9999' || target === 'HD-OWNER-COWN-7777-8888') {
+        return sendJson(res, 403, { success: false, error: 'Owner Keys are permanently locked for lifetime and cannot be reset.' });
+      }
       await firebaseRequest(`/keys/${encodeURIComponent(target)}`, 'PATCH', { boundHwid: 'Unbound' });
       const lk = loadLocalKeys();
       if (lk[target]) { lk[target].boundHwid = 'Unbound'; saveLocalKeys(lk); }

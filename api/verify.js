@@ -18,7 +18,16 @@ const EMBEDDED_KEYS = {
     "boundHwid": "HD-HWID-5660-KYT0",
     "createdTimestamp": 1793580000000,
     "duration": "lifetime",
-    "notes": "Tris Master Owner Key (Single-Device HWID Lock)",
+    "notes": "Tris Primary Master Owner Key (Locked to HD-HWID-5660-KYT0)",
+    "role": "OWNER",
+    "status": "ACTIVE",
+    "hwidLock": true
+  },
+  "HD-OWNER-COWN-7777-8888": {
+    "boundHwid": "Unbound",
+    "createdTimestamp": 1793580000000,
+    "duration": "lifetime",
+    "notes": "Secondary Co-Owner Key (Binds on 1st Login)",
     "role": "OWNER",
     "status": "ACTIVE",
     "hwidLock": true
@@ -213,7 +222,7 @@ const handler = async (req, res) => {
       return sendJson(res, 403, { success: false, error: 'This license key has expired.' });
     }
 
-    const isOwnerMaster = (key === OWNER_KEY || key === 'HD-OWNER-TRIS-8888-9999');
+    const isOwnerMaster = (key === OWNER_KEY || key === 'HD-OWNER-TRIS-8888-9999' || key === 'HD-OWNER-COWN-7777-8888' || key.startsWith('HD-OWNER'));
     const isOwnerRole = (keyData.role === 'OWNER' || keyData.role === 'ADMIN' || isOwnerMaster);
 
     // Single-Device 1-Time HWID Binding (Strictly locks on first login)

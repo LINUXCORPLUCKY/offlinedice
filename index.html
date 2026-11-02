@@ -4210,6 +4210,31 @@ function renderPredictionResults(res) {
 // ==========================================
 // FIREBASE REALTIME DATABASE & HWID ENGINE
 // ==========================================
+// Safe Global Toast Notifier
+function showToast(message) {
+  let container = document.getElementById('toast-container');
+  if (!container) {
+    container = document.createElement('div');
+    container.id = 'toast-container';
+    container.className = 'toast-container';
+    document.body.appendChild(container);
+  }
+
+  const toast = document.createElement('div');
+  toast.className = 'toast';
+  toast.innerHTML = `<span>${message}</span>`;
+
+  container.appendChild(toast);
+
+  setTimeout(() => {
+    toast.style.animation = 'toastOut 0.3s forwards';
+    setTimeout(() => {
+      if (toast.parentNode) toast.parentNode.removeChild(toast);
+    }, 300);
+  }, 3200);
+}
+window.showToast = showToast;
+
 // ==========================================
 // SECURE SERVERLESS API CLIENT (ZERO CLIENT LEAK)
 // All database operations routed via /api/verify and /api/admin
@@ -4377,34 +4402,7 @@ async function handleUnlockGate() {
     if (!res.ok || !data.success) {
       if (statusEl) {
         statusEl.style.color = '#ef4444';
-        if (data.error && data.error.includes('HWID Mismatch') && (inputKey.includes('OWNER') || inputKey === 'HD-OWNER-TRIS-8888-9999')) {
-          statusEl.innerHTML = `❌ ${data.error}<br><button id="btn-quick-reset-owner" style="margin-top:8px; padding:6px 12px; font-size:11px; background:rgba(6,182,212,0.25); border:1px solid #06b6d4; color:#67e8f9; border-radius:6px; cursor:pointer; font-weight:700;">🔄 Reset Owner HWID to this Machine</button>`;
-          const quickBtn = document.getElementById('btn-quick-reset-owner');
-          if (quickBtn) {
-            quickBtn.onclick = async () => {
-              quickBtn.textContent = 'Resetting in Firebase...';
-              try {
-                const r = await fetch('/api/admin', {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({ action: 'reset_hwid', ownerKey: inputKey, key: inputKey, hwid: userHwid })
-                });
-                const d = await r.json();
-                if (d.success) {
-                  statusEl.style.color = '#4ade80';
-                  statusEl.textContent = '✅ Owner HWID reset! Unlocking now...';
-                  setTimeout(handleUnlockGate, 500);
-                } else {
-                  statusEl.textContent = '❌ ' + (d.error || 'Reset failed');
-                }
-              } catch(e) {
-                statusEl.textContent = '❌ Connection error: ' + e.message;
-              }
-            };
-          }
-        } else {
-          statusEl.textContent = '❌ ' + (data.error || 'Invalid License Key.');
-        }
+        statusEl.textContent = '❌ ' + (data.error || 'Invalid License Key.');
       }
       return;
     }
@@ -4573,7 +4571,9 @@ async function fetchKeysVault() {
       }
 
       let resetBtnHtml = '';
-      if (val.boundHwid && val.boundHwid !== 'Unbound' && val.boundHwid !== 'Disabled') {
+      // Owner keys are permanently locked for lifetime: NO reset button on owner keys!
+      const isOwnerKey = (val.role === 'OWNER' || k.startsWith('HD-OWNER'));
+      if (val.boundHwid && val.boundHwid !== 'Unbound' && val.boundHwid !== 'Disabled' && !isOwnerKey) {
         resetBtnHtml = `<button class="btn-action-sm btn-action-reset" data-key="${k}">Reset HWID</button>`;
       }
 
