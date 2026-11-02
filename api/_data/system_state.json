@@ -1,20 +1,13 @@
 {
   "maintenance": {
-    "enabled": false,
-    "reason": "System online and operational.",
-    "updatedAt": 1793610500000,
-    "author": "OWNER"
+    "enabled": false
   },
   "announcement": {
-    "active": false,
-    "text": "",
-    "type": "info",
-    "timestamp": 1793605037245,
-    "author": "OWNER"
+    "active": true,
+    "text": "⚡ HEADLESS DICE // 5s RAPID PATTERN SCANNER & PREDICTOR ONLINE",
+    "timestamp": 1730538000000
   },
   "control": {
-    "timestamp": 1793605037620,
-    "reason": "Maintenance mode activated - Linux updating dice lib",
-    "author": "OWNER"
+    "timestamp": 1730538000000
   }
 }

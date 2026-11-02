@@ -1284,14 +1284,8 @@ function initApp() {
         }
 
         const ctrl = data ? data.control : null;
-        if (ctrl && ctrl.timestamp && ctrl.timestamp > APP_CLIENT_START_TIME) {
-          if (!lastKnownRefreshTimestamp || ctrl.timestamp > lastKnownRefreshTimestamp) {
-            lastKnownRefreshTimestamp = ctrl.timestamp;
-            showToast('⚡ System update broadcasted! Refreshing app...');
-            setTimeout(() => {
-              window.location.reload(true);
-            }, 800);
-          }
+        if (ctrl && ctrl.timestamp) {
+          // Zero reload spam - remote state acknowledged silently
         }
       }
     } catch (e) { }

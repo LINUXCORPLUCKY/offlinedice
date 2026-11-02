@@ -5,10 +5,13 @@ const fs = require('fs');
 const path = require('path');
 const { getSystemState: getAtlasSystemState } = require('../lib/system_manager');
 
+const STATIC_SYSTEM_TIMESTAMP = 1730538000000;
+
 async function getSystemState() {
   try {
     const atlasState = await getAtlasSystemState();
     if (atlasState && atlasState.maintenance) {
+      if (!atlasState.control) atlasState.control = { timestamp: STATIC_SYSTEM_TIMESTAMP };
       return atlasState;
     }
   } catch(e) {}
@@ -16,11 +19,19 @@ async function getSystemState() {
   try {
     const sysPath = path.join(__dirname, '_data', 'system_state.json');
     if (fs.existsSync(sysPath)) {
-      return JSON.parse(fs.readFileSync(sysPath, 'utf8'));
+      const data = JSON.parse(fs.readFileSync(sysPath, 'utf8'));
+      if (!data.control || !data.control.timestamp) {
+        data.control = { timestamp: STATIC_SYSTEM_TIMESTAMP };
+      }
+      return data;
     }
     const fallbackPath = path.join(__dirname, 'data', 'system_state.json');
     if (fs.existsSync(fallbackPath)) {
-      return JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+      const data = JSON.parse(fs.readFileSync(fallbackPath, 'utf8'));
+      if (!data.control || !data.control.timestamp) {
+        data.control = { timestamp: STATIC_SYSTEM_TIMESTAMP };
+      }
+      return data;
     }
   } catch(e) {}
 
@@ -29,10 +40,10 @@ async function getSystemState() {
     announcement: {
       active: true,
       text: "⚡ HEADLESS DICE // 5s RAPID PATTERN SCANNER ONLINE",
-      timestamp: Date.now()
+      timestamp: STATIC_SYSTEM_TIMESTAMP
     },
     control: {
-      timestamp: Date.now()
+      timestamp: STATIC_SYSTEM_TIMESTAMP
     }
   };
 }
@@ -61,7 +72,7 @@ module.exports = async (req, res) => {
     return res.end(JSON.stringify(state.announcement || { active: false, text: '' }));
   }
   if (queryType === 'control') {
-    return res.end(JSON.stringify(state.control || { timestamp: Date.now() }));
+    return res.end(JSON.stringify(state.control || { timestamp: STATIC_SYSTEM_TIMESTAMP }));
   }
 
   return res.end(JSON.stringify(state));
