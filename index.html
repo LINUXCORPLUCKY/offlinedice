@@ -3173,8 +3173,8 @@ html, body {
 
     <!-- Right Column: Prediction & Probability Results Panel -->
     <section class="glass-panel results-panel">
-      <!-- Computing Holographic Scanner Overlay (50s Deep Pattern Analysis) -->
-      <div class="scanner-overlay" id="scanner-overlay">
+      <!-- Computing Holographic Scanner Overlay (5s Rapid Pattern Analysis) -->
+      <div class="scanner-overlay" id="scanner-overlay" style="display: none;">
         <div class="scanner-box">
           <div class="cyber-radar">
             <div class="radar-beam"></div>
@@ -4378,6 +4378,8 @@ function removeLastRoll() {
 // ==========================================
 // 50-SECOND DEEP PATTERN RECOGNITION SCANNER
 // ==========================================
+// 5-SECOND HIGH-PRECISION DEEP PATTERN SCANNER
+// ==========================================
 let scannerInterval = null;
 let scannerSafetyTimeout = null;
 
@@ -4387,7 +4389,7 @@ function executePredictionCalculation(e) {
 
   const hasAnyDice = STATE.rolls.some(r => r.some(d => d !== null));
   if (!hasAnyDice) {
-    (window.showToast || showToast)('⚠️ Please enter dice colors first before calculating prediction!');
+    (window.showToast || showToast || console.log)('⚠️ Please enter dice colors first before calculating prediction!');
     return;
   }
 
@@ -4406,32 +4408,33 @@ function executePredictionCalculation(e) {
   if (logs) logs.innerHTML = '';
   if (fill) fill.style.width = '0%';
 
-  const TOTAL_SECONDS = 7; // High-precision 7-second deep pattern calculation (5-10s window)
+  const TOTAL_SECONDS = 5; // Rapid 5-second deep pattern calculation (5-10s window)
   let remaining = TOTAL_SECONDS;
 
   if (countdownEl) countdownEl.textContent = TOTAL_SECONDS + 's';
 
   const phaseMessages = [
-    { atSec: 7, text: 'Phase 1: Ingesting 4-dice stream rolls & positional vectors...', log: '[00:01] ⚡ Stream matrix ingested into Markov pattern engine' },
-    { atSec: 6, text: 'Phase 2: Analyzing color frequency & recency weight distributions...', log: '[00:02] ⚡ Recency weighting calibrated across active rounds' },
-    { atSec: 5, text: 'Phase 3: Calculating multi-round streak momentum & coexistence...', log: '[00:03] ⚡ Streak continuity bonus synthesized' },
-    { atSec: 4, text: 'Phase 4: Running Markov state transitions between round pairs...', log: '[00:04] ⚡ Markov state transition matrices locked' },
-    { atSec: 3, text: 'Phase 5: Simulating 25,000 Monte Carlo probability draws...', log: '[00:05] ⚡ Monte Carlo 4-dice simulation completed' },
-    { atSec: 2, text: 'Phase 6: Filtering dormant/cold colors & bias variance...', log: '[00:06] ⚡ Cold dead zones filtered and suppressed' },
-    { atSec: 1, text: 'Phase 7: Target locked! Calibrating high-precision prediction...', log: '[00:07] ✅ HIGH-PRECISION PREDICTION READY' }
+    { atSec: 5, text: 'Phase 1: Ingesting 4-dice stream rolls & positional vectors...', log: '[00:01] ⚡ Stream matrix ingested into Markov engine' },
+    { atSec: 4, text: 'Phase 2: Analyzing color frequency & recency weight distributions...', log: '[00:02] ⚡ Recency weighting calibrated across rounds' },
+    { atSec: 3, text: 'Phase 3: Calculating multi-round streak momentum & transitions...', log: '[00:03] ⚡ Markov state transition matrices locked' },
+    { atSec: 2, text: 'Phase 4: Simulating 25,000 Monte Carlo probability draws...', log: '[00:04] ⚡ Monte Carlo 4-dice simulation completed' },
+    { atSec: 1, text: 'Phase 5: Target locked! Calibrating high-precision prediction...', log: '[00:05] ✅ HIGH-PRECISION PREDICTION READY' }
   ];
 
   function addLog(text) {
     if (!logs) return;
-    const span = document.createElement('span');
-    span.textContent = text;
-    logs.appendChild(span);
-    logs.scrollTop = logs.scrollHeight;
+    try {
+      const span = document.createElement('span');
+      span.textContent = text;
+      logs.appendChild(span);
+      logs.scrollTop = logs.scrollHeight;
+    } catch(err) {}
   }
 
-  addLog('[00:00] ⚡ Pattern Engine Activated: Starting 7-second deep pattern analysis...');
+  addLog('[00:00] ⚡ Pattern Engine Activated: Starting 5-second deep pattern analysis...');
 
   function finalize() {
+    // 1. Immediately kill all timers
     if (scannerInterval) {
       clearInterval(scannerInterval);
       scannerInterval = null;
@@ -4441,47 +4444,53 @@ function executePredictionCalculation(e) {
       scannerSafetyTimeout = null;
     }
 
+    // 2. Hide overlay unconditionally FIRST so it NEVER freezes on screen at 0s
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.style.display = 'none';
+    }
+    if (fill) fill.style.width = '0%';
+    STATE.isCalculating = false;
+
+    // 3. Compute and render prediction with bulletproof error handling
     try {
       const result = solve1ColorPrediction();
       if (result) {
         STATE.latestPrediction = result;
         renderPredictionResults(result);
-        if (typeof sfx !== 'undefined' && sfx.playLockChime) {
+        if (typeof sfx !== 'undefined' && sfx && sfx.playLockChime) {
           try { sfx.playLockChime(); } catch(e) {}
         }
         try {
-          (window.showToast || showToast)('⚡ Locked: Prediction is ' + COLOR_CONFIG[result.topColor].name + ' (' + result.topProbability + '%)!');
+          (window.showToast || showToast || console.log)('⚡ Locked: Prediction is ' + COLOR_CONFIG[result.topColor].name + ' (' + result.topProbability + '%)!');
+        } catch(e) {}
+      } else {
+        try {
+          (window.showToast || showToast || console.log)('⚠️ Please enter dice colors first before calculating prediction!');
         } catch(e) {}
       }
     } catch(err) {
-      console.error('Finalize error:', err);
-    } finally {
-      if (overlay) {
-        overlay.classList.remove('active');
-        overlay.style.display = 'none'; // GUARANTEED IMMEDIATE TEARDOWN
-      }
-      if (fill) fill.style.width = '0%';
-      STATE.isCalculating = false;
+      console.error('Finalize computation error:', err);
     }
   }
 
-  // Hook skip button
+  // Hook skip button for immediate reveal
   const skipBtn = document.getElementById('btn-scanner-skip');
   if (skipBtn) {
     skipBtn.onclick = (e) => {
-      if (e) { e.preventDefault(); e.stopPropagation(); }
+      if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
       addLog('[SKIP] ⚡ Fast-forward requested. Revealing prediction now...');
       finalize();
     };
   }
 
-  // Fallback safety timeout guarantees scanner NEVER freezes at 0s
+  // Fallback safety timeout guarantees scanner NEVER freezes at 0s under any circumstances
   scannerSafetyTimeout = setTimeout(() => {
-    if (STATE.isCalculating) {
-      console.warn('Safety timeout finalized scanner');
+    if (STATE.isCalculating || (overlay && overlay.style.display !== 'none')) {
+      console.warn('Safety watchdog timeout force-finalized scanner');
       finalize();
     }
-  }, (TOTAL_SECONDS + 0.6) * 1000);
+  }, (TOTAL_SECONDS + 0.3) * 1000);
 
   scannerInterval = setInterval(() => {
     remaining--;

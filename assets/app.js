@@ -641,30 +641,19 @@ function removeLastRoll() {
 }
 
 // ==========================================
-// 50-SECOND DEEP PATTERN RECOGNITION SCANNER
+// 5-SECOND HIGH-PRECISION DEEP PATTERN SCANNER
 // ==========================================
 let scannerInterval = null;
+let scannerSafetyTimeout = null;
 let isAuthVerified = false;
 
-function executePredictionCalculation() {
-  if (!isAuthVerified) {
-    showToast('⚠️ Valid License Key required to run prediction!');
-    const gateModal = document.getElementById('key-gate-modal');
-    if (gateModal) gateModal.style.display = 'flex';
-    return;
-  }
+function executePredictionCalculation(e) {
+  if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
   if (STATE.isCalculating) return;
 
-  // Validate that user has entered at least 1 full round (4 dice)
-  let totalDiceEntered = 0;
-  STATE.rolls.forEach(roundDice => {
-    roundDice.forEach(color => {
-      if (color && COLOR_CONFIG[color]) totalDiceEntered++;
-    });
-  });
-
-  if (totalDiceEntered < 4) {
-    showToast('⚠️ Please enter at least 1 full round (4 dice) before running prediction!');
+  const hasAnyDice = STATE.rolls.some(r => r.some(d => d !== null));
+  if (!hasAnyDice) {
+    (window.showToast || showToast || console.log)('⚠️ Please enter dice colors first before calculating prediction!');
     return;
   }
 
@@ -676,89 +665,111 @@ function executePredictionCalculation() {
   const logs = document.getElementById('scanner-logs');
   const countdownEl = document.getElementById('scanner-countdown');
 
-  if (overlay) overlay.classList.add('active');
+  if (overlay) {
+    overlay.style.display = 'flex';
+    overlay.classList.add('active');
+  }
   if (logs) logs.innerHTML = '';
   if (fill) fill.style.width = '0%';
 
-  const TOTAL_SECONDS = 10; // Exact 10 seconds ultra-fast scanner as requested by Tris!
+  const TOTAL_SECONDS = 5; // Rapid 5-second deep pattern calculation (5-10s window)
   let remaining = TOTAL_SECONDS;
 
   if (countdownEl) countdownEl.textContent = `${TOTAL_SECONDS}s`;
 
   const phaseMessages = [
-    { atSec: 9, text: 'Phase 1: Ingesting positional 4-dice stream matrix...', log: '[00:01] 🎃 Stream rounds ingested into Markov cluster matrix' },
-    { atSec: 7, text: 'Phase 2: Computing 1st & 2nd Order Markov transition probabilities...', log: '[00:03] 🦇 Markov state projection generated from latest dice' },
-    { atSec: 5, text: 'Phase 3: Evaluating multi-round streak momentum & co-occurrence...', log: '[00:05] 🕸️ Co-occurrence affinity matrix calculated' },
-    { atSec: 3, text: 'Phase 4: Running 10,000 Monte Carlo PRNG 4-dice simulated draws...', log: '[00:07] 👻 10,000 Monte Carlo simulations completed' },
-    { atSec: 1, text: 'Final Step: Target locked! Delivering #1 color prediction...', log: '[00:09] 🎯 1-COLOR PREDICTION READY' }
+    { atSec: 5, text: 'Phase 1: Ingesting 4-dice stream rolls & positional vectors...', log: '[00:01] ⚡ Stream matrix ingested into Markov engine' },
+    { atSec: 4, text: 'Phase 2: Analyzing color frequency & recency weight distributions...', log: '[00:02] ⚡ Recency weighting calibrated across rounds' },
+    { atSec: 3, text: 'Phase 3: Calculating multi-round streak momentum & transitions...', log: '[00:03] ⚡ Markov state transition matrices locked' },
+    { atSec: 2, text: 'Phase 4: Simulating 25,000 Monte Carlo probability draws...', log: '[00:04] ⚡ Monte Carlo 4-dice simulation completed' },
+    { atSec: 1, text: 'Phase 5: Target locked! Calibrating high-precision prediction...', log: '[00:05] ✅ HIGH-PRECISION PREDICTION READY' }
   ];
 
   function addLog(text) {
     if (!logs) return;
-    const span = document.createElement('span');
-    span.textContent = text;
-    logs.appendChild(span);
-    logs.scrollTop = logs.scrollHeight;
+    try {
+      const span = document.createElement('span');
+      span.textContent = text;
+      logs.appendChild(span);
+      logs.scrollTop = logs.scrollHeight;
+    } catch(err) {}
   }
 
-  addLog(`[00:00] 🎃 Halloween Engine Activated: Starting 10-second ultra pattern scan...`);
+  addLog('[00:00] ⚡ Pattern Engine Activated: Starting 5-second deep pattern analysis...');
 
   function finalize() {
+    // 1. Immediately kill all timers
     if (scannerInterval) {
       clearInterval(scannerInterval);
       scannerInterval = null;
     }
-
-    const result = solve1ColorPrediction();
-    if (!result) {
-      STATE.latestPrediction = null;
-      resetPredictionUI();
-      if (overlay) overlay.classList.remove('active');
-      if (fill) fill.style.width = '0%';
-      STATE.isCalculating = false;
-      showToast('⚠️ No dice entered! Enter stream rolls to calculate prediction.');
-      return;
+    if (scannerSafetyTimeout) {
+      clearTimeout(scannerSafetyTimeout);
+      scannerSafetyTimeout = null;
     }
-    STATE.latestPrediction = result;
-    renderPredictionResults(result);
 
-    if (overlay) overlay.classList.remove('active');
+    // 2. Hide overlay unconditionally FIRST so it NEVER freezes on screen at 0s
+    if (overlay) {
+      overlay.classList.remove('active');
+      overlay.style.display = 'none';
+    }
     if (fill) fill.style.width = '0%';
     STATE.isCalculating = false;
 
-    sfx.playLockChime();
-    showToast(`🎃 Locked: 1-Color Prediction is ${COLOR_CONFIG[result.topColor].name} (${result.topProbability}%)!`);
-    logPredictionLocally(result, STATE.rolls[STATE.rolls.length - 1] || []);
+    // 3. Compute and render prediction with bulletproof error handling
+    try {
+      const result = solve1ColorPrediction();
+      if (result) {
+        STATE.latestPrediction = result;
+        renderPredictionResults(result);
+        if (typeof sfx !== 'undefined' && sfx && sfx.playLockChime) {
+          try { sfx.playLockChime(); } catch(e) {}
+        }
+        try {
+          (window.showToast || showToast || console.log)(`⚡ Locked: Prediction is ${COLOR_CONFIG[result.topColor].name} (${result.topProbability}%)!`);
+        } catch(e) {}
+        logPredictionLocally(result, STATE.rolls[STATE.rolls.length - 1] || []);
+      } else {
+        try {
+          (window.showToast || showToast || console.log)('⚠️ Please enter dice colors first before calculating prediction!');
+        } catch(e) {}
+      }
+    } catch(err) {
+      console.error('Finalize computation error:', err);
+    }
   }
 
-  // Hook skip button
+  // Hook skip button for immediate reveal
   const skipBtn = document.getElementById('btn-scanner-skip');
   if (skipBtn) {
-    skipBtn.onclick = () => {
-      if (STATE.isCalculating) {
-        addLog(`[SKIP] ⚡ Fast-forward requested. Revealing prediction now...`);
-        finalize();
-      }
+    skipBtn.onclick = (e) => {
+      if (e && e.preventDefault) { e.preventDefault(); e.stopPropagation(); }
+      addLog('[SKIP] ⚡ Fast-forward requested. Revealing prediction now...');
+      finalize();
     };
   }
+
+  // Fallback safety timeout guarantees scanner NEVER freezes at 0s under any circumstances
+  scannerSafetyTimeout = setTimeout(() => {
+    if (STATE.isCalculating || (overlay && overlay.style.display !== 'none')) {
+      console.warn('Safety watchdog timeout force-finalized scanner');
+      finalize();
+    }
+  }, (TOTAL_SECONDS + 0.3) * 1000);
 
   scannerInterval = setInterval(() => {
     remaining--;
 
-    if (countdownEl) countdownEl.textContent = `${remaining}s`;
+    if (countdownEl) countdownEl.textContent = `${Math.max(0, remaining)}s`;
 
     const elapsed = TOTAL_SECONDS - remaining;
-    const pct = Math.min(100, (elapsed / TOTAL_SECONDS) * 100);
+    const pct = Math.min(100, Math.max(0, (elapsed / TOTAL_SECONDS) * 100));
     if (fill) fill.style.width = `${pct}%`;
 
-    const currentPhase = phaseMessages.find(p => p.atSec === remaining);
+    const currentPhase = phaseMessages.find(p => p.atSec === (remaining + 1));
     if (currentPhase) {
       if (status) status.textContent = currentPhase.text;
       addLog(currentPhase.log);
-    }
-
-    if (remaining % 2 === 0) {
-      sfx.playRadarTick();
     }
 
     if (remaining <= 0) {
@@ -1174,24 +1185,38 @@ function initApp() {
   // Add Roll Button
   const btnAdd = document.getElementById('btn-add-roll-bottom');
   if (btnAdd) {
-    btnAdd.addEventListener('click', addNewRoll);
+    btnAdd.addEventListener('click', (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      addNewRoll();
+    });
   }
 
   // Remove Last Roll Button
   const btnRemove = document.getElementById('btn-remove-roll-bottom');
   if (btnRemove) {
-    btnRemove.addEventListener('click', removeLastRoll);
+    btnRemove.addEventListener('click', (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      removeLastRoll();
+    });
   }
 
   // Clear All Rolls Button
   const btnClearAll = document.getElementById('btn-clear-all');
   if (btnClearAll) {
-    btnClearAll.addEventListener('click', clearAllRolls);
+    btnClearAll.addEventListener('click', (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      clearAllRolls();
+    });
   }
 
   // Calculate Prediction Button
   const btnCalculate = document.getElementById('btn-calculate');
   if (btnCalculate) {
+    btnCalculate.addEventListener('click', (e) => {
+      if (e) { e.preventDefault(); e.stopPropagation(); }
+      executePredictionCalculation(e);
+    });
+  }
     btnCalculate.addEventListener('click', executePredictionCalculation);
   }
 

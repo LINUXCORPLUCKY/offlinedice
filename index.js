@@ -46,7 +46,7 @@ function isMaintenanceActive() {
       }
     }
   } catch(e) {}
-  return true; // Default to active maintenance mode
+  return false; // Default to normal operations unless explicitly enabled
 }
 
 // Page Routes (Owner & Admin portals remain accessible for system management)

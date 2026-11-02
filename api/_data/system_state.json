@@ -1,8 +1,8 @@
 {
   "maintenance": {
-    "enabled": true,
-    "reason": "Linux is currently working on the new library and algorithms for Online Dice. All rooms temporarily paused.",
-    "updatedAt": 1793605037245,
+    "enabled": false,
+    "reason": "System online and operational.",
+    "updatedAt": 1793610500000,
     "author": "OWNER"
   },
   "announcement": {
