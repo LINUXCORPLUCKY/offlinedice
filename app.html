@@ -8,18 +8,12 @@
   <meta http-equiv="Pragma" content="no-cache">
   <meta http-equiv="Expires" content="0">
   <base href="/">
-  <style id="auth-cloak">
-    html, body { display: none !important; }
-  </style>
   <script>
-    // Anti-Bypass Cryptographic Gatekeeper: Strict Server-Side Validation (Zero Bypass)
+    // Immediate Gatekeeper Guard: Redirect Owner to /owner, enforce auth for players
     (function() {
       try {
         var rawAuth = localStorage.getItem('headless_dice_auth') || sessionStorage.getItem('headless_dice_auth');
-        var hwid = localStorage.getItem('headless_dice_hwid') || '';
-        if (!rawAuth || !hwid) {
-          localStorage.removeItem('headless_dice_auth');
-          sessionStorage.removeItem('headless_dice_auth');
+        if (!rawAuth) {
           window.location.replace('/');
           return;
         }
@@ -34,6 +28,17 @@
           return;
         }
 
+        // IF OWNER LOGGED IN, REDIRECT DIRECTLY TO OWNER COMMAND CENTER
+        var isOwner = (auth && (auth.role === 'OWNER' || (auth.key && auth.key.toUpperCase().startsWith('HD-OWNER'))));
+        if (isOwner) {
+          if (auth.key) {
+            sessionStorage.setItem('HD_OWNER_KEY', auth.key);
+            localStorage.setItem('HD_OWNER_KEY', auth.key);
+          }
+          window.location.replace('/owner');
+          return;
+        }
+
         if (!auth || !auth.key || (auth.status !== 'ACTIVE' && auth.status !== 'Active')) {
           localStorage.removeItem('headless_dice_auth');
           sessionStorage.removeItem('headless_dice_auth');
@@ -41,14 +46,16 @@
           return;
         }
 
-        // Mandatory Server-Side Real-Time Verification against /api/verify
+        var hwid = localStorage.getItem('headless_dice_hwid') || '';
+
+        // Verification against /api/verify
         fetch('/api/verify', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ key: auth.key, hwid: hwid })
         })
         .then(function(res) {
-          if (!res.ok) throw new Error('HTTP ' + res.status);
+          if (!res.ok) return null;
           return res.json();
         })
         .then(function(data) {
@@ -59,51 +66,37 @@
             return;
           }
 
-          // Verified! Update auth and release cloak
           auth.role = data.role || auth.role;
           auth.roomId = data.roomId || auth.roomId;
           localStorage.setItem('headless_dice_auth', JSON.stringify(auth));
           sessionStorage.setItem('headless_dice_auth', JSON.stringify(auth));
-
-          var cloak = document.getElementById('auth-cloak');
-          if (cloak) cloak.remove();
         })
-        .catch(function(err) {
-          // If server rejects or network is tampered/blocked, immediately kick
-          localStorage.removeItem('headless_dice_auth');
-          sessionStorage.removeItem('headless_dice_auth');
-          window.location.replace('/');
-        });
+        .catch(function(err) {});
 
-        // Periodic Background Re-Verification every 25 seconds (Instant kick on Discord revoke/blacklist)
+        // Periodic background re-verification every 30 seconds
         setInterval(function() {
           var curAuth = localStorage.getItem('headless_dice_auth');
-          if (!curAuth) {
-            window.location.replace('/');
-            return;
-          }
-          var parsed = JSON.parse(curAuth);
-          fetch('/api/verify', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ key: parsed.key, hwid: hwid })
-          })
-          .then(function(r) { return r.json(); })
-          .then(function(d) {
-            if (!d || !d.success) {
-              localStorage.removeItem('headless_dice_auth');
-              sessionStorage.removeItem('headless_dice_auth');
-              window.location.replace('/');
-            }
-          })
-          .catch(function() {
-            // Do not kick on momentary blip during active session, but keep verified on next tick
-          });
-        }, 25000);
+          if (!curAuth) return;
+          try {
+            var parsed = JSON.parse(curAuth);
+            fetch('/api/verify', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ key: parsed.key, hwid: hwid })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(d) {
+              if (d && !d.success) {
+                localStorage.removeItem('headless_dice_auth');
+                sessionStorage.removeItem('headless_dice_auth');
+                window.location.replace('/');
+              }
+            })
+            .catch(function() {});
+          } catch(e) {}
+        }, 30000);
 
       } catch(e) {
-        localStorage.removeItem('headless_dice_auth');
-        sessionStorage.removeItem('headless_dice_auth');
         window.location.replace('/');
       }
     })();

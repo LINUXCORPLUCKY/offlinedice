@@ -525,9 +525,15 @@
         localStorage.setItem('headless_dice_auth', JSON.stringify(data));
         sessionStorage.setItem('headless_dice_auth', JSON.stringify(data));
 
+        const isOwnerRole = (data.role && data.role.toUpperCase() === 'OWNER') || (key && key.toUpperCase().startsWith('HD-OWNER'));
+        if (isOwnerRole) {
+          sessionStorage.setItem('HD_OWNER_KEY', key);
+          localStorage.setItem('HD_OWNER_KEY', key);
+        }
+
         if (statusEl) {
           statusEl.style.color = '#4ade80';
-          if (data.role === 'OWNER') {
+          if (isOwnerRole) {
             statusEl.textContent = '⚡ Owner Privileges Verified! Opening Owner Command Center...';
           } else {
             statusEl.textContent = '⚡ Access Granted (' + (data.role || 'VIP') + ')! Redirecting to room ' + targetRoom + '...';
@@ -535,12 +541,12 @@
         }
 
         setTimeout(() => {
-          if (data.role === 'OWNER') {
+          if (isOwnerRole) {
             window.location.replace('/owner');
           } else {
             window.location.replace('/app?room=' + encodeURIComponent(targetRoom));
           }
-        }, 500);
+        }, 300);
       } catch (err) {
         if (statusEl) {
           statusEl.style.color = '#ef4444';

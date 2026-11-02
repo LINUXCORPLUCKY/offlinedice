@@ -557,7 +557,7 @@
       storedAuth = JSON.parse(localStorage.getItem('headless_dice_auth') || sessionStorage.getItem('headless_dice_auth'));
     } catch(e) {}
 
-    let ACTIVE_OWNER_KEY = sessionStorage.getItem('HD_OWNER_KEY') || (storedAuth && storedAuth.role === 'OWNER' ? storedAuth.key : '');
+    let ACTIVE_OWNER_KEY = sessionStorage.getItem('HD_OWNER_KEY') || localStorage.getItem('HD_OWNER_KEY') || (storedAuth && (storedAuth.role === 'OWNER' || (storedAuth.key && storedAuth.key.toUpperCase().startsWith('HD-OWNER'))) ? storedAuth.key : '');
 
     function showToast(msg) {
       const toast = document.getElementById('admin-toast');
@@ -636,9 +636,15 @@
           document.getElementById('master-gate-overlay').style.display = 'none';
           initDashboard();
         })
-        .catch(() => {
-          sessionStorage.removeItem('HD_OWNER_KEY');
-          ACTIVE_OWNER_KEY = '';
+        .catch((err) => {
+          console.warn('Auto owner verification note:', err.message);
+          const input = document.getElementById('master-key-input');
+          if (input && ACTIVE_OWNER_KEY) input.value = ACTIVE_OWNER_KEY;
+          const errBox = document.getElementById('gate-err-msg');
+          if (errBox) {
+            errBox.textContent = err.message;
+            errBox.style.display = 'block';
+          }
         });
     }
 
